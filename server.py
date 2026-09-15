@@ -121,8 +121,19 @@ def api_keka_sync():
         token = _keka_token()
         if not token:
             return jsonify({'ok': False, 'error': 'Keka token nahi mila (credentials galat ho sakte hain)'}), 502
-        emps_raw   = _keka_get_all('hris/employees', token)
-        assets_raw = _keka_get_all('assets', token)
+        # Fetch each source independently so a failure in one (e.g. 403 on assets)
+        # does not throw away the other.
+        errors = []
+        try:
+            emps_raw = _keka_get_all('hris/employees', token)
+        except Exception as e:
+            emps_raw = []
+            errors.append('employees: ' + str(e))
+        try:
+            assets_raw = _keka_get_all('assets', token)
+        except Exception as e:
+            assets_raw = []
+            errors.append('assets: ' + str(e))
 
         # ── Employees → {name, wiomId, dept, designation, email, phone, manager...} ──
         by_email, emp_map = {}, {}
@@ -196,6 +207,7 @@ def api_keka_sync():
             'ok': True,
             'employees': len(employees_out), 'employeesFromKeka': len(emp_map),
             'assets': len(assets_out), 'assetsFromKeka': len(keka_assets),
+            'errors': errors,
             '_debug': {
                 'empSampleKeys': list(emps_raw[0].keys()) if emps_raw else [],
                 'assetSampleKeys': list(assets_raw[0].keys()) if assets_raw else [],
@@ -215,4 +227,4 @@ def static_files(path):
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, threaded=True)
