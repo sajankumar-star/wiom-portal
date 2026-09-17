@@ -216,6 +216,19 @@ def api_keka_sync():
     except Exception as e:
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+# ─── DEBUG: outbound (egress) IP — to whitelist in Keka ─────
+@app.route('/api/myip')
+def api_myip():
+    out = {}
+    for name, url in (('ipify', 'https://api.ipify.org'),
+                      ('aws', 'https://checkip.amazonaws.com')):
+        try:
+            with urllib.request.urlopen(url, timeout=10) as r:
+                out[name] = r.read().decode().strip()
+        except Exception as e:
+            out[name] = 'err: ' + str(e)
+    return jsonify(out)
+
 # ─── SERVE PORTAL ──────────────────────────────────────────
 @app.route('/')
 def index():
