@@ -258,6 +258,31 @@ def api_myip():
             out[name] = 'err: ' + str(e)
     return jsonify(out)
 
+# ─── AUTO-SYNC: refresh Keka data on startup + every 6 hours ───────────────
+# So the portal always shows fresh Keka data without anyone clicking anything.
+# Disable by setting the env var KEKA_AUTO_SYNC=0.
+import threading, time as _time
+
+def _auto_keka_sync_loop():
+    port = int(os.environ.get('PORT', 8080))
+    url = 'http://127.0.0.1:%d/api/keka-sync' % port
+    _time.sleep(60)  # give the web server time to finish booting
+    while True:
+        try:
+            req = urllib.request.Request(url, data=b'{}',
+                                         headers={'Content-Type': 'application/json'})
+            with urllib.request.urlopen(req, timeout=240) as r:
+                d = json.loads(r.read().decode())
+            print('[auto-keka-sync] %s employees=%s assets=%s' %
+                  ('ok' if d.get('ok') else 'FAILED: ' + str(d.get('error')),
+                   d.get('employees'), d.get('assets')), flush=True)
+        except Exception as e:
+            print('[auto-keka-sync] error:', e, flush=True)
+        _time.sleep(6 * 3600)
+
+if os.environ.get('KEKA_AUTO_SYNC', '1') == '1' and KEKA_CLIENT_ID:
+    threading.Thread(target=_auto_keka_sync_loop, daemon=True).start()
+
 # ─── SERVE PORTAL ──────────────────────────────────────────
 @app.route('/')
 def index():
