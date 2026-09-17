@@ -211,7 +211,36 @@ def api_keka_sync():
         employees_out = list(merged_emps.values())
 
         # ── Assets → portal asset shape ──
-        TYPE_MAP = {KEKA_LAPTOP_TYPE: ('LAPTOPS', 'Laptop')}
+        # Keka only gives us type/category GUIDs, not names, so we classify each
+        # asset into the portal's own categories from its NAME (with the laptop
+        # type-id as an extra hint). Keeps everything out of a dead "OTHER" bucket.
+        def _asset_cat(name, is_laptop_type):
+            n = (name or '').lower()
+            def has(*w):
+                return any(x in n for x in w)
+            if has('monitor', 'screen', ' lcd', ' tft', ' inch', '"'):        return ('MONITORS', 'Monitor')
+            if has('keyboard', 'keyborad'):                                    return ('COMPUTER HARDWARE', 'Keyboard')
+            if has('mouse'):                                                   return ('COMPUTER HARDWARE', 'Mouse')
+            if has('headset', 'headphone', 'earphone', 'earbud', 'jabra', 'evolve', 'airpod'):
+                return ('COMPUTER HARDWARE', 'Headset')
+            if has('bag'):                                                     return ('ACCESSORIES', 'Bags')
+            if has('sim '):                                                    return ('ACCESSORIES', 'SIM')
+            if has('ups'):                                                     return ('SECURITY', 'UPS')
+            if has('router', 'switch', 'ethernet', 'access point', 'wifi', 'network'):
+                return ('NETWORKING', 'Networking')
+            if has('imei', 'galaxy', 'redmi', 'oppo', 'vivo', 'realme', 'nokia', 'iphone',
+                   'poco', 'moto', 'sm-m', 'sm-a', '5g', 'smartphone'):        return ('MOBILES', 'Mobile')
+            if has('adapter', 'charger', 'dock'):                              return ('COMPUTER HARDWARE', 'Others')
+            if has('desktop', 'raspberry', 'mini pc'):                         return ('COMPUTER HARDWARE', 'Desktop')
+            if has('ram', 'ssd', ' hdd', 'hard disk', 'pen drive', 'pendrive'):return ('COMPUTER HARDWARE', 'Others')
+            if has('license', 'office 365', 'windows', 'adobe', 'software'):   return ('SOFTWARE', 'Software License')
+            if is_laptop_type or has('macbook', 'thinkpad', 'pavilion', 'zenbook', 'latitude',
+                                     'vostro', 'inspiron', 'ideapad', 'elitebook', 'probook',
+                                     'zbook', 'vivobook', 'aspire', 'legion', 'victus',
+                                     'notebook', 'laptop'):
+                return ('LAPTOPS', 'Laptop')
+            return ('COMPUTER HARDWARE', 'Others')
+
         keka_assets = []
         for a in assets_raw:
             at = a.get('assignedTo') if isinstance(a.get('assignedTo'), dict) else {}
@@ -220,8 +249,8 @@ def api_keka_sync():
             if not a_name and a_email in by_email:
                 a_name = by_email[a_email]['name']
             emp = by_email.get(a_email, {})
-            type_name = _txt(a.get('assetType'))
-            cat, typ = TYPE_MAP.get(a.get('assetTypeId'), ('OTHER', type_name or 'Other'))
+            cat, typ = _asset_cat(a.get('assetName') or a.get('name') or '',
+                                  a.get('assetTypeId') == KEKA_LAPTOP_TYPE)
             serial = a.get('assetId') or a.get('serialNumber') or ''
             keka_assets.append({
                 'id': 'KEKA-A-' + str(a.get('id') or serial or len(keka_assets)),
@@ -254,13 +283,6 @@ def api_keka_sync():
         _store_set('wiom_keka_employees', employees_out)
         _store_set('wiom_keka_assets', assets_out)
 
-        def _idcount(key):
-            m = {}
-            for a in assets_raw:
-                v = str(a.get(key))
-                m[v] = m.get(v, 0) + 1
-            return m
-
         return jsonify({
             'ok': True,
             'employees': len(employees_out), 'employeesFromKeka': len(emp_map),
@@ -269,9 +291,6 @@ def api_keka_sync():
             '_debug': {
                 'empSampleKeys': list(emps_raw[0].keys()) if emps_raw else [],
                 'assetSampleKeys': list(assets_raw[0].keys()) if assets_raw else [],
-                'assetTypeIds': _idcount('assetTypeId'),
-                'assetCategoryIds': _idcount('assetCategoryId'),
-                'rawAsset0': assets_raw[0] if assets_raw else None,
             },
         })
     except Exception as e:
