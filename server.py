@@ -214,10 +214,26 @@ def api_keka_sync():
         # Keka only gives us type/category GUIDs, not names, so we classify each
         # asset into the portal's own categories from its NAME (with the laptop
         # type-id as an extra hint). Keeps everything out of a dead "OTHER" bucket.
+        LAPTOP_WORDS = ('macbook', 'thinkpad', 'pavilion', 'zenbook', 'latitude', 'vostro',
+                        'inspiron', 'ideapad', 'elitebook', 'probook', 'zbook', 'vivobook',
+                        'aspire', 'legion', 'victus', 'notebook', 'laptop')
+
         def _asset_cat(name, is_laptop_type):
             n = (name or '').lower()
             def has(*w):
                 return any(x in n for x in w)
+            # 1) Keka's laptop type-id is authoritative — trust it first so laptop
+            #    spec words in the name ("16GB RAM, 512GB SSD", "15 inch") can't
+            #    misfile a real laptop.
+            if is_laptop_type:
+                return ('LAPTOPS', 'Laptop')
+            # 2) Laptops that were mis-typed in Keka — detect by model name, but a
+            #    "laptop bag" / "laptop adapter" is an accessory, not a laptop.
+            if has(*LAPTOP_WORDS):
+                if has('bag'):              return ('ACCESSORIES', 'Bags')
+                if has('adapter', 'charger'): return ('COMPUTER HARDWARE', 'Others')
+                return ('LAPTOPS', 'Laptop')
+            # 3) Everything else, by keyword.
             if has('monitor', 'screen', ' lcd', ' tft', ' inch', '"'):        return ('MONITORS', 'Monitor')
             if has('keyboard', 'keyborad'):                                    return ('COMPUTER HARDWARE', 'Keyboard')
             if has('mouse'):                                                   return ('COMPUTER HARDWARE', 'Mouse')
@@ -232,13 +248,7 @@ def api_keka_sync():
                    'poco', 'moto', 'sm-m', 'sm-a', '5g', 'smartphone'):        return ('MOBILES', 'Mobile')
             if has('adapter', 'charger', 'dock'):                              return ('COMPUTER HARDWARE', 'Others')
             if has('desktop', 'raspberry', 'mini pc'):                         return ('COMPUTER HARDWARE', 'Desktop')
-            if has('ram', 'ssd', ' hdd', 'hard disk', 'pen drive', 'pendrive'):return ('COMPUTER HARDWARE', 'Others')
             if has('license', 'office 365', 'windows', 'adobe', 'software'):   return ('SOFTWARE', 'Software License')
-            if is_laptop_type or has('macbook', 'thinkpad', 'pavilion', 'zenbook', 'latitude',
-                                     'vostro', 'inspiron', 'ideapad', 'elitebook', 'probook',
-                                     'zbook', 'vivobook', 'aspire', 'legion', 'victus',
-                                     'notebook', 'laptop'):
-                return ('LAPTOPS', 'Laptop')
             return ('COMPUTER HARDWARE', 'Others')
 
         keka_assets = []
