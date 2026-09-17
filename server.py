@@ -156,7 +156,18 @@ def api_keka_sync():
             return ''
 
         def _dept_of(emp_obj):
-            return _txt(emp_obj.get('department')) or _group_title(emp_obj, 2)
+            d = _txt(emp_obj.get('department'))
+            if d:
+                return d
+            # An employee can belong to more than one Department group — show all of
+            # them joined into a single value (e.g. "Tech For Future / Analytics").
+            titles = []
+            for g in (emp_obj.get('groups') or []):
+                if isinstance(g, dict) and g.get('groupType') == 2:
+                    t = g.get('title') or g.get('name')
+                    if t and t not in titles:
+                        titles.append(t)
+            return ' / '.join(titles)
 
         def _mgr_name(mgr_obj):
             if not isinstance(mgr_obj, dict):
@@ -258,9 +269,9 @@ def api_myip():
             out[name] = 'err: ' + str(e)
     return jsonify(out)
 
-# ─── AUTO-SYNC: refresh Keka data on startup + every 6 hours ───────────────
+# ─── AUTO-SYNC: refresh Keka data on startup + every 15 minutes ────────────
 # So the portal always shows fresh Keka data without anyone clicking anything.
-# Disable by setting the env var KEKA_AUTO_SYNC=0.
+# Interval is configurable via KEKA_SYNC_MINUTES; disable with KEKA_AUTO_SYNC=0.
 import threading, time as _time
 
 def _auto_keka_sync_loop():
@@ -278,7 +289,11 @@ def _auto_keka_sync_loop():
                    d.get('employees'), d.get('assets')), flush=True)
         except Exception as e:
             print('[auto-keka-sync] error:', e, flush=True)
-        _time.sleep(6 * 3600)
+        try:
+            mins = float(os.environ.get('KEKA_SYNC_MINUTES', '15'))
+        except ValueError:
+            mins = 15
+        _time.sleep(max(60, mins * 60))
 
 if os.environ.get('KEKA_AUTO_SYNC', '1') == '1' and KEKA_CLIENT_ID:
     threading.Thread(target=_auto_keka_sync_loop, daemon=True).start()
