@@ -147,24 +147,16 @@ def api_keka_sync():
         assets_raw = _pd.get('assets') or []
 
         # ── Employees → {name, wiomId, dept, designation, email, phone, manager...} ──
-        def _dept_of(emp_obj):
-            # Keka usually has no top-level department; it lives in `groups`,
-            # where each group is tagged by a groupType (Department/Business Unit/…).
-            d = _txt(emp_obj.get('department'))
-            if d:
-                return d
+        def _group_title(emp_obj, gtype):
+            # Keka tags each group with a numeric groupType:
+            #   1 = Business Unit, 2 = Department, 3 = Location, 5 = Pay group.
             for g in (emp_obj.get('groups') or []):
-                if not isinstance(g, dict):
-                    continue
-                gt = g.get('groupType')
-                gtn = _txt(gt) if isinstance(gt, dict) else str(gt or '')
-                if 'depart' in gtn.lower() or 'business' in gtn.lower():
-                    return g.get('title') or g.get('name') or g.get('identifier') or ''
-            # Fallback: first group with a usable title.
-            for g in (emp_obj.get('groups') or []):
-                if isinstance(g, dict) and (g.get('title') or g.get('name')):
-                    return g.get('title') or g.get('name')
+                if isinstance(g, dict) and g.get('groupType') == gtype:
+                    return g.get('title') or g.get('name') or ''
             return ''
+
+        def _dept_of(emp_obj):
+            return _txt(emp_obj.get('department')) or _group_title(emp_obj, 2)
 
         def _mgr_name(mgr_obj):
             if not isinstance(mgr_obj, dict):
@@ -185,6 +177,7 @@ def api_keka_sync():
             emp = {
                 'id': 'KEKA-' + num, 'name': name, 'wiomId': num,
                 'dept': _dept_of(e), 'designation': _txt(e.get('jobTitle')),
+                'location': _group_title(e, 3),
                 'email': email,
                 'phone': e.get('mobilePhone') or e.get('workPhone') or e.get('phoneNumber') or '',
                 'managerName': _mgr_name(mgr),
@@ -218,7 +211,7 @@ def api_keka_sync():
                 'id': 'KEKA-A-' + str(a.get('id') or serial or len(keka_assets)),
                 'name': a.get('assetName') or a.get('name') or 'Asset',
                 'assetId': serial, 'serial': serial, 'category': cat, 'type': typ,
-                'location': _txt(a.get('location')), 'condition': 'Good',
+                'location': _txt(a.get('location')) or emp.get('location', ''), 'condition': 'Good',
                 'status': 'Assigned' if a_name else 'Available',
                 'ack': 'Not Applicable', 'assignedTo': a_name,
                 'wiomId': emp.get('wiomId', ''), 'dept': emp.get('dept', ''), 'empEmail': a_email,
@@ -247,9 +240,6 @@ def api_keka_sync():
             '_debug': {
                 'empSampleKeys': list(emps_raw[0].keys()) if emps_raw else [],
                 'assetSampleKeys': list(assets_raw[0].keys()) if assets_raw else [],
-                'rawEmp0': emps_raw[0] if emps_raw else None,
-                'rawAsset0': assets_raw[0] if assets_raw else None,
-                'mappedEmp0': employees_out[0] if employees_out else None,
             },
         })
     except Exception as e:
