@@ -147,6 +147,31 @@ def api_keka_sync():
         assets_raw = _pd.get('assets') or []
 
         # ── Employees → {name, wiomId, dept, designation, email, phone, manager...} ──
+        def _dept_of(emp_obj):
+            # Keka usually has no top-level department; it lives in `groups`,
+            # where each group is tagged by a groupType (Department/Business Unit/…).
+            d = _txt(emp_obj.get('department'))
+            if d:
+                return d
+            for g in (emp_obj.get('groups') or []):
+                if not isinstance(g, dict):
+                    continue
+                gt = g.get('groupType')
+                gtn = _txt(gt) if isinstance(gt, dict) else str(gt or '')
+                if 'depart' in gtn.lower() or 'business' in gtn.lower():
+                    return g.get('title') or g.get('name') or g.get('identifier') or ''
+            # Fallback: first group with a usable title.
+            for g in (emp_obj.get('groups') or []):
+                if isinstance(g, dict) and (g.get('title') or g.get('name')):
+                    return g.get('title') or g.get('name')
+            return ''
+
+        def _mgr_name(mgr_obj):
+            if not isinstance(mgr_obj, dict):
+                return ''
+            fl = ('%s %s' % (mgr_obj.get('firstName') or '', mgr_obj.get('lastName') or '')).strip()
+            return (mgr_obj.get('name') or mgr_obj.get('displayName') or mgr_obj.get('fullName') or fl or '')
+
         by_email, emp_map = {}, {}
         for e in emps_raw:
             num = str(e.get('employeeNumber') or '').strip()
@@ -154,17 +179,17 @@ def api_keka_sync():
                 continue
             email = (e.get('email') or '').lower()
             name  = e.get('displayName') or ('%s %s' % (e.get('firstName') or '', e.get('lastName') or '')).strip()
-            mgr   = e.get('reportingManager') or e.get('reportingTo') or e.get('reportsTo') or e.get('manager') or {}
+            mgr   = e.get('reportsTo') or e.get('reportingManager') or e.get('reportingTo') or e.get('l2Manager') or e.get('manager') or {}
             if not isinstance(mgr, dict):
                 mgr = {}
             emp = {
                 'id': 'KEKA-' + num, 'name': name, 'wiomId': num,
-                'dept': _txt(e.get('department')), 'designation': _txt(e.get('jobTitle')),
+                'dept': _dept_of(e), 'designation': _txt(e.get('jobTitle')),
                 'email': email,
                 'phone': e.get('mobilePhone') or e.get('workPhone') or e.get('phoneNumber') or '',
-                'managerName': mgr.get('name') or mgr.get('displayName') or mgr.get('fullName') or '',
+                'managerName': _mgr_name(mgr),
                 'managerEmail': mgr.get('email') or '',
-                'joinDate': e.get('dateJoined') or e.get('joiningDate') or '',
+                'joinDate': e.get('joiningDate') or e.get('dateJoined') or '',
                 'status': 'Active' if e.get('employmentStatus') == 0 else 'Inactive',
             }
             emp_map[num] = emp
@@ -192,7 +217,7 @@ def api_keka_sync():
             keka_assets.append({
                 'id': 'KEKA-A-' + str(a.get('id') or serial or len(keka_assets)),
                 'name': a.get('assetName') or a.get('name') or 'Asset',
-                'assetId': serial, 'category': cat, 'type': typ,
+                'assetId': serial, 'serial': serial, 'category': cat, 'type': typ,
                 'location': _txt(a.get('location')), 'condition': 'Good',
                 'status': 'Assigned' if a_name else 'Available',
                 'ack': 'Not Applicable', 'assignedTo': a_name,
@@ -222,6 +247,9 @@ def api_keka_sync():
             '_debug': {
                 'empSampleKeys': list(emps_raw[0].keys()) if emps_raw else [],
                 'assetSampleKeys': list(assets_raw[0].keys()) if assets_raw else [],
+                'rawEmp0': emps_raw[0] if emps_raw else None,
+                'rawAsset0': assets_raw[0] if assets_raw else None,
+                'mappedEmp0': employees_out[0] if employees_out else None,
             },
         })
     except Exception as e:
