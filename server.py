@@ -126,22 +126,25 @@ def api_keka_sync():
         return jsonify({'ok': False, 'error': 'Keka credentials set nahi hain. Railway me '
                         'KEKA_CLIENT_ID, KEKA_CLIENT_SECRET, KEKA_API_KEY environment variables add karein.'}), 400
     try:
-        token = _keka_token()
-        if not token:
-            return jsonify({'ok': False, 'error': 'Keka token nahi mila (credentials galat ho sakte hain)'}), 502
-        # Fetch each source independently so a failure in one (e.g. 403 on assets)
-        # does not throw away the other.
+        # Fetch Keka data via the helpdesk proxy. The portal's own server IP is blocked
+        # by Keka's firewall, but the helpdesk's IP is allowed — so we ask it to fetch.
         errors = []
+        proxy_url = os.environ.get('HELPDESK_PROXY_URL',
+                                   'https://wiom-helpdesk-production.up.railway.app/api/agent/keka-proxy')
         try:
-            emps_raw = _keka_get_all('hris/employees', token)
+            _body = json.dumps({'clientId': KEKA_CLIENT_ID, 'clientSecret': KEKA_CLIENT_SECRET,
+                                'apiKey': KEKA_API_KEY}).encode()
+            _preq = urllib.request.Request(proxy_url, data=_body,
+                                           headers={'Content-Type': 'application/json',
+                                                    'x-agent-key': os.environ.get('AGENT_SECRET', '')})
+            with urllib.request.urlopen(_preq, timeout=180) as _r:
+                _pd = json.loads(_r.read().decode())
         except Exception as e:
-            emps_raw = []
-            errors.append('employees: ' + str(e))
-        try:
-            assets_raw = _keka_get_all('assets', token)
-        except Exception as e:
-            assets_raw = []
-            errors.append('assets: ' + str(e))
+            return jsonify({'ok': False, 'error': 'helpdesk proxy call failed: ' + str(e)}), 502
+        if not _pd.get('ok'):
+            return jsonify({'ok': False, 'error': 'helpdesk proxy: ' + str(_pd.get('error') or _pd)}), 502
+        emps_raw = _pd.get('employees') or []
+        assets_raw = _pd.get('assets') or []
 
         # ── Employees → {name, wiomId, dept, designation, email, phone, manager...} ──
         by_email, emp_map = {}, {}
