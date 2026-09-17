@@ -196,12 +196,17 @@ def api_keka_sync():
                 'joinDate': e.get('joiningDate') or e.get('dateJoined') or '',
                 'status': 'Active' if e.get('employmentStatus') == 0 else 'Inactive',
             }
-            emp_map[num] = emp
             if email:
-                by_email[email] = emp
+                by_email[email] = emp           # ALL employees — used to enrich assets
+            if e.get('employmentStatus') == 0:   # only ACTIVE go into the directory
+                emp_map[num] = emp
 
+        # Directory = active Keka employees + any non-Keka (manually added) rows.
+        # Ex-employees are dropped from the list, but their assets still show
+        # (each asset carries its own assignedTo / dept / manager, set above).
         existing_emps = _store_get('wiom_keka_employees', [])
-        merged_emps = {str(x.get('wiomId') or x.get('id') or i): x for i, x in enumerate(existing_emps)}
+        non_keka = [x for x in existing_emps if not str(x.get('id', '')).startswith('KEKA-')]
+        merged_emps = {str(x.get('wiomId') or x.get('id') or i): x for i, x in enumerate(non_keka)}
         merged_emps.update(emp_map)
         employees_out = list(merged_emps.values())
 
@@ -232,16 +237,29 @@ def api_keka_sync():
                 'warranty': a.get('warrantyExpiryDate') or a.get('warrantyExpiry') or '',
             })
 
+        # Merge by serial so a manually-added laptop and its Keka copy collapse
+        # into ONE row (Keka wins). Old rows kept the serial in `serial`; Keka
+        # rows keep it in `assetId` — normalise both (trim + upper-case).
         existing_assets = _store_get('wiom_keka_assets', [])
         def _akey(x):
-            return ('sn:' + x['assetId']) if x.get('assetId') else ('nm:' + (x.get('name') or ''))
-        merged_assets = {_akey(x): x for x in existing_assets}
+            sn = (x.get('assetId') or x.get('serial') or '').strip().upper()
+            return ('sn:' + sn) if sn else ('nm:' + (x.get('name') or '').strip().lower())
+        merged_assets = {}
+        for x in existing_assets:
+            merged_assets[_akey(x)] = x
         for a in keka_assets:
             merged_assets[_akey(a)] = a
         assets_out = list(merged_assets.values())
 
         _store_set('wiom_keka_employees', employees_out)
         _store_set('wiom_keka_assets', assets_out)
+
+        def _idcount(key):
+            m = {}
+            for a in assets_raw:
+                v = str(a.get(key))
+                m[v] = m.get(v, 0) + 1
+            return m
 
         return jsonify({
             'ok': True,
@@ -251,6 +269,9 @@ def api_keka_sync():
             '_debug': {
                 'empSampleKeys': list(emps_raw[0].keys()) if emps_raw else [],
                 'assetSampleKeys': list(assets_raw[0].keys()) if assets_raw else [],
+                'assetTypeIds': _idcount('assetTypeId'),
+                'assetCategoryIds': _idcount('assetCategoryId'),
+                'rawAsset0': assets_raw[0] if assets_raw else None,
             },
         })
     except Exception as e:
