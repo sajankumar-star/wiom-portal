@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, send_from_directory
-import json, os, sqlite3, hashlib, urllib.request, urllib.parse
+import json, os, sqlite3, hashlib, urllib.request, urllib.parse, urllib.error
 from functools import wraps
 
 app = Flask(__name__, static_folder='static')
@@ -71,8 +71,16 @@ def _keka_token():
     }).encode()
     req = urllib.request.Request('https://login.keka.com/connect/token', data=body,
                                  headers={'Content-Type': 'application/x-www-form-urlencoded'})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return json.loads(r.read().decode()).get('access_token')
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.loads(r.read().decode()).get('access_token')
+    except urllib.error.HTTPError as e:
+        detail = ''
+        try:
+            detail = e.read().decode()[:400]
+        except Exception:
+            pass
+        raise Exception('Keka token %s @ %s :: %s' % (e.code, req.full_url, detail))
 
 def _keka_get_all(path, token):
     out, page = [], 1
