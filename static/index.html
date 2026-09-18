@@ -6,6 +6,7 @@
 <title>Wiom Ã¢â¬â Asset Management</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',sans-serif;background:#f4f5f9;color:#1a1a2e;font-size:14px}
@@ -328,6 +329,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
       <input type="text" id="global-search" placeholder="Search assets, employees..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}">
     </div>
     <div class="spacer"></div>
+    <button class="icon-btn" onclick="openQRScanner()" title="Scan asset QR"><i class="bi bi-qr-code-scan"></i></button>
     <div style="position:relative" id="notif-bell">
       <button class="icon-btn" onclick="toggleNotifPanel()" title="Notifications"><i class="bi bi-bell"></i></button>
       <span id="notif-count" style="display:none;position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:50%;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 2px"></span>
@@ -367,6 +369,19 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
 </div>
 
 <!-- ââââââââââââââââââ USER MANAGEMENT MODAL ââââââââââââââââââ -->
+<div class="modal-overlay" id="qr-scan-modal">
+  <div style="background:#fff;border-radius:14px;max-width:420px;width:92%;margin:8vh auto;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#6D0040;color:#fff">
+      <span style="font-weight:700"><i class="bi bi-qr-code-scan"></i> Scan Asset QR</span>
+      <span onclick="closeQRScanner()" style="cursor:pointer;font-size:22px;line-height:1">&times;</span>
+    </div>
+    <div style="padding:16px">
+      <div id="qr-reader" style="width:100%"></div>
+      <div id="qr-scan-status" style="font-size:12px;color:#888;margin-top:10px;text-align:center">Camera se asset ka QR label scan karein</div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="user-mgmt-modal">
   <div class="modal-box" style="max-width:700px">
     <div class="modal-header">
@@ -5392,6 +5407,41 @@ function renderRepairs() {
 // ââââââââââââââââââââââââââââââââââââââââââââââ
 //  QR CODE LABEL PRINT
 // ââââââââââââââââââââââââââââââââââââââââââââââ
+let _qrScanner = null;
+function openQRScanner() {
+  const modal = document.getElementById('qr-scan-modal');
+  if (!modal) return;
+  modal.classList.add('show');
+  const status = document.getElementById('qr-scan-status');
+  if (typeof Html5Qrcode === 'undefined') {
+    status.textContent = 'Scanner library load nahi hui — internet check karein.';
+    return;
+  }
+  status.textContent = 'Camera shuru ho raha hai…';
+  _qrScanner = new Html5Qrcode('qr-reader');
+  _qrScanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 220 },
+    (decoded) => onQRDecoded(decoded),
+    () => {}
+  ).then(() => { status.textContent = 'Asset ka QR label camera ke saamne laayein'; })
+   .catch(e => { status.textContent = 'Camera nahi khul paya: ' + e; });
+}
+function closeQRScanner() {
+  const modal = document.getElementById('qr-scan-modal');
+  if (_qrScanner) {
+    _qrScanner.stop().then(() => { try { _qrScanner.clear(); } catch(e){} _qrScanner = null; }).catch(() => { _qrScanner = null; });
+  }
+  if (modal) modal.classList.remove('show');
+}
+function onQRDecoded(text) {
+  let code = String(text || '');
+  if (code.indexOf('WIOM:') === 0) code = code.slice(5).split('|')[0];
+  code = code.trim().toUpperCase();
+  const a = getAssets().find(x => (x.assetId || '').toUpperCase() === code || (x.serial || '').toUpperCase() === code);
+  closeQRScanner();
+  if (a) viewAsset(a.id);
+  else showToast('Is QR ka asset nahi mila: ' + code, 'error');
+}
+
 function printQRLabel(id) {
   const a = getAssets().find(x=>x.id===id);
   if (!a) return;
