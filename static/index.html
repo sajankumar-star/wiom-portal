@@ -355,6 +355,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
     <div class="sub-tab" data-view="reports">Reports</div>
     <div class="sub-tab" data-view="maintenance">Maintenance Log</div>
     <div class="sub-tab" data-view="audit">Audit Log</div>
+    <div class="sub-tab" data-view="health">🩺 Data Health</div>
     <div class="sub-tab" data-view="expenses">IT Expenses</div>
     <div class="sub-tab" data-view="notes">📝 My Notes</div>
     <div class="sub-tab" data-view="settings">Settings</div>
@@ -1452,7 +1453,8 @@ function switchView(view) {
   currentView = view;
   document.querySelectorAll('.sub-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
   const c = document.getElementById('main-content');
-  if (view === 'dashboard') renderDashboard();
+  if (view === 'health') renderDataHealth();
+  else if (view === 'dashboard') renderDashboard();
   else if (view === 'summary') renderSummary();
   else if (view === 'list') renderAssetList();
   else if (view === 'assigned') renderAssigned();
@@ -4918,6 +4920,82 @@ function showCalDayDetail(day, month, year) {
 // ââââââââââââââââââââââââââââââââââââââââââââââ
 //  DASHBOARD
 // ââââââââââââââââââââââââââââââââââââââââââââââ
+function renewWarranty(id) {
+  const a = getAssets().find(x => x.id === id);
+  if (!a) return;
+  const nd = prompt('New warranty expiry date (YYYY-MM-DD) for "' + a.name + '":', a.warranty || '');
+  if (!nd) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(nd.trim())) { showToast('Use format YYYY-MM-DD', 'error'); return; }
+  const assets = getAssets();
+  const idx = assets.findIndex(x => x.id === id);
+  if (idx < 0) return;
+  assets[idx].warranty = nd.trim();
+  saveAssets(assets);
+  logAudit('Warranty Renewed', a.name + ' → ' + nd.trim(), currentUser ? currentUser.name : 'Admin');
+  showToast('Warranty renewed to ' + nd.trim(), 'success');
+  if (currentView === 'dashboard') renderDashboard(); else if (currentView === 'health') renderDataHealth();
+}
+
+// ── DATA HEALTH — live self-audit of the whole dataset ──────────────────────
+function renderDataHealth() {
+  const assets = getAssets();
+  const emps = getEmployees();
+  const active = new Set(emps.map(e => (e.name || '').toLowerCase().trim()));
+  const norm = s => (s || '').toLowerCase().trim();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // duplicate serials
+  const bySn = {};
+  assets.forEach(a => { const sn = (a.assetId || a.serial || '').trim().toUpperCase(); if (sn) (bySn[sn] = bySn[sn] || []).push(a); });
+  const dupSerials = Object.entries(bySn).filter(([s, arr]) => arr.length > 1);
+
+  const assigned = assets.filter(a => a.status === 'Assigned');
+  const orphan = assigned.filter(a => a.assignedTo && !active.has(norm(a.assignedTo)) && !a.exEmployee);
+  const exHeld = assets.filter(a => a.exEmployee);
+  const noSerial = assigned.filter(a => !a.serial && !a.assetId);
+  const assignedNoName = assets.filter(a => a.status === 'Assigned' && !a.assignedTo);
+  const lowStock = assets.filter(a => a.qty != null && a.minQty != null && Number(a.qty) <= Number(a.minQty));
+  const pendingLong = assets.filter(a => {
+    if (a.ack !== 'Pending' || !a.assignDate) return false;
+    const d = new Date(a.assignDate); d.setHours(0,0,0,0);
+    return (today - d) / 86400000 > 7;
+  });
+
+  const card = (icon, color, title, count, detail, okMsg) => `
+    <div style="background:#fff;border:1px solid #ececf5;border-left:4px solid ${count ? color : '#22c55e'};border-radius:12px;padding:16px 18px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <i class="bi ${count ? icon : 'bi-check-circle-fill'}" style="color:${count ? color : '#22c55e'};font-size:18px"></i>
+        <span style="font-weight:700;color:#1a1a2e">${title}</span>
+        <span style="margin-left:auto;font-weight:800;font-size:18px;color:${count ? color : '#22c55e'}">${count}</span>
+      </div>
+      ${count ? `<div style="font-size:12px;color:#666;margin-top:8px;line-height:1.6">${detail}</div>`
+              : `<div style="font-size:12px;color:#16a34a;margin-top:6px">${okMsg}</div>`}
+    </div>`;
+
+  const list = (arr, fn) => arr.slice(0, 12).map(fn).join('') + (arr.length > 12 ? ` <span style="color:#aaa">+${arr.length - 12} more</span>` : '');
+
+  document.getElementById('main-content').innerHTML = `
+  <div class="page-header"><h2><i class="bi bi-heart-pulse" style="color:#E91E8C"></i> Data Health</h2>
+    <button class="btn btn-outline btn-sm" onclick="renderDataHealth()"><i class="bi bi-arrow-repeat"></i> Refresh</button></div>
+  <p style="font-size:13px;color:#888;margin:-6px 0 16px">${assets.length} assets · ${emps.length} employees · live checks</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
+    ${card('bi-people-fill', '#dc2626', 'Assets held by ex-employees', exHeld.length,
+        list(exHeld, a => `<div>• ${escH(a.name)} — <b>${escH(a.assignedTo)}</b></div>`), 'None — all assigned assets are with active staff')}
+    ${card('bi-files', '#f97316', 'Duplicate serial numbers', dupSerials.length,
+        list(dupSerials, ([s, arr]) => `<div>• <code>${escH(s)}</code> ×${arr.length}</div>`), 'No duplicates')}
+    ${card('bi-person-x', '#f59e0b', 'Orphan assignments (unknown employee)', orphan.length,
+        list(orphan, a => `<div>• ${escH(a.name)} — ${escH(a.assignedTo)}</div>`), 'Every assignment maps to a known employee')}
+    ${card('bi-hourglass-split', '#d97706', 'Acknowledgements pending > 7 days', pendingLong.length,
+        list(pendingLong, a => `<div>• ${escH(a.name)} — ${escH(a.assignedTo || '')}</div>`), 'No long-pending acknowledgements')}
+    ${card('bi-upc-scan', '#6366f1', 'Assigned assets missing serial', noSerial.length,
+        list(noSerial, a => `<div>• ${escH(a.name)} — ${escH(a.assignedTo || '')}</div>`), 'All assigned assets have a serial')}
+    ${card('bi-exclamation-triangle', '#ef4444', 'Assigned but no employee name', assignedNoName.length,
+        list(assignedNoName, a => `<div>• ${escH(a.name)} <code>${escH(a.assetId || '')}</code></div>`), 'No blank-assignee records')}
+    ${card('bi-box-seam', '#c2410c', 'Low-stock consumables', lowStock.length,
+        list(lowStock, a => `<div>• ${escH(a.name)} — qty ${a.qty}</div>`), 'No items below their stock threshold')}
+  </div>`;
+}
+
 function syncTimeAgo(epochSec) {
   if (!epochSec) return 'never';
   const s = Math.floor(Date.now()/1000 - epochSec);
@@ -5008,6 +5086,7 @@ function renderDashboard() {
       <div style="font-size:12px;font-weight:600;color:#1a1a2e;margin-top:2px">${escH(a.name)}</div>
       <div style="font-size:10px;color:#888;margin-top:2px">${escH(a.assetId)}</div>
       <div style="font-size:10px;color:#888">${escH(a.warranty)}</div>
+      <button onclick="renewWarranty('${escH(a.id)}')" style="margin-top:6px;font-size:10px;font-weight:600;color:${col};background:#fff;border:1px solid ${col}55;border-radius:6px;padding:2px 8px;cursor:pointer"><i class="bi bi-arrow-clockwise"></i> Renew</button>
     </div>`;
   }).join('') : `<div style="color:#aaa;font-size:13px;padding:12px">No assets expiring in next 30 days</div>`;
 
