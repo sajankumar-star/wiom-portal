@@ -4995,13 +4995,13 @@ function renderDataHealth() {
   <p style="font-size:13px;color:#888;margin:-6px 0 16px">${assets.length} assets · ${emps.length} employees · live checks</p>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px">
     ${card('bi-people-fill', '#dc2626', 'Assets held by ex-employees', exHeld.length,
-        list(exHeld, a => `<div>• ${escH(a.name)} — <b>${escH(a.assignedTo)}</b></div>`), 'None — all assigned assets are with active staff')}
+        list(exHeld, a => `<div>• ${escH(a.name)} — <b>${escH(a.assignedTo)}</b>${a.managerEmail ? ` · <a href="mailto:${escH(a.managerEmail)}?subject=${encodeURIComponent('Asset recovery: ' + a.name)}&body=${encodeURIComponent('Hi ' + (a.managerName || '') + ',\n\nPlease help recover the asset "' + a.name + '" (' + (a.assetId || '') + ') from ex-employee ' + a.assignedTo + '.\n\nThanks,\nIT Team')}" style="color:#E91E8C">chase ${escH(a.managerName || 'manager')}</a>` : ''}</div>`), 'None — all assigned assets are with active staff')}
     ${card('bi-files', '#f97316', 'Duplicate serial numbers', dupSerials.length,
         list(dupSerials, ([s, arr]) => `<div>• <code>${escH(s)}</code> ×${arr.length}</div>`), 'No duplicates')}
     ${card('bi-person-x', '#f59e0b', 'Orphan assignments (unknown employee)', orphan.length,
         list(orphan, a => `<div>• ${escH(a.name)} — ${escH(a.assignedTo)}</div>`), 'Every assignment maps to a known employee')}
     ${card('bi-hourglass-split', '#d97706', 'Acknowledgements pending > 7 days', pendingLong.length,
-        list(pendingLong, a => `<div>• ${escH(a.name)} — ${escH(a.assignedTo || '')}</div>`), 'No long-pending acknowledgements')}
+        list(pendingLong, a => `<div>• ${escH(a.name)} — ${escH(a.assignedTo || '')}${a.empEmail ? ` · <a href="mailto:${escH(a.empEmail)}?subject=${encodeURIComponent('Please acknowledge: ' + a.name)}&body=${encodeURIComponent('Hi ' + (a.assignedTo || '') + ',\n\nPlease acknowledge receipt of "' + a.name + '" (' + (a.assetId || '') + ') in the asset portal.\n\nThanks,\nIT Team')}" style="color:#E91E8C">remind</a>` : ''}</div>`), 'No long-pending acknowledgements')}
     ${card('bi-upc-scan', '#6366f1', 'Assigned assets missing serial', noSerial.length,
         list(noSerial, a => `<div>• ${escH(a.name)} — ${escH(a.assignedTo || '')}</div>`), 'All assigned assets have a serial')}
     ${card('bi-exclamation-triangle', '#ef4444', 'Assigned but no employee name', assignedNoName.length,
