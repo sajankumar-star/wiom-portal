@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, send_from_directory
-import json, os, sqlite3, hashlib, urllib.request, urllib.parse, urllib.error
+import json, os, sqlite3, hashlib, hmac, time, urllib.request, urllib.parse, urllib.error
 from functools import wraps
 
 app = Flask(__name__, static_folder='static')
@@ -21,6 +21,61 @@ def init_db():
         conn.commit()
 
 init_db()
+
+# ─── API AUTH (fail-open until configured) ─────────────────
+# Set BOTH PORTAL_PASSWORD and PORTAL_AUTH_SECRET in Railway to require login for
+# the data API. Until both are set, the API stays open exactly as before — so
+# there is no risk of locking anyone out before the frontend is ready.
+PORTAL_PASSWORD    = os.environ.get('PORTAL_PASSWORD', '')
+PORTAL_AUTH_SECRET = os.environ.get('PORTAL_AUTH_SECRET', '')
+# These API paths never require the cookie: login itself, and the sync trigger
+# (used by the internal auto-sync loop and the in-app "Sync now" button).
+_AUTH_OPEN_PATHS = ('/api/login', '/api/keka-sync')
+
+def _auth_on():
+    return bool(PORTAL_PASSWORD and PORTAL_AUTH_SECRET)
+
+def _make_token():
+    exp = str(int(time.time()) + 7 * 24 * 3600)
+    sig = hmac.new(PORTAL_AUTH_SECRET.encode(), exp.encode(), hashlib.sha256).hexdigest()
+    return exp + '.' + sig
+
+def _valid_token(tok):
+    try:
+        exp, sig = (tok or '').split('.', 1)
+        good = hmac.new(PORTAL_AUTH_SECRET.encode(), exp.encode(), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(sig, good) and int(exp) > time.time()
+    except Exception:
+        return False
+
+@app.before_request
+def _api_gate():
+    if not _auth_on():
+        return  # fail-open: nothing changes until configured
+    path = request.path
+    if not path.startswith('/api/') or path in _AUTH_OPEN_PATHS:
+        return
+    if not _valid_token(request.cookies.get('portal_auth', '')):
+        return jsonify({'ok': False, 'error': 'auth required'}), 401
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    if not _auth_on():
+        return jsonify({'ok': True, 'protection': False})
+    body = request.get_json(force=True, silent=True) or {}
+    pw = body.get('password') or ''
+    valid = (pw == PORTAL_PASSWORD)
+    if not valid:
+        for usr in (_store_get('wiom_keka_users', []) or []):
+            if isinstance(usr, dict) and usr.get('password') == pw and pw:
+                valid = True
+                break
+    if not valid:
+        return jsonify({'ok': False, 'error': 'invalid credentials'}), 401
+    resp = jsonify({'ok': True, 'protection': True})
+    resp.set_cookie('portal_auth', _make_token(), httponly=True, samesite='Lax',
+                    secure=True, max_age=7 * 24 * 3600)
+    return resp
 
 # ─── API ───────────────────────────────────────────────────
 @app.route('/api/get/<key>')
@@ -140,8 +195,12 @@ def api_keka_sync():
             with urllib.request.urlopen(_preq, timeout=180) as _r:
                 _pd = json.loads(_r.read().decode())
         except Exception as e:
+            _store_set('wiom_keka_sync_status', {'at': int(time.time()), 'ok': False,
+                       'error': 'helpdesk proxy call failed: ' + str(e)})
             return jsonify({'ok': False, 'error': 'helpdesk proxy call failed: ' + str(e)}), 502
         if not _pd.get('ok'):
+            _store_set('wiom_keka_sync_status', {'at': int(time.time()), 'ok': False,
+                       'error': 'helpdesk proxy: ' + str(_pd.get('error') or _pd)})
             return jsonify({'ok': False, 'error': 'helpdesk proxy: ' + str(_pd.get('error') or _pd)}), 502
         emps_raw = _pd.get('employees') or []
         assets_raw = _pd.get('assets') or []
@@ -271,6 +330,7 @@ def api_keka_sync():
                 'location': _txt(a.get('location')) or emp.get('location', ''), 'condition': 'Good',
                 'status': 'Assigned' if a_name else 'Available',
                 'ack': 'Not Applicable', 'assignedTo': a_name,
+                'assignDate': (a.get('assignedOn') or a.get('assignedDate') or '')[:10],
                 'wiomId': emp.get('wiomId', ''), 'dept': emp.get('dept', ''), 'empEmail': a_email,
                 'managerName': emp.get('managerName', ''), 'managerEmail': emp.get('managerEmail', ''),
                 'vendor': '', 'invoice': '',
@@ -305,6 +365,9 @@ def api_keka_sync():
 
         _store_set('wiom_keka_employees', employees_out)
         _store_set('wiom_keka_assets', assets_out)
+        _store_set('wiom_keka_sync_status', {'at': int(time.time()), 'ok': True,
+                   'employees': len(employees_out), 'assets': len(assets_out),
+                   'exEmployeeHeld': ex_held})
 
         return jsonify({
             'exEmployeeHeld': ex_held,
@@ -318,6 +381,7 @@ def api_keka_sync():
             },
         })
     except Exception as e:
+        _store_set('wiom_keka_sync_status', {'at': int(time.time()), 'ok': False, 'error': str(e)})
         return jsonify({'ok': False, 'error': str(e)}), 500
 
 # ─── DEBUG: outbound (egress) IP — to whitelist in Keka ─────
