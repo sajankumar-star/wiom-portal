@@ -234,9 +234,10 @@ def api_keka_sync():
                 if has('adapter', 'charger'): return ('COMPUTER HARDWARE', 'Others')
                 return ('LAPTOPS', 'Laptop')
             # 3) Everything else, by keyword.
-            if has('monitor', 'screen', ' lcd', ' tft', ' inch', '"'):        return ('MONITORS', 'Monitor')
-            if has('keyboard', 'keyborad'):                                    return ('COMPUTER HARDWARE', 'Keyboard')
-            if has('mouse'):                                                   return ('COMPUTER HARDWARE', 'Mouse')
+            if has('monitor', 'screen', ' lcd', ' tft', ' inch', '"', 'ultragear', 'ultrawide') \
+               or n.strip().startswith(('lg 2', 'lg 3')):                      return ('MONITORS', 'Monitor')
+            if has('keyboard', 'keyborad', 'mx keys'):                         return ('COMPUTER HARDWARE', 'Keyboard')
+            if has('mouse', 'mx master', 'mx anywhere', 'mx vertical'):        return ('COMPUTER HARDWARE', 'Mouse')
             if has('headset', 'headphone', 'earphone', 'earbud', 'jabra', 'evolve', 'airpod'):
                 return ('COMPUTER HARDWARE', 'Headset')
             if has('bag'):                                                     return ('ACCESSORIES', 'Bags')
@@ -245,7 +246,8 @@ def api_keka_sync():
             if has('router', 'switch', 'ethernet', 'access point', 'wifi', 'network'):
                 return ('NETWORKING', 'Networking')
             if has('imei', 'galaxy', 'redmi', 'oppo', 'vivo', 'realme', 'nokia', 'iphone',
-                   'poco', 'moto', 'sm-m', 'sm-a', '5g', 'smartphone'):        return ('MOBILES', 'Mobile')
+                   'poco', 'moto', 'sm-m', 'sm-a', '5g', 'smartphone', 'samsungm', 'galaxy m'):
+                return ('MOBILES', 'Mobile')
             if has('adapter', 'charger', 'dock'):                              return ('COMPUTER HARDWARE', 'Others')
             if has('desktop', 'raspberry', 'mini pc'):                         return ('COMPUTER HARDWARE', 'Desktop')
             if has('license', 'office 365', 'windows', 'adobe', 'software'):   return ('SOFTWARE', 'Software License')
@@ -290,10 +292,22 @@ def api_keka_sync():
             merged_assets[_akey(a)] = a
         assets_out = list(merged_assets.values())
 
+        # Flag assets still assigned to someone who is NOT an active employee
+        # (held by an ex-employee) so the app can surface unreturned assets.
+        _active_names = set((e.get('name') or '').strip().lower() for e in employees_out)
+        ex_held = 0
+        for a in assets_out:
+            is_ex = bool(a.get('status') == 'Assigned' and a.get('assignedTo')
+                         and a['assignedTo'].strip().lower() not in _active_names)
+            a['exEmployee'] = is_ex
+            if is_ex:
+                ex_held += 1
+
         _store_set('wiom_keka_employees', employees_out)
         _store_set('wiom_keka_assets', assets_out)
 
         return jsonify({
+            'exEmployeeHeld': ex_held,
             'ok': True,
             'employees': len(employees_out), 'employeesFromKeka': len(emp_map),
             'assets': len(assets_out), 'assetsFromKeka': len(keka_assets),
