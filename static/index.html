@@ -1266,7 +1266,8 @@ function doLogin() {
   const p = document.getElementById('auth-pass').value;
   const users = getUsers();
   const found = users.find(x => x.username.toLowerCase() === u && x.password === p);
-  if (found) {
+  if (!found) { document.getElementById('auth-err').style.display = 'block'; return; }
+  const proceed = () => {
     currentUser = found;
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
@@ -1276,9 +1277,14 @@ function doLogin() {
     // Restrict viewer role
     applyRoleRestrictions();
     DB.init().then(()=>{ seedData(); initSubTabs(); switchView('dashboard'); });
-  } else {
-    document.getElementById('auth-err').style.display = 'block';
-  }
+  };
+  // Establish a server session so the data API can require login. This is a
+  // no-op (fail-open) until PORTAL_PASSWORD + PORTAL_AUTH_SECRET are set on the
+  // server, and any network error also falls through to the old behaviour.
+  fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:u, password:p})})
+    .then(r=>r.json())
+    .then(res=>{ if (res && res.ok === false) document.getElementById('auth-err').style.display = 'block'; else proceed(); })
+    .catch(()=>proceed());
 }
 
 function applyRoleRestrictions() {
@@ -4865,6 +4871,39 @@ function showCalDayDetail(day, month, year) {
 // ââââââââââââââââââââââââââââââââââââââââââââââ
 //  DASHBOARD
 // ââââââââââââââââââââââââââââââââââââââââââââââ
+function syncTimeAgo(epochSec) {
+  if (!epochSec) return 'never';
+  const s = Math.floor(Date.now()/1000 - epochSec);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s/60) + ' min ago';
+  if (s < 86400) return Math.floor(s/3600) + ' hr ago';
+  return Math.floor(s/86400) + ' days ago';
+}
+function syncBarHTML() {
+  const st = DB.get('sync_status', null);
+  const failed = st && st.ok === false;
+  const bg = failed ? '#fef2f2' : '#f0fdf4', bd = failed ? '#fecaca' : '#bbf7d0', col = failed ? '#dc2626' : '#16a34a';
+  const icon = failed ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill';
+  const msg = !st ? 'Keka: abhi tak koi sync nahi hua'
+    : failed ? ('Keka sync FAIL — ' + escH(String(st.error||'').slice(0,90)))
+    : ('Keka synced ' + syncTimeAgo(st.at) + ' · ' + (st.employees||0) + ' employees, ' + (st.assets||0) + ' assets');
+  return `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;background:${bg};border:1.5px solid ${bd};border-radius:12px">
+    <i class="bi ${icon}" style="color:${col};font-size:16px"></i>
+    <span style="font-size:13px;color:${col};font-weight:600;flex:1;min-width:180px">${msg}</span>
+    <button id="sync-now-btn" class="btn btn-sm" style="background:#E91E8C;color:#fff;border:none" onclick="doSyncNow()"><i class="bi bi-arrow-repeat"></i> Sync Now</button>
+  </div>`;
+}
+async function doSyncNow() {
+  const btn = document.getElementById('sync-now-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Syncing...'; }
+  try {
+    const d = await fetch('/api/keka-sync', {method:'POST'}).then(r=>r.json());
+    if (d.ok) showToast('Keka sync complete — ' + d.employees + ' employees, ' + d.assets + ' assets', 'success');
+    else showToast('Sync fail: ' + (d.error||'unknown'), 'error');
+  } catch (e) { showToast('Sync error: ' + e, 'error'); }
+  await DB.init();
+  renderDashboard();
+}
 function renderDashboard() {
   const assets = getAssets();
   const total = assets.length;
@@ -4917,6 +4956,7 @@ function renderDashboard() {
   }).join('') : `<div style="color:#aaa;font-size:13px;padding:12px">No assets expiring in next 30 days</div>`;
 
   document.getElementById('main-content').innerHTML = `
+  ${syncBarHTML()}
   <div class="dash-stat-cards">
     ${statCards.map(c=>`<div class="dash-stat-card" onclick="switchView('${c.view}')">
       <div class="sc-icon" style="background:${c.bg};color:${c.col}"><i class="bi ${c.icon}"></i></div>
