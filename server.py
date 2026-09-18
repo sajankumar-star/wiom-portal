@@ -349,7 +349,31 @@ def api_keka_sync():
         for x in existing_assets:
             merged_assets[_akey(x)] = x
         for a in keka_assets:
-            merged_assets[_akey(a)] = a
+            key = _akey(a)
+            old = merged_assets.get(key)
+            new_to = (a.get('assignedTo') or '').strip().lower()
+            if old is not None:
+                old_to = (old.get('assignedTo') or '').strip().lower()
+                if a.get('status') == 'Assigned' and new_to and new_to != old_to:
+                    # Newly (re)assigned to a DIFFERENT person → needs acknowledgement.
+                    a['ack'] = 'Pending'
+                    a['ackDate'] = ''
+                else:
+                    # Keep whatever acknowledgement state the app already had — we
+                    # NEVER force old, un-acknowledged assignments into Pending, and
+                    # a completed acknowledgement is preserved across every sync.
+                    a['ack'] = old.get('ack', a.get('ack'))
+                    if old.get('ackDate'):
+                        a['ackDate'] = old.get('ackDate')
+                # Preserve app-entered fields that Keka does not provide.
+                for f in ('vendor', 'invoice', 'desc', 'photo', 'price'):
+                    if not a.get(f) and old.get(f):
+                        a[f] = old.get(f)
+            else:
+                # Brand-new asset row: if it arrives already assigned, require ack.
+                if a.get('status') == 'Assigned' and new_to:
+                    a['ack'] = 'Pending'
+            merged_assets[key] = a
         assets_out = list(merged_assets.values())
 
         # Flag assets still assigned to someone who is NOT an active employee
