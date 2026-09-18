@@ -863,6 +863,16 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
         </div>
         <div class="form-row">
           <div class="form-group">
+            <label>Quantity in Stock <small style="color:#aaa">(consumables — blank = 1 unit)</small></label>
+            <input type="number" id="f-qty" placeholder="e.g. 25" min="0" step="1">
+          </div>
+          <div class="form-group">
+            <label>Low-Stock Alert Below</label>
+            <input type="number" id="f-minqty" placeholder="e.g. 5" min="0" step="1">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
             <label>Asset Status</label>
             <select id="f-status">
               <option value="">Select Status</option>
@@ -1276,7 +1286,7 @@ function doLogin() {
     if (av) { av.textContent = found.initials || getUserInitials(found.name); av.title = found.name + ' (' + found.role + ')'; }
     // Restrict viewer role
     applyRoleRestrictions();
-    DB.init().then(()=>{ seedData(); initSubTabs(); switchView('dashboard'); });
+    DB.init().then(()=>{ seedData(); autoOffboardFromKeka(); initSubTabs(); switchView('dashboard'); });
   };
   // Establish a server session so the data API can require login. This is a
   // no-op (fail-open) until PORTAL_PASSWORD + PORTAL_AUTH_SECRET are set on the
@@ -2535,6 +2545,8 @@ function openAddModal() {
     if (selectedType) document.getElementById('f-type').value = selectedType;
   } else { updateTypeOptions(); }
   document.getElementById('f-price').value = '';
+  document.getElementById('f-qty').value = '';
+  document.getElementById('f-minqty').value = '';
   clearPhoto();
   document.getElementById('asset-modal').classList.add('show');
 }
@@ -2566,6 +2578,8 @@ function editAsset(id) {
   document.getElementById('f-ram').value = a.ram||'';
   document.getElementById('f-storage').value = a.storage||'';
   document.getElementById('f-price').value = a.price||'';
+  document.getElementById('f-qty').value = (a.qty===0||a.qty) ? a.qty : '';
+  document.getElementById('f-minqty').value = (a.minQty===0||a.minQty) ? a.minQty : '';
   if (a.photo) {
     document.getElementById('f-photo-data').value = a.photo;
     document.getElementById('f-photo-img').src = a.photo;
@@ -2603,6 +2617,7 @@ function viewAsset(id) {
           ${infoRow('Asset ID', `<code style="background:#f0f0f8;padding:2px 6px;border-radius:4px;font-size:12px">${escH(a.assetId)}</code>`)}
           ${infoRow('Serial No', escH(a.serial))}
           ${infoRow('Condition', badgeCondition(a.condition))}
+          ${(a.qty!=null) ? infoRow('Quantity in Stock', escH(String(a.qty)) + ((a.minQty!=null && Number(a.qty)<=Number(a.minQty)) ? ' <span style="color:#f97316;font-weight:700">(LOW STOCK)</span>' : '')) : ''}
           ${infoRow('Specs / Config', escH(a.desc))}
           ${infoRow('Vendor', escH(a.vendor))}
           ${infoRow('Invoice No', escH(a.invoice))}
@@ -2760,6 +2775,10 @@ function saveAsset() {
   const desc = document.getElementById('f-desc').value.trim();
   const price = parseFloat(document.getElementById('f-price').value)||0;
   const photo = document.getElementById('f-photo-data').value||'';
+  const qtyRaw = document.getElementById('f-qty').value.trim();
+  const qty = qtyRaw === '' ? null : (parseInt(qtyRaw,10)||0);
+  const minQtyRaw = document.getElementById('f-minqty').value.trim();
+  const minQty = minQtyRaw === '' ? null : (parseInt(minQtyRaw,10)||0);
 
   if (!cat) { showToast('Please select a category', 'error'); return; }
   if (!type) { showToast('Please select a type', 'error'); return; }
@@ -2772,13 +2791,13 @@ function saveAsset() {
   if (editId) {
     const idx = assets.findIndex(a=>a.id===editId);
     if (idx>-1) {
-      assets[idx] = {...assets[idx], category:cat, type, assetId, name, serial, location:loc, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo,
+      assets[idx] = {...assets[idx], category:cat, type, assetId, name, serial, location:loc, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty,
         ack: status==='Assigned' ? (assets[idx].ack||'Pending') : 'Not Applicable'};
       saveAssets(assets);
       showToast('Asset updated successfully', 'success');
     }
   } else {
-    const newAsset = {id:genId(), category:cat, type, assetId, name, serial, location:loc, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo,
+    const newAsset = {id:genId(), category:cat, type, assetId, name, serial, location:loc, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty,
       ack: status==='Assigned' ? 'Pending' : 'Not Applicable'};
     assets.push(newAsset);
     saveAssets(assets);
@@ -3881,7 +3900,7 @@ async function kekaSyncNow() {
 }
 
 function exportBackup() {
-  const keys = ['assets','users','audit_log','employees','maintenance_log','email_settings','email_log','return_history','custom_categories','repair_log'];
+  const keys = ['assets','users','audit_log','employees','maintenance_log','email_settings','email_log','return_history','custom_categories','repair_log','offboarding','daily_notes','wiom_asset_costs'];
   const backup = {};
   keys.forEach(k => { backup[k] = DB.get(k, null); });
   const json = JSON.stringify(backup, null, 2);
@@ -3922,7 +3941,7 @@ function importBackup(e) {
   reader.onload = ev => {
     try {
       const data = JSON.parse(ev.target.result);
-      const keys = ['assets','users','audit_log','employees','maintenance_log','email_settings','email_log','return_history','custom_categories','repair_log'];
+      const keys = ['assets','users','audit_log','employees','maintenance_log','email_settings','email_log','return_history','custom_categories','repair_log','offboarding','daily_notes','wiom_asset_costs'];
       keys.forEach(k => { if (data[k] !== undefined && data[k] !== null) DB.set(k, data[k]); });
       showToast('Backup imported â reloading...', 'success');
       setTimeout(() => location.reload(), 1500);
@@ -4492,6 +4511,34 @@ function renderEmpAssetSummary() {
   <div id="emp-asset-cards">${buildCards('')}</div>`;
 }
 
+// Auto-create offboarding entries from Keka: any ex-employee who still holds
+// assets (flagged server-side as a.exEmployee) gets an offboarding task with
+// their held assets pre-filled — unless one already exists for them (any status).
+function autoOffboardFromKeka() {
+  try {
+    const assets = getAssets();
+    const obs = DB.get('offboarding', []);
+    const existing = new Set(obs.map(o => (o.empName||'').toLowerCase().trim()));
+    const byPerson = {};
+    assets.filter(a => a.exEmployee && a.status === 'Assigned' && a.assignedTo)
+          .forEach(a => { (byPerson[a.assignedTo] = byPerson[a.assignedTo] || []).push(a); });
+    let added = 0;
+    Object.entries(byPerson).forEach(([name, list]) => {
+      if (existing.has(name.toLowerCase().trim())) return;   // don't duplicate / recreate
+      obs.unshift({
+        id: 'OB-KEKA-' + (list[0].wiomId || name.replace(/\s+/g,'')),
+        empId: '', empName: name, wiomId: list[0].wiomId || '', dept: list[0].dept || '',
+        lastDay: '', hrContact: '', status: 'In Progress',
+        checklist: {}, assets: list.map(a => a.id),
+        startedBy: 'Keka Auto-sync', startedAt: new Date().toLocaleString('en-IN'),
+        source: 'keka-auto'
+      });
+      added++;
+    });
+    if (added) { DB.set('offboarding', obs); console.log('[auto-offboard] created', added, 'entries'); }
+  } catch (e) { console.warn('auto-offboard failed', e); }
+}
+
 function renderOffboarding() {
   const offboardings = DB.get('offboarding', []).filter(o=>o.status!=='Completed');
   const completed = DB.get('offboarding', []).filter(o=>o.status==='Completed');
@@ -4893,6 +4940,15 @@ function syncBarHTML() {
     <button id="sync-now-btn" class="btn btn-sm" style="background:#E91E8C;color:#fff;border:none" onclick="doSyncNow()"><i class="bi bi-arrow-repeat"></i> Sync Now</button>
   </div>`;
 }
+function lowStockBarHTML() {
+  const low = getAssets().filter(a => a.qty != null && a.minQty != null && Number(a.qty) <= Number(a.minQty));
+  if (!low.length) return '';
+  const items = low.slice(0,8).map(a => escH(a.name) + ' (' + a.qty + ')').join(', ');
+  return `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;background:#fff7ed;border:1.5px solid #fed7aa;border-radius:12px">
+    <i class="bi bi-box-seam" style="color:#f97316;font-size:16px"></i>
+    <span style="font-size:13px;color:#c2410c;font-weight:600">Low stock (${low.length}): ${items}${low.length>8?' …':''}</span>
+  </div>`;
+}
 async function doSyncNow() {
   const btn = document.getElementById('sync-now-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Syncing...'; }
@@ -4957,6 +5013,7 @@ function renderDashboard() {
 
   document.getElementById('main-content').innerHTML = `
   ${syncBarHTML()}
+  ${lowStockBarHTML()}
   <div class="dash-stat-cards">
     ${statCards.map(c=>`<div class="dash-stat-card" onclick="switchView('${c.view}')">
       <div class="sc-icon" style="background:${c.bg};color:${c.col}"><i class="bi ${c.icon}"></i></div>
