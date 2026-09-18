@@ -2150,6 +2150,7 @@ function filterAssignedTable() {
   );
   if (deptF) assets = assets.filter(a=>a.dept===deptF);
   if (locF) assets = assets.filter(a=>a.location===locF);
+  if (document.getElementById('assigned-ex-only')?.checked) assets = assets.filter(a=>a.exEmployee);
   const tbody = document.getElementById('assigned-tbody');
   const countEl = document.getElementById('assigned-count');
   if (countEl) countEl.textContent = `(${assets.length})`;
@@ -2158,7 +2159,7 @@ function filterAssignedTable() {
   tbody.innerHTML = assets.map(a=>`
     <tr>
       <td>
-        <div style="font-weight:600">${escH(a.assignedTo)}</div>
+        <div style="font-weight:600">${escH(a.assignedTo)}${a.exEmployee?` <span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;vertical-align:middle;white-space:nowrap">EX-EMPLOYEE</span>`:''}</div>
         ${a.wiomId?`<div style="font-size:11px;color:#888">${escH(a.wiomId)}</div>`:''}
         ${a.dept?`<div style="font-size:11px;color:#888">${escH(a.dept)}</div>`:''}
       </td>
@@ -2181,7 +2182,7 @@ function renderAssigned() {
   const rows = allAssigned.map(a=>`
     <tr>
       <td>
-        <div style="font-weight:600">${escH(a.assignedTo)}</div>
+        <div style="font-weight:600">${escH(a.assignedTo)}${a.exEmployee?` <span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;vertical-align:middle;white-space:nowrap">EX-EMPLOYEE</span>`:''}</div>
         ${a.wiomId?`<div style="font-size:11px;color:#888">${escH(a.wiomId)}</div>`:''}
         ${a.dept?`<div style="font-size:11px;color:#888">${escH(a.dept)}</div>`:''}
       </td>
@@ -2212,6 +2213,7 @@ function renderAssigned() {
     </div>
     <select id="assigned-dept-filter" onchange="filterAssignedTable()" style="padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;color:#444;outline:none;background:#fff"><option value="">All Departments</option>${[...new Set(getAssets().filter(a=>a.status==='Assigned'&&a.dept).map(a=>a.dept))].sort().map(d=>`<option>${escH(d)}</option>`).join('')}</select>
     <select id="assigned-loc-filter" onchange="filterAssignedTable()" style="padding:9px 12px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;color:#444;outline:none;background:#fff"><option value="">All Locations</option><option>Gurugram</option><option>Mumbai</option><option>Saket</option><option>New Delhi</option></select>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#dc2626;font-weight:600;cursor:pointer;white-space:nowrap;padding:8px 12px;border:1.5px solid #fecaca;border-radius:10px;background:#fef2f2"><input type="checkbox" id="assigned-ex-only" onchange="filterAssignedTable()" style="width:15px;height:15px;accent-color:#dc2626;cursor:pointer"> ⚠ Ex-employee held (${allAssigned.filter(a=>a.exEmployee).length})</label>
   </div>
   <div class="white-card">
     <div class="ack-table-wrap">
