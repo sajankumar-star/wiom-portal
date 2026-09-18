@@ -400,7 +400,7 @@ def api_myip():
 # ─── AUTO-SYNC: refresh Keka data on startup + every 15 minutes ────────────
 # So the portal always shows fresh Keka data without anyone clicking anything.
 # Interval is configurable via KEKA_SYNC_MINUTES; disable with KEKA_AUTO_SYNC=0.
-import threading, time as _time
+import threading, time as _time, datetime as _dt
 
 def _auto_keka_sync_loop():
     port = int(os.environ.get('PORT', 8080))
@@ -425,6 +425,82 @@ def _auto_keka_sync_loop():
 
 if os.environ.get('KEKA_AUTO_SYNC', '1') == '1' and KEKA_CLIENT_ID:
     threading.Thread(target=_auto_keka_sync_loop, daemon=True).start()
+
+# ─── SLACK DAILY DIGEST (via the helpdesk Slack bot) ───────────────────────
+def _build_digest():
+    assets = _store_get('wiom_keka_assets', []) or []
+    pending_ack = [a for a in assets if a.get('ack') == 'Pending']
+    ex_held     = [a for a in assets if a.get('exEmployee')]
+    today = _dt.date.today()
+    soon  = today + _dt.timedelta(days=30)
+    exp = []
+    for a in assets:
+        w = a.get('warranty')
+        if not w:
+            continue
+        try:
+            d = _dt.date.fromisoformat(str(w)[:10])
+        except Exception:
+            continue
+        if today <= d <= soon:
+            exp.append(a)
+    lines = [
+        '• *Pending acknowledgements:* %d' % len(pending_ack),
+        '• *Warranty expiring (30 days):* %d' % len(exp),
+        '• *Assets to recover from ex-employees:* %d' % len(ex_held),
+    ]
+    if ex_held:
+        lines.append('')
+        lines.append('*Recover from ex-employees:*')
+        for a in ex_held[:12]:
+            lines.append('   • %s — %s' % (a.get('name', 'Asset'), a.get('assignedTo', '')))
+    return '\n'.join(lines)
+
+def _send_digest():
+    if not KEKA_CLIENT_SECRET:
+        return {'ok': False, 'error': 'no client secret configured'}
+    body = {'clientSecret': KEKA_CLIENT_SECRET, 'header': 'WIOM Asset Portal — Daily Digest',
+            'text': _build_digest()}
+    ch = os.environ.get('SLACK_ASSET_CHANNEL', '')
+    if ch:
+        body['channel'] = ch
+    else:
+        body['email'] = os.environ.get('SLACK_DIGEST_EMAIL', 'sajan.kumar@wiom.in')
+    url = os.environ.get('HELPDESK_SLACK_URL',
+                         'https://wiom-helpdesk-production.up.railway.app/api/agent/slack-notify')
+    req = urllib.request.Request(url, data=json.dumps(body).encode(),
+                                 headers={'Content-Type': 'application/json'})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.loads(r.read().decode())
+
+@app.route('/api/send-digest', methods=['POST'])
+def api_send_digest():
+    try:
+        return jsonify(_send_digest())
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+def _digest_loop():
+    _time.sleep(120)
+    last_sent = ''
+    try:
+        hour = int(os.environ.get('SLACK_DIGEST_HOUR', '9'))
+    except ValueError:
+        hour = 9
+    while True:
+        try:
+            now = _dt.datetime.utcnow() + _dt.timedelta(hours=5, minutes=30)  # IST
+            today = now.strftime('%Y-%m-%d')
+            if now.hour == hour and last_sent != today:
+                d = _send_digest()
+                last_sent = today
+                print('[digest] sent for %s: %s' % (today, d.get('ok')), flush=True)
+        except Exception as e:
+            print('[digest] error:', e, flush=True)
+        _time.sleep(20 * 60)
+
+if os.environ.get('SLACK_DIGEST', '1') == '1' and KEKA_CLIENT_SECRET:
+    threading.Thread(target=_digest_loop, daemon=True).start()
 
 # ─── SERVE PORTAL ──────────────────────────────────────────
 @app.route('/')
