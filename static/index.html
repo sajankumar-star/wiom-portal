@@ -433,7 +433,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
     <div class="topbar">
       <div class="search-wrap">
         <i class="bi bi-search si"></i>
-        <input type="text" id="global-search" placeholder="Search assets, employees, serial no..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}">
+        <input type="text" id="global-search" placeholder="Search assets, employees, serial no..." autocomplete="off" oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}else if(event.key==='Enter'){event.preventDefault();globalSearchEnter();}">
       </div>
       <div class="spacer"></div>
       <button class="btn-add-asset" onclick="openAddModal()"><i class="bi bi-plus-lg"></i><span>Add Asset</span></button>
@@ -1941,34 +1941,68 @@ function applyFilters() {
   document.getElementById('asset-main').innerHTML = renderAssetTable();
 }
 
-function globalSearch(q) {
-  const trimmed = q.trim();
-  if (!trimmed) {
-    // Clear whichever local search is active
-    const fsearch = document.getElementById('f-search');
-    const asearch = document.getElementById('assigned-search');
-    if (fsearch) { fsearch.value = ''; applyFilters(); }
-    if (asearch) { asearch.value = ''; filterAssignedTable(); }
-    return;
+function _globalSearchDD() {
+  let dd = document.getElementById('global-search-dd');
+  if (!dd) {
+    dd = document.createElement('div');
+    dd.id = 'global-search-dd';
+    dd.style.cssText = 'position:absolute;top:100%;left:0;right:0;margin-top:6px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.15);max-height:380px;overflow-y:auto;z-index:200;display:none';
+    const wrap = document.querySelector('.topbar .search-wrap');
+    if (wrap) wrap.appendChild(dd);
   }
-  if (currentView === 'assigned') {
-    // Filter within Assigned Assets
-    const asearch = document.getElementById('assigned-search');
-    if (asearch) { asearch.value = trimmed; filterAssignedTable(); }
-    return;
-  }
-  if (currentView === 'list') {
-    const fsearch = document.getElementById('f-search');
-    if (fsearch) { fsearch.value = trimmed; applyFilters(); }
-    return;
-  }
-  // Other views: go to Asset List
-  switchView('list');
-  setTimeout(() => {
-    const fsearch = document.getElementById('f-search');
-    if (fsearch) { fsearch.value = trimmed; applyFilters(); }
-  }, 100);
+  return dd;
 }
+function globalSearch(q) {
+  const trimmed = (q||'').trim();
+  const dd = _globalSearchDD();
+  if (!dd) return;
+  if (!trimmed) { dd.style.display = 'none'; dd.innerHTML=''; return; }
+  const ql = trimmed.toLowerCase();
+  const assets = getAssets();
+  const matches = assets.filter(a =>
+    (a.assetId||'').toLowerCase().includes(ql) ||
+    (a.serial||'').toLowerCase().includes(ql) ||
+    (a.name||'').toLowerCase().includes(ql) ||
+    (a.assignedTo||'').toLowerCase().includes(ql) ||
+    (a.wiomId||'').toLowerCase().includes(ql) ||
+    (a.empEmail||'').toLowerCase().includes(ql)
+  ).slice(0, 25);
+  if (!matches.length) {
+    dd.innerHTML = `<div style="padding:14px;color:#9ca3af;font-size:13px">Koi asset nahi mila for "<strong>${escH(trimmed)}</strong>"</div>`;
+    dd.style.display = 'block'; return;
+  }
+  dd.innerHTML = `<div style="padding:8px 14px;font-size:11px;color:#9ca3af;font-weight:600;border-bottom:1px solid #f3f4f6">${matches.length} result${matches.length>1?'s':''}</div>` +
+    matches.map(a => `<div onmousedown="globalSearchOpen('${escH(a.id)}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px" onmouseover="this.style.background='#F5F7FB'" onmouseout="this.style.background='#fff'">
+      <div style="width:32px;height:32px;border-radius:8px;background:#eff6ff;color:#2563EB;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="bi bi-${catIcon(a.category)}"></i></div>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(a.name)}</div>
+      <div style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><code style="background:#f3f4f6;padding:1px 5px;border-radius:4px">${escH(a.assetId)}</code>${a.serial?' · S/No '+escH(a.serial):''}${a.assignedTo?' · '+escH(a.assignedTo):''}</div></div>
+      ${badgeStatus(a.status)}
+    </div>`).join('');
+  dd.style.display = 'block';
+}
+function globalSearchOpen(id) {
+  const dd = document.getElementById('global-search-dd');
+  if (dd) dd.style.display = 'none';
+  const s = document.getElementById('global-search');
+  if (s) s.value = '';
+  if (typeof viewAsset === 'function') viewAsset(id);
+}
+function globalSearchEnter() {
+  const s = document.getElementById('global-search');
+  const q = (s?.value||'').trim().toLowerCase();
+  if (!q) return;
+  const assets = getAssets();
+  // exact assetId or serial match → open directly
+  const exact = assets.find(a => (a.assetId||'').toLowerCase()===q || (a.serial||'').toLowerCase()===q);
+  const one = exact || (assets.filter(a=>(a.assetId||'').toLowerCase().includes(q)||(a.serial||'').toLowerCase().includes(q)||(a.name||'').toLowerCase().includes(q)).length===1
+    ? assets.find(a=>(a.assetId||'').toLowerCase().includes(q)||(a.serial||'').toLowerCase().includes(q)||(a.name||'').toLowerCase().includes(q)) : null);
+  if (one) globalSearchOpen(one.id);
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('global-search-dd');
+  const s = document.getElementById('global-search');
+  if (dd && s && !s.contains(e.target) && !dd.contains(e.target)) dd.style.display='none';
+});
 
 // Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
 //  ASSIGNED ASSETS
