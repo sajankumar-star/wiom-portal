@@ -400,6 +400,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
       <div class="ng-title">ASSET MANAGEMENT</div>
       <div class="nav-item" data-view="list" onclick="navGo('list')"><i class="bi bi-laptop"></i><span>All Assets</span></div>
       <div class="nav-item" data-view="assigned" onclick="navGo('assigned')"><i class="bi bi-person-badge"></i><span>Assigned</span></div>
+      <div class="nav-item" data-view="accessories" onclick="navGo('accessories')"><i class="bi bi-plugin"></i><span>Accessories</span></div>
       <div class="nav-item" data-view="returns" onclick="navGo('returns')"><i class="bi bi-arrow-return-left"></i><span>Returns</span></div>
 
       <div class="ng-title">IT OPERATIONS</div>
@@ -1610,6 +1611,7 @@ function switchView(view) {
   else if (view === 'summary') renderSummary();
   else if (view === 'list') renderAssetList();
   else if (view === 'assigned') renderAssigned();
+  else if (view === 'accessories') renderAccessories();
   else if (view === 'inbox') renderInbox();
   else if (view === 'ack') renderAck();
   else if (view === 'returns') renderReturnHistory();
@@ -4169,6 +4171,98 @@ function saveReturn() {
 // Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
 //  RETURN HISTORY VIEW
 // Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
+// ─── ACCESSORIES INVENTORY ───
+const ACCESSORY_TYPES = ['Mouse','Keyboard','Adapter','Monitor','Headphone','Bags','Phone','SIM','Desktop','UPS','Others'];
+const ACCESSORY_ID_PREFIX = {
+  'Mouse':'MOU','Keyboard':'KEY','Adapter':'CH','Monitor':'MON','Headphone':'HP',
+  'Bags':'BAG','Phone':'PH','SIM':'SIM','Desktop':'DT','UPS':'UPS','Others':'ACC'
+};
+function nextAccessoryId(type) {
+  const prefix = ACCESSORY_ID_PREFIX[type] || 'ACC';
+  const assets = getAssets();
+  let max = 0;
+  assets.forEach(a => {
+    const m = String(a.assetId||'').match(new RegExp('^'+prefix+'-(\\d+)$','i'));
+    if (m) max = Math.max(max, parseInt(m[1],10));
+  });
+  return prefix + '-' + String(max+1).padStart(3,'0');
+}
+function isAccessory(a) { return ACCESSORY_TYPES.includes(a.type); }
+function addAccessoryQuick(type) {
+  openAddModal();
+  setTimeout(()=>{
+    // find the category that contains this type
+    let cat = '';
+    for (const c in CATEGORIES) { if ((CATEGORIES[c]||[]).includes(type)) { cat = c; break; } }
+    const catEl = document.getElementById('f-category');
+    if (cat && catEl) { catEl.value = cat; if (typeof updateTypeOptions==='function') updateTypeOptions(); }
+    const typeEl = document.getElementById('f-type'); if (typeEl) typeEl.value = type;
+    const idEl = document.getElementById('f-asset-id'); if (idEl) idEl.value = nextAccessoryId(type);
+    const stEl = document.getElementById('f-status'); if (stEl) stEl.value = 'Available';
+  }, 60);
+}
+function renderAccessories() {
+  const assets = getAssets();
+  const accs = assets.filter(isAccessory);
+  const byType = {};
+  ACCESSORY_TYPES.forEach(t=>byType[t]={total:0,assigned:0,available:0});
+  accs.forEach(a=>{
+    if(!byType[a.type]) byType[a.type]={total:0,assigned:0,available:0};
+    byType[a.type].total++;
+    if(a.status==='Assigned') byType[a.type].assigned++;
+    else if(a.status==='Available'||a.status==='In Stock') byType[a.type].available++;
+  });
+  const typesWithData = Object.keys(byType).filter(t=>byType[t].total>0);
+  const total = accs.length, assigned = accs.filter(a=>a.status==='Assigned').length, available = accs.filter(a=>a.status==='Available'||a.status==='In Stock').length;
+
+  const summaryCards = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
+    <div style="background:#fff;border:1px solid #e8e8f0;border-radius:12px;padding:16px"><div style="font-size:12px;color:#6b7280">Total Accessories</div><div style="font-size:24px;font-weight:800;color:#2563EB">${total}</div></div>
+    <div style="background:#fff;border:1px solid #e8e8f0;border-radius:12px;padding:16px"><div style="font-size:12px;color:#6b7280">Assigned</div><div style="font-size:24px;font-weight:800;color:#3b82f6">${assigned}</div></div>
+    <div style="background:#fff;border:1px solid #e8e8f0;border-radius:12px;padding:16px"><div style="font-size:12px;color:#6b7280">Available</div><div style="font-size:24px;font-weight:800;color:#10b981">${available}</div></div>
+  </div>`;
+
+  const quickAdd = `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+    ${['Mouse','Keyboard','Adapter','Monitor','Headphone'].map(t=>`<button class="btn btn-outline btn-sm" onclick="addAccessoryQuick('${t}')"><i class="bi bi-plus"></i> ${t}${t==='Adapter'?' / Charger':''}</button>`).join('')}
+  </div>`;
+
+  const rows = accs.slice().sort((a,b)=>(a.type||'').localeCompare(b.type||'')).map(a=>`<tr style="border-bottom:1px solid #f5f5f5">
+    <td style="padding:9px 12px"><code style="background:#eff6ff;color:#2563EB;padding:2px 7px;border-radius:5px;font-size:12px;font-weight:600">${escH(a.assetId)}</code></td>
+    <td style="padding:9px 12px;font-weight:600">${escH(a.name)}</td>
+    <td style="padding:9px 12px;font-size:12px;color:#6b7280">${escH(a.type)}</td>
+    <td style="padding:9px 12px">${badgeStatus(a.status)}</td>
+    <td style="padding:9px 12px;font-size:13px">${a.assignedTo?escH(a.assignedTo):'<span style="color:#bbb">—</span>'}</td>
+    <td style="padding:9px 12px;text-align:right">
+      <button class="btn btn-sm btn-outline" onclick="viewAsset('${escH(a.id)}')" title="Details"><i class="bi bi-eye"></i></button>
+      ${a.status==='Assigned'
+        ? `<button class="btn btn-sm" style="background:#fff7ed;color:#f97316;border:1.5px solid #fed7aa" onclick="openReturnModal('${escH(a.id)}')"><i class="bi bi-box-arrow-in-left"></i></button>`
+        : `<button class="btn btn-sm btn-primary" onclick="openAssignModal('${escH(a.id)}')"><i class="bi bi-person-check"></i></button>`}
+    </td>
+  </tr>`).join('');
+
+  document.getElementById('main-content').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <h2><i class="bi bi-plugin" style="color:#2563EB"></i> Accessories Inventory</h2>
+      <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> Add Accessory</button>
+    </div>
+    <div style="font-size:13px;color:#6b7280;margin-bottom:18px">Har charger / mouse / monitor ka apna unique ID — kaun sa kis employee ke paas hai, sab yahan.</div>
+    ${summaryCards}
+    <div style="font-size:12px;font-weight:700;color:#0B1220;margin-bottom:8px">Quick Add</div>
+    ${quickAdd}
+    <div style="background:#fff;border:1px solid #e8e8f0;border-radius:12px;overflow:hidden">
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:#fafafa">
+          <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">ID</th>
+          <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">Name</th>
+          <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">Type</th>
+          <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">Status</th>
+          <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">Assigned To</th>
+          <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">Action</th>
+        </tr></thead>
+        <tbody>${rows || `<tr><td colspan="6"><div class="empty-state"><i class="bi bi-plugin"></i><p>Koi accessory nahi. "Quick Add" se shuru karein.</p></div></td></tr>`}</tbody>
+      </table></div>
+    </div>`;
+}
+
 function renderInbox() {
   const assets = getAssets();
   const issues = assets.filter(a=>a.ack==='Issue Reported');
