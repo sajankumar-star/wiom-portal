@@ -49,7 +49,40 @@ input,select,textarea{font-family:inherit}
 @media(max-width:820px){.auth-brand{display:none}.auth-form-wrap{padding:24px 16px;background:linear-gradient(135deg,#0B1220,#2563EB)}.auth-box{box-shadow:0 20px 60px rgba(0,0,0,.25)}}
 
 /* Ã¢ââ¬Ã¢ââ¬ SHELL Ã¢ââ¬Ã¢ââ¬ */
-#app{display:none;flex-direction:column;min-height:100vh}
+#app{display:none;min-height:100vh}
+/* ENTERPRISE SIDEBAR LAYOUT */
+.sidebar{width:242px;flex-shrink:0;background:#0B1220;color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:6px}.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px}
+.sb-brand{padding:20px 20px 14px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:11px}
+.sb-brand .lm{width:38px;height:38px;background:#2563EB;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;color:#fff;flex-shrink:0}
+.sb-brand .sb-name{font-size:17px;font-weight:800;letter-spacing:.5px;line-height:1.1}
+.sb-brand .sb-sub{font-size:9.5px;font-weight:600;letter-spacing:1.5px;color:rgba(255,255,255,.4);margin-top:2px}
+.nav-scroll{flex:1;padding:10px 0 20px}
+.ng-title{font-size:10px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,.33);padding:14px 20px 5px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:9px 18px;margin:1px 8px;border-radius:9px;color:rgba(255,255,255,.72);font-size:13.5px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s;border-left:3px solid transparent}
+.nav-item i{font-size:16px;width:18px;text-align:center;flex-shrink:0}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav-item.active{background:rgba(37,99,235,.16);color:#fff;border-left-color:#2563EB}
+.main-wrap{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{background:#fff;border-bottom:1px solid #e8e8f0;display:flex;align-items:center;height:62px;padding:0 24px;gap:14px;position:sticky;top:0;z-index:50}
+.topbar .search-wrap{flex:1;max-width:440px;position:relative}
+.topbar .search-wrap input{width:100%;padding:9px 14px 9px 38px;border-radius:10px;border:1px solid #e5e7eb;background:#F5F7FB;color:#1a1a2e;font-size:13px;outline:none;transition:all .15s}
+.topbar .search-wrap input:focus{border-color:#2563EB;background:#fff;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.topbar .search-wrap input::placeholder{color:#9ca3af}
+.topbar .search-wrap .si{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:15px}
+.topbar .spacer{flex:1}
+.topbar .icon-btn{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#4b5563;cursor:pointer;border:1px solid #e5e7eb;background:#fff;font-size:17px;transition:all .15s}
+.topbar .icon-btn:hover{background:#F5F7FB;border-color:#2563EB;color:#2563EB}
+.topbar .tb-user{display:flex;align-items:center;gap:9px;cursor:pointer;padding-left:6px}
+.topbar .tb-user .avatar{width:36px;height:36px;border-radius:50%;background:#2563EB;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.topbar .tb-user .tb-meta{line-height:1.2}
+.topbar .tb-user .tb-name{font-size:13px;font-weight:700;color:#1a1a2e}
+.topbar .tb-user .tb-role{font-size:11px;color:#6b7280}
+.btn-add-asset{background:#2563EB;color:#fff;border:none;padding:9px 15px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.btn-add-asset:hover{background:#1D4ED8}
+.btn-scan{background:#fff;color:#2563EB;border:1px solid #bfdbfe;padding:9px 14px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.btn-scan:hover{background:#eff6ff}
+@media(max-width:860px){.sidebar{width:60px}.sb-brand .sb-txt,.ng-title,.nav-item span{display:none}.nav-item{justify-content:center;padding:11px 0;margin:1px 6px}.sb-brand{justify-content:center;padding:16px 0}.topbar .btn-add-asset span,.topbar .btn-scan span,.topbar .tb-meta{display:none}}
 
 /* TOP NAV */
 .topnav{background:#0B1220;color:#fff;display:flex;align-items:center;height:56px;padding:0 24px;gap:16px;position:sticky;top:0;z-index:100}
@@ -355,53 +388,69 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
 <!-- Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â APP Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â -->
 <div id="app">
 
-  <!-- TOP NAV -->
-  <div class="topnav">
-    <div class="brand">
-      <span>Wiom</span>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="lm">W</div>
+      <div class="sb-txt"><div class="sb-name">WIOM</div><div class="sb-sub">IT ASSET HUB</div></div>
     </div>
-    <div class="search-wrap">
-      <i class="bi bi-search si"></i>
-      <input type="text" id="global-search" placeholder="Search assets, employees..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}">
+    <div class="nav-scroll">
+      <div class="nav-item active" data-view="dashboard" onclick="navGo('dashboard')"><i class="bi bi-house-door"></i><span>Overview</span></div>
+
+      <div class="ng-title">ASSET MANAGEMENT</div>
+      <div class="nav-item" data-view="list" onclick="navGo('list')"><i class="bi bi-laptop"></i><span>All Assets</span></div>
+      <div class="nav-item" data-view="assigned" onclick="navGo('assigned')"><i class="bi bi-person-badge"></i><span>Assigned</span></div>
+      <div class="nav-item" data-view="returns" onclick="navGo('returns')"><i class="bi bi-arrow-return-left"></i><span>Returns</span></div>
+
+      <div class="ng-title">IT OPERATIONS</div>
+      <div class="nav-item" data-view="repairs" onclick="navGo('repairs')"><i class="bi bi-tools"></i><span>Repairs</span></div>
+      <div class="nav-item" data-view="reports" onclick="navGo('reports')"><i class="bi bi-shield-check"></i><span>Warranty &amp; Reports</span></div>
+      <div class="nav-item" data-view="inbox" onclick="navGo('inbox')"><i class="bi bi-inbox"></i><span>Requests &amp; Issues</span></div>
+      <div class="nav-item" onclick="openQRScanner()"><i class="bi bi-qr-code-scan"></i><span>QR Scanner</span></div>
+
+      <div class="ng-title">PEOPLE</div>
+      <div class="nav-item" data-view="__employees" onclick="navGo('__employees')"><i class="bi bi-people"></i><span>Employees</span></div>
+
+      <div class="ng-title">INSIGHTS</div>
+      <div class="nav-item" data-view="summary" onclick="navGo('summary')"><i class="bi bi-graph-up"></i><span>Analytics</span></div>
+      <div class="nav-item" data-view="health" onclick="navGo('health')"><i class="bi bi-heart-pulse"></i><span>Data Health</span></div>
+      <div class="nav-item" data-view="expenses" onclick="navGo('expenses')"><i class="bi bi-currency-rupee"></i><span>IT Expenses</span></div>
+      <div class="nav-item" data-view="audit" onclick="navGo('audit')"><i class="bi bi-clock-history"></i><span>Audit Logs</span></div>
+
+      <div class="ng-title">MORE</div>
+      <div class="nav-item" data-view="maintenance" onclick="navGo('maintenance')"><i class="bi bi-wrench-adjustable"></i><span>Maintenance</span></div>
+      <div class="nav-item" data-view="notes" onclick="navGo('notes')"><i class="bi bi-journal-text"></i><span>My Notes</span></div>
+      <div class="nav-item" data-view="settings" onclick="navGo('settings')"><i class="bi bi-gear"></i><span>Settings</span></div>
     </div>
-    <div class="spacer"></div>
-    <button class="icon-btn" onclick="openQRScanner()" title="Scan asset QR"><i class="bi bi-qr-code-scan"></i></button>
-    <div style="position:relative" id="notif-bell">
-      <button class="icon-btn" onclick="toggleNotifPanel()" title="Notifications"><i class="bi bi-bell"></i></button>
-      <span id="notif-count" style="display:none;position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:50%;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 2px"></span>
-      <div id="notif-panel" style="display:none;position:absolute;top:38px;right:0;width:320px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:999;max-height:360px;overflow-y:auto">
-        <div style="padding:10px 14px;font-weight:700;font-size:13px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center"><span><i class="bi bi-bell" style="color:#2563EB"></i> Notifications</span></div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main-wrap">
+    <!-- TOP BAR -->
+    <div class="topbar">
+      <div class="search-wrap">
+        <i class="bi bi-search si"></i>
+        <input type="text" id="global-search" placeholder="Search assets, employees, serial no..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}">
+      </div>
+      <div class="spacer"></div>
+      <button class="btn-add-asset" onclick="openAddModal()"><i class="bi bi-plus-lg"></i><span>Add Asset</span></button>
+      <button class="btn-scan" onclick="openQRScanner()"><i class="bi bi-qr-code-scan"></i><span>Scan QR</span></button>
+      <div style="position:relative" id="notif-bell">
+        <button class="icon-btn" onclick="toggleNotifPanel()" title="Notifications"><i class="bi bi-bell"></i></button>
+        <span id="notif-count" style="display:none;position:absolute;top:-2px;right:-2px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;border-radius:50%;min-width:16px;height:16px;line-height:16px;text-align:center;padding:0 2px"></span>
+        <div id="notif-panel" style="display:none;position:absolute;top:44px;right:0;width:340px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:999;max-height:400px;overflow-y:auto">
+          <div style="padding:10px 14px;font-weight:700;font-size:13px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center"><span><i class="bi bi-bell" style="color:#2563EB"></i> Notifications</span></div>
+        </div>
+      </div>
+      <div class="tb-user" onclick="openUserMgmt()" title="Account">
+        <div class="avatar" id="topbar-avatar">SK</div>
+        <div class="tb-meta"><div class="tb-name" id="tb-user-name">Sajan Kumar</div><div class="tb-role" id="tb-user-role">IT Admin</div></div>
       </div>
     </div>
-    <button class="icon-btn" onclick="openUserMgmt()" title="User Management"><i class="bi bi-gear"></i></button>
-    <div class="avatar" id="topbar-avatar" title="Logged in user" onclick="openUserMgmt()" style="cursor:pointer">SK</div>
-  </div>
 
-  <!-- MODULE TABS -->
-  <div class="module-bar">
-    <div class="mod-tab active" id="mod-assets" onclick="switchModule('assets')">ASSETS</div>
-    <div class="mod-tab" id="mod-employees" onclick="switchModule('employees')">EMPLOYEES</div>
+    <!-- CONTENT AREA -->
+    <div class="content" id="main-content"></div>
   </div>
-
-  <!-- SUB TABS -->
-  <div class="sub-bar" id="sub-bar">
-    <div class="sub-tab active" data-view="dashboard">Dashboard</div>
-    <div class="sub-tab" data-view="summary">Summary</div>
-    <div class="sub-tab" data-view="assigned">Assigned Assets</div>
-    <div class="sub-tab" data-view="inbox">📥 Requests &amp; Issues</div>
-    <div class="sub-tab" data-view="list">Asset List</div>
-    <div class="sub-tab" data-view="returns">Return History</div>
-    <div class="sub-tab" data-view="reports">Reports</div>
-    <div class="sub-tab" data-view="maintenance">Maintenance Log</div>
-    <div class="sub-tab" data-view="audit">Audit Log</div>
-    <div class="sub-tab" data-view="health">🩺 Data Health</div>
-    <div class="sub-tab" data-view="expenses">IT Expenses</div>
-    <div class="sub-tab" data-view="notes">📝 My Notes</div>
-    <div class="sub-tab" data-view="settings">Settings</div>
-  </div>
-
-  <!-- CONTENT AREA -->
-  <div class="content" id="main-content"></div>
 
 </div>
 
@@ -1344,6 +1393,8 @@ function doLogin() {
     // Update topbar avatar
     const av = document.getElementById('topbar-avatar');
     if (av) { av.textContent = found.initials || getUserInitials(found.name); av.title = found.name + ' (' + found.role + ')'; }
+    const nm = document.getElementById('tb-user-name'); if (nm) nm.textContent = found.name || 'User';
+    const rl = document.getElementById('tb-user-role'); if (rl) rl.textContent = found.role || 'Member';
     // Restrict viewer role
     applyRoleRestrictions();
     DB.init().then(()=>{ seedData(); autoOffboardFromKeka(); initSubTabs(); switchView('dashboard'); });
@@ -1521,9 +1572,19 @@ function initSubTabs() {
     t.addEventListener('click', () => switchView(t.dataset.view));
   });
 }
+function navGo(view) {
+  if (view === '__employees') {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === '__employees'));
+    if (typeof switchModule === 'function') switchModule('employees');
+    return;
+  }
+  currentModule = 'assets';
+  switchView(view);
+}
 function switchView(view) {
   currentView = view;
   document.querySelectorAll('.sub-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+  document.querySelectorAll('.nav-item').forEach(t => t.classList.toggle('active', t.dataset.view === view));
   const c = document.getElementById('main-content');
   if (view === 'health') renderDataHealth();
   else if (view === 'dashboard') renderDashboard();
@@ -3097,13 +3158,16 @@ let currentModule = 'assets';
 function switchModule(mod) {
   currentModule = mod;
   document.querySelectorAll('.mod-tab').forEach(t => t.classList.remove('active'));
+  const me = document.getElementById('mod-employees');
+  const ma = document.getElementById('mod-assets');
+  const sb = document.getElementById('sub-bar');
   if (mod === 'employees') {
-    document.getElementById('mod-employees').classList.add('active');
-    document.getElementById('sub-bar').style.display = 'none';
+    if (me) me.classList.add('active');
+    if (sb) sb.style.display = 'none';
     renderEmployeeModule('directory');
   } else {
-    document.getElementById('mod-assets').classList.add('active');
-    document.getElementById('sub-bar').style.display = '';
+    if (ma) ma.classList.add('active');
+    if (sb) sb.style.display = '';
     switchView(currentView === 'dashboard' ? 'dashboard' : currentView);
   }
 }
