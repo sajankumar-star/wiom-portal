@@ -397,31 +397,33 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
       <div class="sb-txt"><div class="sb-name">WIOM</div><div class="sb-sub">IT ASSET HUB</div></div>
     </div>
     <div class="nav-scroll">
-      <div class="nav-item active" data-view="dashboard" onclick="navGo('dashboard')"><i class="bi bi-house-door"></i><span>Overview</span></div>
+      <div class="ng-title">OVERVIEW</div>
+      <div class="nav-item active" data-view="dashboard" onclick="navGo('dashboard')"><i class="bi bi-house-door"></i><span>Dashboard</span></div>
 
-      <div class="ng-title">ASSET MANAGEMENT</div>
+      <div class="ng-title">ASSETS</div>
       <div class="nav-item" data-view="list" onclick="navGo('list')"><i class="bi bi-laptop"></i><span>All Assets</span></div>
       <div class="nav-item" data-view="assigned" onclick="navGo('assigned')"><i class="bi bi-person-badge"></i><span>Assigned</span></div>
+      <div class="nav-item" data-view="__available" onclick="navAvailable()"><i class="bi bi-box-seam"></i><span>Available</span></div>
       <div class="nav-item" data-view="accessories" onclick="navGo('accessories')"><i class="bi bi-plugin"></i><span>Accessories</span></div>
       <div class="nav-item" data-view="returns" onclick="navGo('returns')"><i class="bi bi-arrow-return-left"></i><span>Returns</span></div>
-
-      <div class="ng-title">IT OPERATIONS</div>
       <div class="nav-item" data-view="repairs" onclick="navGo('repairs')"><i class="bi bi-tools"></i><span>Repairs</span></div>
       <div class="nav-item" data-view="reports" onclick="navGo('reports')"><i class="bi bi-shield-check"></i><span>Warranty &amp; Reports</span></div>
-      <div class="nav-item" data-view="inbox" onclick="navGo('inbox')"><i class="bi bi-inbox"></i><span>Requests &amp; Issues</span></div>
-      <div class="nav-item" onclick="openQRScanner()"><i class="bi bi-qr-code-scan"></i><span>QR Scanner</span></div>
 
       <div class="ng-title">PEOPLE</div>
       <div class="nav-item" data-view="__employees" onclick="navGo('__employees')"><i class="bi bi-people"></i><span>Employees</span></div>
 
-      <div class="ng-title">INSIGHTS</div>
+      <div class="ng-title">OPERATIONS</div>
+      <div class="nav-item" data-view="inbox" onclick="navGo('inbox')"><i class="bi bi-inbox"></i><span>Requests &amp; Issues</span></div>
+      <div class="nav-item" onclick="openQRScanner()"><i class="bi bi-qr-code-scan"></i><span>QR Scanner</span></div>
+      <div class="nav-item" data-view="maintenance" onclick="navGo('maintenance')"><i class="bi bi-wrench-adjustable"></i><span>Maintenance</span></div>
+
+      <div class="ng-title">REPORTS</div>
       <div class="nav-item" data-view="summary" onclick="navGo('summary')"><i class="bi bi-graph-up"></i><span>Analytics</span></div>
-      <div class="nav-item" data-view="health" onclick="navGo('health')"><i class="bi bi-heart-pulse"></i><span>Data Health</span></div>
       <div class="nav-item" data-view="expenses" onclick="navGo('expenses')"><i class="bi bi-currency-rupee"></i><span>IT Expenses</span></div>
       <div class="nav-item" data-view="audit" onclick="navGo('audit')"><i class="bi bi-clock-history"></i><span>Audit Logs</span></div>
 
-      <div class="ng-title">MORE</div>
-      <div class="nav-item" data-view="maintenance" onclick="navGo('maintenance')"><i class="bi bi-wrench-adjustable"></i><span>Maintenance</span></div>
+      <div class="ng-title">ADMIN</div>
+      <div class="nav-item" data-view="health" onclick="navGo('health')"><i class="bi bi-heart-pulse"></i><span>Data Health</span></div>
       <div class="nav-item" data-view="notes" onclick="navGo('notes')"><i class="bi bi-journal-text"></i><span>My Notes</span></div>
       <div class="nav-item" data-view="settings" onclick="navGo('settings')"><i class="bi bi-gear"></i><span>Settings</span></div>
     </div>
@@ -1635,6 +1637,15 @@ function navGo(view) {
   }
   currentModule = 'assets';
   switchView(view);
+}
+function navAvailable() {
+  currentModule = 'assets';
+  switchView('list');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === '__available'));
+  setTimeout(() => {
+    const st = document.getElementById('f-stat');
+    if (st) { st.value = 'Available'; if (typeof applyFilters === 'function') applyFilters(); }
+  }, 80);
 }
 function switchView(view) {
   currentView = view;
