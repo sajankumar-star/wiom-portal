@@ -2563,6 +2563,7 @@ function markAckComplete(id) {
   const idx = assets.findIndex(a=>a.id===id);
   if (idx>-1) {
     assets[idx].ack = 'Completed';
+    assets[idx].ackDate = new Date().toISOString().slice(0,10);
     delete assets[idx].issueNote; delete assets[idx].issueDate;
     saveAssets(assets);
     renderAck();
@@ -2860,6 +2861,8 @@ function viewAsset(id) {
     <button class="btn btn-outline btn-sm" onclick="closeViewModal();editAsset('${escH(a.id)}')"><i class="bi bi-pencil"></i> Edit</button>
     <button class="btn btn-outline btn-sm" onclick="closeViewModal();openRepairModal('${escH(a.id)}')"><i class="bi bi-wrench"></i> Repair</button>
     <button class="btn btn-outline btn-sm" onclick="printQRLabel('${escH(a.id)}')"><i class="bi bi-qr-code"></i> QR Label</button>
+    ${a.status==='Assigned' && (a.wiomId||a.empEmail)
+      ? `<button class="btn btn-outline btn-sm" onclick="copySelfServiceLink('${escH(a.wiomId||a.empEmail)}')"><i class="bi bi-link-45deg"></i> Copy Portal Link</button>` : ''}
     ${a.status==='Assigned'
       ? `<button class="btn btn-sm" style="background:#fff7ed;color:#f97316;border:1.5px solid #fed7aa" onclick="closeViewModal();openReturnModal('${escH(a.id)}')"><i class="bi bi-box-arrow-in-left"></i> Return</button>`
       : `<button class="btn btn-primary btn-sm" onclick="closeViewModal();openAssignModal('${escH(a.id)}')"><i class="bi bi-person-check"></i> Assign</button>`
@@ -3361,6 +3364,11 @@ function checkNotifications() {
     alerts.push({type:'error', msg:`<strong>${escH(a.assignedTo||'Employee')}</strong> reported an issue on <strong>${escH(a.name)}</strong>${a.issueNote?': "'+escH(a.issueNote)+'"':''}`, color:'#dc2626'});
   });
 
+  // Open employee self-service requests
+  (DB.get('employee_requests', [])||[]).filter(r=>r.status==='Open').forEach(r => {
+    alerts.push({type:'warn', msg:`<strong>${escH(r.empName||r.empId||'Employee')}</strong> — ${escH(r.type)} request${r.assetName?' ('+escH(r.assetName)+')':''}${r.note?': "'+escH(r.note)+'"':''}`, color:'#8b5cf6'});
+  });
+
   // Warranty — only expired or expiring within 30 days
   assets.forEach(a => {
     if (a.warranty) {
@@ -3406,7 +3414,173 @@ document.addEventListener('click', e => {
   if (panel && bell && !bell.contains(e.target) && !panel.contains(e.target)) panel.style.display='none';
 });
 setTimeout(checkNotifications, 500);
-setTimeout(checkAckFromUrl, 300);
+bootEmployeeLinks();
+
+// Employee-facing entry points (no admin login needed). Runs on page load.
+async function bootEmployeeLinks() {
+  const params = new URLSearchParams(window.location.search);
+  const myId = params.get('myassets');
+  const ackId = params.get('ack');
+  if (!myId && !ackId) return;
+  // Load data from server first (fail-open API, no login required)
+  try { await DB.init(); } catch(e){}
+  if (myId) { renderSelfService(myId); return; }
+  if (ackId) checkAckFromUrl();
+}
+
+// ─── EMPLOYEE SELF-SERVICE PORTAL ───
+function findEmployeeAssets(idOrEmail) {
+  const q = String(idOrEmail||'').trim().toLowerCase();
+  return getAssets().filter(a => a.status==='Assigned' && (
+    String(a.wiomId||'').toLowerCase()===q ||
+    String(a.empEmail||'').toLowerCase()===q ||
+    String(a.assignedTo||'').toLowerCase()===q
+  ));
+}
+
+function renderSelfService(myId) {
+  const assets = findEmployeeAssets(myId);
+  const authEl = document.getElementById('auth-screen');
+  const appEl = document.getElementById('app');
+  if (authEl) authEl.style.display = 'none';
+  if (appEl) appEl.style.display = 'none';
+  let host = document.getElementById('selfservice-root');
+  if (!host) { host = document.createElement('div'); host.id = 'selfservice-root'; document.body.appendChild(host); }
+  const empName = assets.length ? (assets[0].assignedTo||'') : '';
+  const cards = assets.length ? assets.map(a=>{
+    const ackBadge = a.ack==='Completed' ? '<span style="background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600">✓ Acknowledged</span>'
+      : a.ack==='Issue Reported' ? '<span style="background:#fee2e2;color:#dc2626;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600">⚠ Issue Reported</span>'
+      : '<span style="background:#fef3c7;color:#d97706;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600">Pending</span>';
+    return `<div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
+        <div><div style="font-weight:700;font-size:15px;color:#1a1a2e">${escH(a.name)}</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">${escH(a.category)} / ${escH(a.type)} · ID: ${escH(a.assetId)}${a.serial?' · S/No: '+escH(a.serial):''}</div></div>
+        <div>${ackBadge}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        ${a.ack!=='Completed'?`<button onclick="ssAck('${escH(a.id)}')" style="background:#10b981;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer"><i class="bi bi-check2-circle"></i> Acknowledge</button>`:''}
+        <button onclick="ssReport('${escH(a.id)}')" style="background:#fff;color:#dc2626;border:1.5px solid #fecaca;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer"><i class="bi bi-exclamation-triangle"></i> Report Issue</button>
+        <button onclick="ssRequest('${escH(a.id)}','Return')" style="background:#fff;color:#f97316;border:1.5px solid #fed7aa;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer"><i class="bi bi-box-arrow-in-left"></i> Return Request</button>
+      </div>
+    </div>`;
+  }).join('') : `<div style="background:#fff;border-radius:14px;padding:40px;text-align:center;color:#888"><i class="bi bi-inbox" style="font-size:40px;color:#ccc"></i><div style="margin-top:10px">Aapke naam koi asset assigned nahi mili.<br>Agar galat lage to IT team se contact karein.</div></div>`;
+  host.innerHTML = `
+    <div style="min-height:100vh;background:#f4f5f9;padding:0 0 40px">
+      <div style="background:linear-gradient(135deg,#6D0040,#E91E8C);color:#fff;padding:28px 20px 24px">
+        <div style="max-width:640px;margin:0 auto">
+          <div style="font-size:13px;opacity:.85;font-weight:600;letter-spacing:.5px">WIOM · MY ASSETS</div>
+          <div style="font-size:24px;font-weight:800;margin-top:6px">${escH(empName||'Employee Portal')}</div>
+          <div style="font-size:13px;opacity:.9;margin-top:4px">${assets.length} asset${assets.length!==1?'s':''} assigned to you</div>
+        </div>
+      </div>
+      <div style="max-width:640px;margin:0 auto;padding:20px 16px 0">
+        <div style="display:flex;gap:10px;margin-bottom:16px">
+          <button onclick="ssRequest('','New Asset')" style="flex:1;background:#fff;border:1px solid #eee;border-radius:12px;padding:14px;font-size:13px;font-weight:600;color:#E91E8C;cursor:pointer"><i class="bi bi-plus-circle"></i><br>Request New Asset</button>
+          <button onclick="ssRequest('','Replacement')" style="flex:1;background:#fff;border:1px solid #eee;border-radius:12px;padding:14px;font-size:13px;font-weight:600;color:#3b82f6;cursor:pointer"><i class="bi bi-arrow-repeat"></i><br>Request Replacement</button>
+        </div>
+        ${cards}
+        <div style="text-align:center;font-size:11px;color:#bbb;margin-top:24px">Wiom IT Asset Portal · Powered by Keka sync</div>
+      </div>
+    </div>
+    <div id="ss-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:16px"></div>`;
+}
+
+function ssCurrentEmp() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('myassets')||'';
+}
+
+function ssAck(id) {
+  const assets = getAssets();
+  const idx = assets.findIndex(a=>a.id===id);
+  if (idx<0) return;
+  assets[idx].ack = 'Completed';
+  assets[idx].ackDate = new Date().toISOString().slice(0,10);
+  saveAssets(assets);
+  ssToast('✅ Acknowledged — thank you!');
+  renderSelfService(ssCurrentEmp());
+}
+
+function ssReport(id) {
+  const m = document.getElementById('ss-modal');
+  m.style.display = 'flex';
+  m.innerHTML = `<div style="background:#fff;border-radius:16px;padding:24px;max-width:420px;width:100%">
+    <div style="font-size:17px;font-weight:700;margin-bottom:12px;color:#dc2626"><i class="bi bi-exclamation-triangle"></i> Report an Issue</div>
+    <textarea id="ss-issue-note" placeholder="Kya problem hai? (damaged, not working, missing part...)" style="width:100%;min-height:90px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="ssSubmitReport('${escH(id)}')" style="flex:1;background:#dc2626;color:#fff;border:none;padding:11px;border-radius:8px;font-weight:600;cursor:pointer">Submit</button>
+      <button onclick="document.getElementById('ss-modal').style.display='none'" style="background:#f3f4f6;border:none;padding:11px 18px;border-radius:8px;font-weight:600;color:#666;cursor:pointer">Cancel</button>
+    </div>
+  </div>`;
+  setTimeout(()=>{ const t=document.getElementById('ss-issue-note'); if(t)t.focus(); }, 50);
+}
+
+function ssSubmitReport(id) {
+  const note = (document.getElementById('ss-issue-note')?.value||'').trim();
+  if (!note) { ssToast('Please describe the problem'); return; }
+  const assets = getAssets();
+  const idx = assets.findIndex(a=>a.id===id);
+  if (idx<0) return;
+  assets[idx].ack = 'Issue Reported';
+  assets[idx].issueNote = note;
+  assets[idx].issueDate = new Date().toISOString().slice(0,10);
+  saveAssets(assets);
+  document.getElementById('ss-modal').style.display='none';
+  ssToast('📝 Issue reported — IT team notified');
+  renderSelfService(ssCurrentEmp());
+}
+
+function ssRequest(id, kind) {
+  const m = document.getElementById('ss-modal');
+  m.style.display = 'flex';
+  const asset = id ? getAssets().find(a=>a.id===id) : null;
+  m.innerHTML = `<div style="background:#fff;border-radius:16px;padding:24px;max-width:420px;width:100%">
+    <div style="font-size:17px;font-weight:700;margin-bottom:4px;color:#E91E8C"><i class="bi bi-send"></i> ${escH(kind)} Request</div>
+    ${asset?`<div style="font-size:12px;color:#888;margin-bottom:12px">For: ${escH(asset.name)}</div>`:'<div style="height:8px"></div>'}
+    <textarea id="ss-req-note" placeholder="Details / reason (optional)..." style="width:100%;min-height:80px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button onclick="ssSubmitRequest('${escH(id||'')}','${escH(kind)}')" style="flex:1;background:#E91E8C;color:#fff;border:none;padding:11px;border-radius:8px;font-weight:600;cursor:pointer">Submit Request</button>
+      <button onclick="document.getElementById('ss-modal').style.display='none'" style="background:#f3f4f6;border:none;padding:11px 18px;border-radius:8px;font-weight:600;color:#666;cursor:pointer">Cancel</button>
+    </div>
+  </div>`;
+}
+
+function ssSubmitRequest(id, kind) {
+  const note = (document.getElementById('ss-req-note')?.value||'').trim();
+  const emp = ssCurrentEmp();
+  const asset = id ? getAssets().find(a=>a.id===id) : null;
+  const reqs = DB.get('employee_requests', []);
+  reqs.push({
+    id: 'REQ-'+Date.now(),
+    type: kind,
+    empId: emp,
+    empName: asset ? (asset.assignedTo||'') : '',
+    assetId: asset ? asset.assetId : '',
+    assetName: asset ? asset.name : '',
+    note: note,
+    status: 'Open',
+    date: new Date().toISOString().slice(0,10)
+  });
+  DB.set('employee_requests', reqs);
+  document.getElementById('ss-modal').style.display='none';
+  ssToast('✅ Request submitted — IT team dekhega');
+}
+
+function ssToast(msg) {
+  const d = document.createElement('div');
+  d.textContent = msg;
+  d.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;z-index:10000;box-shadow:0 6px 20px rgba(0,0,0,.3)';
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(), 2600);
+}
+
+function copySelfServiceLink(empKey) {
+  const url = window.location.origin + '/?myassets=' + encodeURIComponent(empKey);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(()=>showToast('Portal link copied — employee ko bhej dein','success'))
+      .catch(()=>showToast(url,'info'));
+  } else { showToast(url, 'info'); }
+}
 
 function checkAckFromUrl() {
   const params = new URLSearchParams(window.location.search);
