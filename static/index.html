@@ -851,9 +851,12 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
           <div class="form-group">
             <label>Status</label>
             <select id="repair-status">
-              <option value="Sent for Repair">Sent for Repair</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Repaired">Repaired</option>
+              <option value="Reported">Reported</option>
+              <option value="Sent to Vendor">Sent to Vendor</option>
+              <option value="Under Repair">Under Repair</option>
+              <option value="Ready">Ready</option>
+              <option value="Received">Received</option>
+              <option value="Closed">Closed</option>
               <option value="Cannot Repair">Cannot Repair</option>
             </select>
           </div>
@@ -3003,6 +3006,7 @@ function viewAsset(id) {
   if (repairLog.length > 0) {
     html += `
     <div class="section-divider" style="margin-top:4px">Repair History (${repairLog.length})</div>
+    ${(()=>{ const active = repairLog.find(r=>r.status!=='Closed'&&r.status!=='Completed'&&r.status!=='Cannot Repair') || repairLog[0]; return active ? `<div style="background:#fff;border:1px solid #ececf5;border-radius:10px;padding:12px 14px;margin-bottom:12px"><div style="font-size:11px;color:#9ca3af;font-weight:600;margin-bottom:8px">CURRENT REPAIR STATUS</div>${repairStepperHTML(active.status)}</div>` : ''; })()}
     <div style="overflow-x:auto;background:#fff;border:1px solid #ececf5;border-radius:8px;margin-bottom:16px">
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="background:#fafafa">
@@ -5953,7 +5957,41 @@ function repairStatusBadge(s) {
     'Repaired':'badge-repaired',
     'Cannot Repair':'badge-cannotrepair'
   };
+  const colors = {
+    'Reported':'#6b7280','Sent to Vendor':'#3b82f6','Under Repair':'#f59e0b',
+    'Ready':'#8b5cf6','Received':'#0ea5e9','Closed':'#10b981','Cannot Repair':'#ef4444'
+  };
+  if (colors[s]) return `<span class="badge" style="background:${colors[s]}18;color:${colors[s]};border:1px solid ${colors[s]}44">${escH(s)}</span>`;
   return `<span class="badge ${map[s]||'badge-na'}">${escH(s)}</span>`;
+}
+// Repair lifecycle stages (maps old + new statuses to a stage index)
+const REPAIR_STAGES = ['Reported','Sent to Vendor','Under Repair','Ready','Received','Closed'];
+function repairStageIndex(status) {
+  const alias = {
+    'Reported':0, 'Sent for Repair':1, 'Sent to Vendor':1, 'In Progress':2, 'Under Repair':2,
+    'Ready':3, 'Repaired':3, 'Received':4, 'Closed':5, 'Completed':5, 'Returned':5
+  };
+  return (status in alias) ? alias[status] : 0;
+}
+function repairStepperHTML(status) {
+  if (status === 'Cannot Repair') {
+    return `<div style="font-size:12px;color:#ef4444;font-weight:600;padding:4px 0"><i class="bi bi-x-octagon-fill"></i> Cannot Repair — closed</div>`;
+  }
+  const cur = repairStageIndex(status);
+  return `<div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:2px 0">
+    ${REPAIR_STAGES.map((st,i)=>{
+      const done = i < cur, active = i === cur;
+      const col = done ? '#10b981' : active ? '#2563EB' : '#d1d5db';
+      const fill = done ? '#10b981' : active ? '#2563EB' : '#e5e7eb';
+      return `<div style="display:flex;align-items:center">
+        <div title="${st}" style="display:flex;flex-direction:column;align-items:center;min-width:52px">
+          <div style="width:20px;height:20px;border-radius:50%;background:${fill};color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700">${done?'<i class="bi bi-check"></i>':(i+1)}</div>
+          <div style="font-size:9px;color:${active?'#2563EB':'#9ca3af'};font-weight:${active?'700':'500'};margin-top:3px;text-align:center;line-height:1.1">${st}</div>
+        </div>
+        ${i<REPAIR_STAGES.length-1?`<div style="width:18px;height:2px;background:${i<cur?'#10b981':'#e5e7eb'};margin:0 -2px 14px"></div>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 let repairFilter = 'All';
@@ -5969,7 +6007,7 @@ function openRepairModal(assetId, repairId) {
   document.getElementById('repair-issue').value = '';
   document.getElementById('repair-est-cost').value = '';
   document.getElementById('repair-priority').value = 'Normal';
-  document.getElementById('repair-status').value = 'Sent for Repair';
+  document.getElementById('repair-status').value = 'Reported';
   document.getElementById('repair-actual-cost').value = '';
   document.getElementById('repair-return-date').value = '';
   document.getElementById('repair-notes').value = '';
