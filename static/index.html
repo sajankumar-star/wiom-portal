@@ -5260,9 +5260,13 @@ function renderOffboarding() {
   const assets = getAssets();
 
   const checklistItems = [
-    {key:'idCard', label:'ID Card Collected'},
+    {key:'conditionCheck', label:'Asset Condition Checked'},
+    {key:'dataBackup', label:'Data Backup Taken'},
+    {key:'dataWipe', label:'Data Wipe / Format Confirmed'},
     {key:'accessRevoked', label:'System Access Revoked'},
     {key:'emailDeact', label:'Email Deactivated'},
+    {key:'idCard', label:'ID Card Collected'},
+    {key:'itClearance', label:'IT Clearance Given'},
     {key:'settlement', label:'Final Settlement Done'},
     {key:'noc', label:'NOC Issued'}
   ];
@@ -5303,7 +5307,7 @@ function renderOffboarding() {
           ${assetRows}
         </div>
         <div>
-          <div style="font-size:12px;font-weight:700;color:#0B1220;margin-bottom:6px">Checklist</div>
+          ${(()=>{ const done=checklistItems.filter(c=>checklist[c.key]).length; const pct=Math.round(done/checklistItems.length*100); return `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px"><div style="font-size:12px;font-weight:700;color:#0B1220">IT Clearance Checklist</div><div style="font-size:11px;color:#6b7280">${done}/${checklistItems.length}</div></div><div style="height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:${pct}%;background:${pct===100?'#10b981':'#2563EB'};transition:width .3s"></div></div>`; })()}
           ${clHtml}
         </div>
       </div>
