@@ -895,6 +895,8 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
       </div>
       <div class="modal-right">
         <input type="hidden" id="edit-id">
+
+        <div class="section-divider"><i class="bi bi-info-circle"></i> Basic Information</div>
         <div class="form-row">
           <div class="form-group">
             <label>Asset Category *</label>
@@ -926,10 +928,21 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
             <input type="text" id="f-asset-name" placeholder="e.g. Apple MacBook Air M2">
           </div>
         </div>
-        <span class="add-desc-link" onclick="toggleDesc()"><i class="bi bi-plus"></i> Add Description</span>
-        <div class="form-group" id="desc-group" style="display:none">
-          <label>Description</label>
-          <textarea id="f-desc" rows="2" placeholder="Optional description"></textarea>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Serial No (S/No)</label>
+            <input type="text" id="f-serial" placeholder="e.g. SN123456789">
+          </div>
+          <div class="form-group">
+            <label>Asset Condition</label>
+            <select id="f-condition">
+              <option value="">Select Condition</option>
+              <option>New</option>
+              <option>Good</option>
+              <option>Fair</option>
+              <option>Poor</option>
+            </select>
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -944,14 +957,52 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
             <input type="text" id="f-locdetail" placeholder="Floor / Building / Seat (optional)" style="margin-top:8px">
           </div>
           <div class="form-group">
-            <label>Asset Condition</label>
-            <select id="f-condition">
-              <option value="">Select Condition</option>
-              <option>New</option>
-              <option>Good</option>
-              <option>Fair</option>
-              <option>Poor</option>
+            <label>Asset Status</label>
+            <select id="f-status">
+              <option value="">Select Status</option>
+              <option>Available</option>
+              <option>Assigned</option>
+              <option>In Stock</option>
+              <option>Not Available</option>
+              <option>Under Repair</option>
             </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Assigned To (Employee)</label>
+          <input type="text" id="f-assigned-to" placeholder="Employee name (if assigned)">
+        </div>
+        <span class="add-desc-link" onclick="toggleDesc()"><i class="bi bi-plus"></i> Add Description</span>
+        <div class="form-group" id="desc-group" style="display:none">
+          <label>Description / Specs</label>
+          <textarea id="f-desc" rows="2" placeholder="Optional description"></textarea>
+        </div>
+
+        <div class="section-divider" style="margin-top:16px"><i class="bi bi-cpu"></i> Hardware</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Processor</label>
+            <input type="text" id="f-processor" placeholder="e.g. Intel Core i5 11th Gen">
+          </div>
+          <div class="form-group">
+            <label>RAM</label>
+            <input type="text" id="f-ram" placeholder="e.g. 16 GB">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Storage</label>
+          <input type="text" id="f-storage" placeholder="e.g. 512 GB SSD">
+        </div>
+
+        <div class="section-divider" style="margin-top:16px"><i class="bi bi-receipt"></i> Purchase &amp; Warranty</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Vendor Name</label>
+            <input type="text" id="f-vendor" placeholder="e.g. Dell Technologies">
+          </div>
+          <div class="form-group">
+            <label>Invoice No</label>
+            <input type="text" id="f-invoice" placeholder="e.g. INV-2024-001">
           </div>
         </div>
         <div class="form-row">
@@ -969,66 +1020,19 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
             <label>Purchase Price (&#8377;)</label>
             <input type="number" id="f-price" placeholder="e.g. 75000" min="0" step="1">
           </div>
-        </div>
-        <div class="form-row">
           <div class="form-group">
-            <label>Quantity in Stock <small style="color:#aaa">(consumables — blank = 1 unit)</small></label>
+            <label>Quantity in Stock <small style="color:#aaa">(blank = 1)</small></label>
             <input type="number" id="f-qty" placeholder="e.g. 25" min="0" step="1">
           </div>
+        </div>
+        <div class="form-row">
           <div class="form-group">
             <label>Low-Stock Alert Below</label>
             <input type="number" id="f-minqty" placeholder="e.g. 5" min="0" step="1">
           </div>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Asset Status</label>
-            <select id="f-status">
-              <option value="">Select Status</option>
-              <option>Available</option>
-              <option>Assigned</option>
-              <option>In Stock</option>
-              <option>Not Available</option>
-              <option>Under Repair</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Assigned To (Employee)</label>
-            <input type="text" id="f-assigned-to" placeholder="Employee name (if assigned)">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Serial No (S/No)</label>
-            <input type="text" id="f-serial" placeholder="e.g. SN123456789">
-          </div>
-          <div class="form-group">
-            <label>Invoice No</label>
-            <input type="text" id="f-invoice" placeholder="e.g. INV-2024-001">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Vendor Name</label>
-            <input type="text" id="f-vendor" placeholder="e.g. Dell Technologies">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Processor</label>
-            <input type="text" id="f-processor" placeholder="e.g. Intel Core i5 11th Gen">
-          </div>
-          <div class="form-group">
-            <label>RAM</label>
-            <input type="text" id="f-ram" placeholder="e.g. 16 GB">
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Storage</label>
-            <input type="text" id="f-storage" placeholder="e.g. 512 GB SSD">
-          </div>
-        </div>
+
+        <div class="section-divider" style="margin-top:16px"><i class="bi bi-folder"></i> Documents</div>
         <div class="form-group">
           <label>Asset Image</label>
           <div class="file-input-wrap" onclick="this.querySelector('input').click()">
@@ -1046,7 +1050,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
           </div>
         </div>
         <div class="form-group">
-          <label>Asset Documents</label>
+          <label>Other Documents</label>
           <div class="file-input-wrap" onclick="this.querySelector('input').click()">
             <i class="bi bi-paperclip" style="font-size:18px"></i><br>
             Click to attach documents<br><small>PDF, DOC, XLS up to 10MB</small>
