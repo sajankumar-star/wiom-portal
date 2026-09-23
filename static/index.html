@@ -5138,10 +5138,16 @@ function renderDashboard() {
   const repairLog = DB.get('repair_log',[]);
   const underRepairRecs = repairLog.filter(r=>r.status==='Sent for Repair'||r.status==='In Progress').slice(0,5);
 
+  const underRepair = assets.filter(a=>a.status==='Under Repair').length;
+  const returnedCount = (DB.get('return_history',[])||[]).length;
+  const lostDamaged = assets.filter(a=>a.status==='Lost'||a.condition==='Damaged'||a.condition==='Critical').length;
   const statCards = [
     {label:'Total Assets', val:total, icon:'bi-boxes', bg:'#FFE4F3', col:'#E91E8C', view:'list'},
     {label:'Assigned', val:assigned, icon:'bi-person-check', bg:'#dbeafe', col:'#3b82f6', view:'assigned'},
     {label:'Available', val:available, icon:'bi-check-circle', bg:'#d1fae5', col:'#10b981', view:'list'},
+    {label:'Under Repair', val:underRepair, icon:'bi-tools', bg:'#fef9c3', col:'#ca8a04', view:'repairs'},
+    {label:'Returned', val:returnedCount, icon:'bi-box-arrow-in-left', bg:'#ffedd5', col:'#f97316', view:'returns'},
+    {label:'Lost / Damaged', val:lostDamaged, icon:'bi-exclamation-octagon', bg:'#fee2e2', col:'#dc2626', view:'list'},
     {label:'Pending ACK', val:pendingAck, icon:'bi-hourglass-split', bg:'#fef3c7', col:'#d97706', view:'ack'},
     {label:'Expiring Warranty', val:expiringWarranty.length, icon:'bi-shield-exclamation', bg:'#fee2e2', col:'#ef4444', view:'reports'},
   ];
