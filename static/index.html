@@ -2370,11 +2370,12 @@ function filterAckTable() {
 function renderAck() {
   const allAssets = getAssets();
   const pendingAssets = allAssets.filter(a=>a.ack==='Pending');
+  const issueAssets = allAssets.filter(a=>a.ack==='Issue Reported');
   const completedCount = allAssets.filter(a=>a.ack==='Completed').length;
   const naCount = allAssets.filter(a=>a.ack==='Not Applicable').length;
-  updateAckBadge(pendingAssets.length);
+  updateAckBadge(pendingAssets.length + issueAssets.length);
   const today = new Date(); today.setHours(0,0,0,0);
-  const rows = pendingAssets.map(a=>{
+  const rows = [...issueAssets, ...pendingAssets].map(a=>{
     const mailtoLink = `javascript:sendAckReminder('${escH(a.id)}')`;
     // Days pending
     let daysPendingHtml = 'â';
@@ -2796,6 +2797,36 @@ function viewAsset(id) {
           </tr>`).join('')}
         </tbody>
       </table>
+    </div>`;
+  }
+
+  // Unified chronological timeline (Asset 360)
+  const tl = [];
+  if (a.purchased) tl.push({date:a.purchased, icon:'bag-check', col:'#8b5cf6', title:'Purchased', desc:[a.vendor?'Vendor: '+a.vendor:'', a.invoice?'Invoice: '+a.invoice:''].filter(Boolean).join(' · ')});
+  if (a.assignDate) tl.push({date:a.assignDate, icon:'person-check', col:'#3b82f6', title:'Assigned to '+(a.assignedTo||'employee'), desc:[a.dept||'', (a.itemsGiven&&a.itemsGiven.length)?'Items: '+a.itemsGiven.join(', '):''].filter(Boolean).join(' · ')});
+  if (a.ack==='Completed' && a.ackDate) tl.push({date:a.ackDate, icon:'check2-circle', col:'#10b981', title:'Acknowledged by employee', desc:''});
+  if (a.ack==='Issue Reported') tl.push({date:a.issueDate||a.assignDate||'', icon:'exclamation-triangle', col:'#dc2626', title:'Issue reported by employee', desc:a.issueNote||''});
+  (DB.get('repair_log',[]).filter(r=>r.assetId===a.id)).forEach(r=>{
+    tl.push({date:r.sentDate||'', icon:'wrench', col:'#f59e0b', title:'Sent for repair'+(r.vendor?' — '+r.vendor:''), desc:[r.issue||'', r.status?'Status: '+r.status:''].filter(Boolean).join(' · ')});
+  });
+  (a.returnHistory||[]).forEach(r=>{
+    tl.push({date:r.returnDate||'', icon:'box-arrow-in-left', col:'#f97316', title:'Returned by '+(r.empName||'employee'), desc:[r.condition?'Condition: '+r.condition:'', r.penalty>0?'Penalty: ₹'+r.penalty:''].filter(Boolean).join(' · ')});
+  });
+  tl.sort((x,y)=> String(x.date).localeCompare(String(y.date)));
+  if (tl.length) {
+    html += `<div class="section-divider" style="margin-top:4px"><i class="bi bi-clock-history"></i> Lifecycle Timeline</div>
+    <div style="position:relative;padding-left:8px;margin-bottom:16px">
+      ${tl.map((e,i)=>`<div style="display:flex;gap:12px;position:relative;padding-bottom:${i===tl.length-1?'0':'16px'}">
+        <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+          <div style="width:30px;height:30px;border-radius:50%;background:${e.col}18;color:${e.col};display:flex;align-items:center;justify-content:center;font-size:14px"><i class="bi bi-${e.icon}"></i></div>
+          ${i===tl.length-1?'':`<div style="width:2px;flex:1;background:#e5e7eb;margin-top:2px"></div>`}
+        </div>
+        <div style="padding-top:3px;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:#1a1a2e">${escH(e.title)}</div>
+          ${e.desc?`<div style="font-size:12px;color:#6b7280;margin-top:1px">${escH(e.desc)}</div>`:''}
+          <div style="font-size:11px;color:#aaa;margin-top:1px">${escH(e.date||'—')}</div>
+        </div>
+      </div>`).join('')}
     </div>`;
   }
 
