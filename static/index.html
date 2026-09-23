@@ -5326,12 +5326,68 @@ function renderEmployeeModule(view) {
   document.getElementById('main-content').innerHTML = `<div style="padding:4px 0">${tabHtml}${content}</div>`;
 }
 
+function openEmpProfile(empId) {
+  const e = getEmployees().find(x=>x.id===empId);
+  if (!e) return;
+  const assets = getAssets();
+  const mine = assets.filter(a=>a.assignedTo && a.assignedTo.toLowerCase()===(e.name||'').toLowerCase() && a.status==='Assigned');
+  const catEmoji = t => ({Laptop:'💻',Adapter:'🔌',Monitor:'🖥️',Mouse:'🖱️',Keyboard:'⌨️',Headphone:'🎧',Mobile:'📱',Bags:'👜',SIM:'📇'}[t]||'📦');
+  const ackChip = a => a.ack==='Completed'?'<span style="background:#d1fae5;color:#065f46;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600">✓ Acknowledged</span>'
+    : a.ack==='Issue Reported'?'<span style="background:#fee2e2;color:#dc2626;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600">⚠ Issue</span>'
+    : '<span style="background:#fef3c7;color:#d97706;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600">Pending</span>';
+  const assetHtml = mine.length ? mine.map(a=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f3f4f6">
+      <div style="font-size:20px">${catEmoji(a.type)}</div>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${escH(a.name)}</div><div style="font-size:11px;color:#888"><code>${escH(a.assetId)}</code>${a.serial?' · '+escH(a.serial):''}</div></div>
+      ${ackChip(a)}
+      <button class="btn btn-sm btn-outline" onclick="closeEmpProfile();viewAsset('${escH(a.id)}')"><i class="bi bi-eye"></i></button>
+    </div>`).join('') : '<div style="color:#9ca3af;font-size:13px;padding:10px 0">Koi asset assigned nahi</div>';
+  // History from audit log + returns mentioning this employee
+  const hist = (DB.get('audit_log',[])||[]).filter(l=> (l.details||'').toLowerCase().includes((e.name||'').toLowerCase())).slice(0,8);
+  const histHtml = hist.length ? hist.map(l=>`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px">
+      <span style="color:#2563EB;font-weight:600;white-space:nowrap">${escH(l.action)}</span>
+      <span style="color:#555;flex:1;min-width:0">${escH(l.details||'')}</span>
+      <span style="color:#bbb;white-space:nowrap">${escH((l.timestamp||'').slice(0,10))}</span>
+    </div>`).join('') : '<div style="color:#9ca3af;font-size:13px;padding:8px 0">Koi history nahi</div>';
+  const pendingAckCount = mine.filter(a=>a.ack!=='Completed').length;
+  let m = document.getElementById('emp-profile-modal');
+  if (m) m.remove();
+  m = document.createElement('div');
+  m.id = 'emp-profile-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  m.onclick = ev => { if (ev.target===m) m.remove(); };
+  m.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:90vh;overflow:auto">
+    <div style="background:linear-gradient(135deg,#0F172A,#2563EB);color:#fff;padding:22px 24px;border-radius:16px 16px 0 0;display:flex;align-items:center;gap:14px">
+      <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700">${escH(getUserInitials(e.name||'?'))}</div>
+      <div style="flex:1"><div style="font-size:19px;font-weight:800">${escH(e.name)}</div>
+      <div style="font-size:12px;opacity:.85;margin-top:2px">${escH(e.dept||'—')}${e.wiomId?' · '+escH(e.wiomId):''}</div>
+      ${e.email?`<div style="font-size:12px;opacity:.85">${escH(e.email)}</div>`:''}</div>
+      <button onclick="closeEmpProfile()" style="background:rgba(255,255,255,.15);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px">&times;</button>
+    </div>
+    <div style="padding:20px 24px">
+      <div style="display:flex;gap:10px;margin-bottom:18px">
+        <div style="flex:1;background:#eff6ff;border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:#2563EB">${mine.length}</div><div style="font-size:11px;color:#6b7280">Assets</div></div>
+        <div style="flex:1;background:#fffbeb;border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:#d97706">${pendingAckCount}</div><div style="font-size:11px;color:#6b7280">Pending ACK</div></div>
+      </div>
+      <div style="font-weight:700;font-size:13px;color:#0F172A;margin-bottom:6px"><i class="bi bi-box-seam" style="color:#2563EB"></i> Assigned Assets</div>
+      ${assetHtml}
+      <div style="font-weight:700;font-size:13px;color:#0F172A;margin:18px 0 6px"><i class="bi bi-clock-history" style="color:#2563EB"></i> Asset History</div>
+      ${histHtml}
+      <div style="display:flex;gap:8px;margin-top:20px">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="closeEmpProfile();openEmpModal('${escH(e.id)}')"><i class="bi bi-pencil"></i> Edit</button>
+        <button class="btn btn-sm" style="flex:1;background:#fef2f2;color:#dc2626;border:1px solid #fecaca" onclick="closeEmpProfile();openOffboardModal()"><i class="bi bi-box-arrow-right"></i> Start Offboarding</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+}
+function closeEmpProfile() { const m=document.getElementById('emp-profile-modal'); if(m) m.remove(); }
+
 function renderEmpDirectory() {
   const employees = getEmployees();
   const assets = getAssets();
   const getAssetCount = name => assets.filter(a=>a.assignedTo&&a.assignedTo.toLowerCase()===name.toLowerCase()).length;
   const rows = employees.map(e=>`<tr>
-    <td><div style="font-weight:600">${escH(e.name)}</div></td>
+    <td><div style="font-weight:600;color:#2563EB;cursor:pointer" onclick="openEmpProfile('${escH(e.id)}')">${escH(e.name)}</div></td>
     <td><code style="font-size:11px">${escH(e.wiomId||'â')}</code></td>
     <td>${escH(e.dept||'â')}</td>
     <td><a href="mailto:${escH(e.email)}" style="color:#2563EB">${escH(e.email)}</a></td>
@@ -5340,6 +5396,7 @@ function renderEmpDirectory() {
     <td>${escH(e.joinDate||'â')}</td>
     <td><span class="badge badge-assigned">${getAssetCount(e.name)}</span></td>
     <td>
+      <button class="btn btn-primary btn-sm" onclick="openEmpProfile('${escH(e.id)}')"><i class="bi bi-eye"></i> Profile</button>
       <button class="btn btn-outline btn-sm" onclick="openEmpModal('${escH(e.id)}')"><i class="bi bi-pencil"></i></button>
       <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteEmployee('${escH(e.id)}')"><i class="bi bi-trash"></i></button>
     </td>
