@@ -1559,6 +1559,7 @@ function badgeCondition(c) {
 }
 function badgeAck(a) {
   if (!a) return '';
+  if (a==='Issue Reported') return `<span class="badge" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca">⚠ Issue Reported</span>`;
   const cls = a==='Completed'?'badge-completed':a==='Pending'?'badge-pending':'badge-notapplicable';
   return `<span class="badge ${cls}">${a}</span>`;
 }
@@ -3298,6 +3299,11 @@ function checkNotifications() {
     if (total > 0 && avail === 0) alerts.push({type:'error', msg:`<strong>${escH(cat)}</strong> — No assets available (low stock)`, color:'#ef4444'});
   });
 
+  // Issue Reported by employees — highest priority
+  assets.filter(a=>a.ack==='Issue Reported').forEach(a => {
+    alerts.push({type:'error', msg:`<strong>${escH(a.assignedTo||'Employee')}</strong> reported an issue on <strong>${escH(a.name)}</strong>${a.issueNote?': "'+escH(a.issueNote)+'"':''}`, color:'#dc2626'});
+  });
+
   // Warranty — only expired or expiring within 30 days
   assets.forEach(a => {
     if (a.warranty) {
@@ -3355,9 +3361,7 @@ function checkAckFromUrl() {
     showToast(`${a.name} pehle se acknowledge ho chuka hai`, 'success');
     return;
   }
-  assets[idx].ack = 'Completed';
-  saveAssets(assets);
-  // Show big confirmation
+  ackRenderChoice(ackId, a); return; /* legacy auto-confirm below (disabled)
   const d = document.createElement('div');
   d.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center';
   d.innerHTML = `<div style="background:#fff;border-radius:16px;padding:40px;max-width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)">
@@ -3367,7 +3371,74 @@ function checkAckFromUrl() {
     <div style="font-size:13px;color:#888;margin-bottom:24px">Asset ID: ${escH(a.assetId)} â Assigned to: ${escH(a.assignedTo||'â')}</div>
     <button onclick="this.closest('div[style*=fixed]').remove()" style="background:#E91E8C;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">OK</button>
   </div>`;
+  */
+  checkNotifications();
+}
+
+function ackRenderChoice(ackId, a) {
+  const d = document.createElement('div');
+  d.id = 'ack-choice-modal';
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  d.innerHTML = `<div style="background:#fff;border-radius:16px;padding:32px;max-width:440px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="font-size:44px;margin-bottom:10px">📦</div>
+    <div style="font-size:20px;font-weight:700;color:#1a1a2e;margin-bottom:6px">Confirm your asset</div>
+    <div style="font-size:15px;color:#333;margin-bottom:4px"><strong>${escH(a.name)}</strong></div>
+    <div style="font-size:12px;color:#888;margin-bottom:22px">Asset ID: ${escH(a.assetId)}${a.serial?' · S/No: '+escH(a.serial):''}<br>Assigned to: ${escH(a.assignedTo||'—')}</div>
+    <div id="ack-choice-body">
+      <button onclick="ackConfirmReceived('${escH(ackId)}')" style="display:block;width:100%;background:#10b981;color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px"><i class="bi bi-check2-circle"></i> Yes, I received it</button>
+      <button onclick="ackShowIssueForm()" style="display:block;width:100%;background:#fff;color:#dc2626;border:1.5px solid #fecaca;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer"><i class="bi bi-exclamation-triangle"></i> Report a problem</button>
+    </div>
+  </div>`;
   document.body.appendChild(d);
+}
+
+function ackConfirmReceived(ackId) {
+  const assets = getAssets();
+  const idx = assets.findIndex(a => a.assetId === ackId || a.id === ackId);
+  if (idx < 0) return;
+  assets[idx].ack = 'Completed';
+  assets[idx].ackDate = new Date().toISOString().slice(0,10);
+  saveAssets(assets);
+  const a = assets[idx];
+  const modal = document.getElementById('ack-choice-modal');
+  if (modal) modal.firstElementChild.innerHTML = `
+    <div style="font-size:52px;margin-bottom:14px">✅</div>
+    <div style="font-size:22px;font-weight:700;color:#065f46;margin-bottom:8px">Acknowledged!</div>
+    <div style="font-size:15px;color:#555;margin-bottom:6px"><strong>${escH(a.name)}</strong></div>
+    <div style="font-size:13px;color:#888;margin-bottom:24px">Thank you for confirming.</div>
+    <button onclick="document.getElementById('ack-choice-modal').remove()" style="background:#E91E8C;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">OK</button>`;
+  checkNotifications();
+}
+
+function ackShowIssueForm() {
+  const body = document.getElementById('ack-choice-body');
+  if (!body) return;
+  body.innerHTML = `
+    <textarea id="ack-issue-note" placeholder="Kya problem hai? (e.g. damaged, wrong item, not received, missing accessory...)" style="width:100%;min-height:90px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:12px"></textarea>
+    <button onclick="ackSubmitIssue()" style="display:block;width:100%;background:#dc2626;color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px"><i class="bi bi-send"></i> Submit issue</button>
+    <button onclick="document.getElementById('ack-choice-modal').remove()" style="display:block;width:100%;background:none;color:#888;border:none;padding:6px;font-size:13px;cursor:pointer">Cancel</button>`;
+  const ta = document.getElementById('ack-issue-note');
+  if (ta) ta.focus();
+}
+
+function ackSubmitIssue() {
+  const params = new URLSearchParams(window.location.search);
+  const ackId = params.get('ack');
+  const note = (document.getElementById('ack-issue-note')?.value||'').trim();
+  if (!note) { showToast('Please describe the problem', 'error'); return; }
+  const assets = getAssets();
+  const idx = assets.findIndex(a => a.assetId === ackId || a.id === ackId);
+  if (idx < 0) return;
+  assets[idx].ack = 'Issue Reported';
+  assets[idx].issueNote = note;
+  assets[idx].issueDate = new Date().toISOString().slice(0,10);
+  saveAssets(assets);
+  const modal = document.getElementById('ack-choice-modal');
+  if (modal) modal.firstElementChild.innerHTML = `
+    <div style="font-size:52px;margin-bottom:14px">📝</div>
+    <div style="font-size:20px;font-weight:700;color:#dc2626;margin-bottom:8px">Issue reported</div>
+    <div style="font-size:13px;color:#888;margin-bottom:24px">IT team ko notify kar diya gaya hai. Aapse jaldi contact kiya jayega.</div>
+    <button onclick="document.getElementById('ack-choice-modal').remove()" style="background:#E91E8C;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">OK</button>`;
   checkNotifications();
 }
 
