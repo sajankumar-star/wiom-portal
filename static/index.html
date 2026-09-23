@@ -5790,11 +5790,13 @@ function renderDashboard() {
     const sd = new Date(r.sentDate); sd.setHours(0,0,0,0);
     return Math.round((today-sd)/(1000*60*60*24)) > 7;
   }).length;
+  const offboardPending = (DB.get('offboarding',[])||[]).filter(o=>o.status!=='Completed').length;
   const itAlerts = [
     {n:issuesReported, txt:'assets with employee-reported issues', icon:'exclamation-triangle-fill', col:'#EF4444', bg:'#fef2f2', view:'inbox'},
     {n:pendingAck, txt:'acknowledgements pending', icon:'hourglass-split', col:'#F59E0B', bg:'#fffbeb', view:'ack'},
     {n:expiringWarranty.length, txt:'warranties expiring in 30 days', icon:'shield-exclamation', col:'#F59E0B', bg:'#fffbeb', view:'reports'},
     {n:repairOver7, txt:'assets under repair over 7 days', icon:'tools', col:'#EF4444', bg:'#fef2f2', view:'repairs'},
+    {n:offboardPending, txt:'employee offboarding pending', icon:'person-dash-fill', col:'#3B82F6', bg:'#eff6ff', view:'__employees'},
     {n:openRequests, txt:'open employee requests', icon:'inbox-fill', col:'#8B5CF6', bg:'#f5f3ff', view:'inbox'},
   ].filter(a=>a.n>0);
   const hh = new Date().getHours();
