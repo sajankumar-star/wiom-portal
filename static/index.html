@@ -885,6 +885,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
               <option>Saket</option>
               <option>New Delhi</option>
             </select>
+            <input type="text" id="f-locdetail" placeholder="Floor / Building / Seat (optional)" style="margin-top:8px">
           </div>
           <div class="form-group">
             <label>Asset Condition</label>
@@ -2320,7 +2321,8 @@ function renderAssigned() {
 
 function filterAckTable() {
   const q = (document.getElementById('ack-search')?.value||'').toLowerCase().trim();
-  let assets = getAssets().filter(a=>a.ack==='Pending');
+  let assets = getAssets().filter(a=>a.ack==='Pending'||a.ack==='Issue Reported');
+  assets.sort((x,y)=>(y.ack==='Issue Reported'?1:0)-(x.ack==='Issue Reported'?1:0));
   if (q) assets = assets.filter(a =>
     (a.assignedTo||'').toLowerCase().includes(q) ||
     (a.wiomId||'').toLowerCase().includes(q) ||
@@ -2328,10 +2330,10 @@ function filterAckTable() {
     (a.assetId||'').toLowerCase().includes(q) ||
     (a.dept||'').toLowerCase().includes(q)
   );
-  const tbody = document.getElementById('ack-tbody');
+  const tbody = document.getElementById('ack-tbody') || document.querySelector('#main-content table tbody');
   if (!tbody) return;
   if (!assets.length) {
-    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="bi bi-search"></i><p>No results for "${q}"</p></div></td></tr>`;
+    tbody.innerHTML = q ? `<tr><td colspan="9"><div class="empty-state"><i class="bi bi-search"></i><p>No results for "${q}"</p></div></td></tr>` : `<tr><td colspan="9"><div class="empty-state"><i class="bi bi-check-all"></i><p>All acknowledgements are complete!</p></div></td></tr>`;
     return;
   }
   const today = new Date(); today.setHours(0,0,0,0);
@@ -2356,10 +2358,11 @@ function filterAckTable() {
       <td>${escH(a.category)} / ${escH(a.type)}</td>
       <td>${escH(a.assignDate||'—')}</td>
       <td style="text-align:center">${daysPendingHtml}</td>
-      <td>${badgeAck('Pending')}${a.reminderCount?`<span style="font-size:10px;color:#888;margin-left:6px">${a.reminderCount} reminder${a.reminderCount>1?'s':''} sent</span>`:''}</td>
+      <td>${badgeAck(a.ack)}${a.reminderCount?`<span style="font-size:10px;color:#888;margin-left:6px">${a.reminderCount} reminder${a.reminderCount>1?'s':''} sent</span>`:''}${a.issueNote?`<div style="font-size:11px;color:#dc2626;margin-top:4px;max-width:220px">"${escH(a.issueNote)}"${a.issueDate?` <span style="color:#999">(${escH(a.issueDate)})</span>`:''}</div>`:''}</td>
       <td>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-primary btn-sm" onclick="markAckComplete('${escH(a.id)}')"><i class="bi bi-check2"></i> Mark Complete</button>
+          <button class="btn btn-primary btn-sm" onclick="markAckComplete('${escH(a.id)}')"><i class="bi bi-check2"></i> ${a.ack==='Issue Reported'?'Resolve':'Mark Complete'}</button>
+          ${a.ack!=='Issue Reported'?`<button class="btn btn-sm" style="background:#fff;color:#dc2626;border:1px solid #fecaca" onclick="markAckIssue('${escH(a.id)}')"><i class="bi bi-exclamation-triangle"></i> Report Issue</button>`:''}
           <button class="btn btn-outline btn-sm" onclick="sendAckReminder('${escH(a.id)}')" title="Send reminder email"><i class="bi bi-bell"></i> Remind</button>
         </div>
       </td>
@@ -2433,6 +2436,7 @@ function renderAck() {
       </table>
     </div>
   </div>`;
+  filterAckTable();
 }
 
 function updateAckBadge(count) {
@@ -2539,11 +2543,27 @@ function sendAckReminder(id) {
   showToast(`Reminder preview khula â ${a.assignedTo} ko bhejo`, 'success');
 }
 
+function markAckIssue(id) {
+  const note = prompt('Employee ne kya issue report kiya? (short note likhein):');
+  if (note===null) return;
+  const assets = getAssets();
+  const idx = assets.findIndex(a=>a.id===id);
+  if (idx>-1) {
+    assets[idx].ack = 'Issue Reported';
+    assets[idx].issueNote = (note||'').trim();
+    assets[idx].issueDate = new Date().toISOString().slice(0,10);
+    saveAssets(assets);
+    renderAck();
+    showToast('Issue reported: ' + (assets[idx].assignedTo||'Employee'), 'error');
+  }
+}
+
 function markAckComplete(id) {
   const assets = getAssets();
   const idx = assets.findIndex(a=>a.id===id);
   if (idx>-1) {
     assets[idx].ack = 'Completed';
+    delete assets[idx].issueNote; delete assets[idx].issueDate;
     saveAssets(assets);
     renderAck();
     showToast(`â ${assets[idx].assignedTo||'Employee'} â Acknowledgement complete, list se hata diya`, 'success');
@@ -2602,6 +2622,7 @@ function openAddModal() {
   document.getElementById('f-desc').value = '';
   document.getElementById('desc-group').style.display = 'none';
   document.getElementById('f-location').value = '';
+  { const _ld=document.getElementById('f-locdetail'); if(_ld) _ld.value=''; }
   document.getElementById('f-condition').value = '';
   document.getElementById('f-purchased').value = '';
   document.getElementById('f-warranty').value = '';
@@ -2640,6 +2661,7 @@ function editAsset(id) {
   document.getElementById('f-desc').value = a.desc||'';
   document.getElementById('desc-group').style.display = a.desc ? 'block' : 'none';
   document.getElementById('f-location').value = a.location||'';
+  { const _ld=document.getElementById('f-locdetail'); if(_ld) _ld.value=a.locDetail||''; }
   document.getElementById('f-condition').value = a.condition||'';
   document.getElementById('f-purchased').value = a.purchased||'';
   document.getElementById('f-warranty').value = a.warranty||'';
@@ -2690,6 +2712,7 @@ function viewAsset(id) {
         <div class="info-grid">
           ${infoRow('Asset ID', `<code style="background:#f0f0f8;padding:2px 6px;border-radius:4px;font-size:12px">${escH(a.assetId)}</code>`)}
           ${infoRow('Serial No', escH(a.serial))}
+          ${infoRow('Location', [escH(a.location||''), escH(a.locDetail||'')].filter(Boolean).join(' — '))}
           ${infoRow('Condition', badgeCondition(a.condition))}
           ${(a.qty!=null) ? infoRow('Quantity in Stock', escH(String(a.qty)) + ((a.minQty!=null && Number(a.qty)<=Number(a.minQty)) ? ' <span style="color:#f97316;font-weight:700">(LOW STOCK)</span>' : '')) : ''}
           ${infoRow('Specs / Config', escH(a.desc))}
@@ -2865,6 +2888,7 @@ function saveAsset() {
   const assetId = document.getElementById('f-asset-id').value.trim();
   const name = document.getElementById('f-asset-name').value.trim();
   const loc = document.getElementById('f-location').value;
+  const locDetail = (document.getElementById('f-locdetail')?.value||'').trim();
   const cond = document.getElementById('f-condition').value;
   const purchased = document.getElementById('f-purchased').value;
   const warranty = document.getElementById('f-warranty').value;
@@ -2895,13 +2919,13 @@ function saveAsset() {
   if (editId) {
     const idx = assets.findIndex(a=>a.id===editId);
     if (idx>-1) {
-      assets[idx] = {...assets[idx], category:cat, type, assetId, name, serial, location:loc, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty,
+      assets[idx] = {...assets[idx], category:cat, type, assetId, name, serial, location:loc, locDetail, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty,
         ack: status==='Assigned' ? (assets[idx].ack||'Pending') : 'Not Applicable'};
       saveAssets(assets);
       showToast('Asset updated successfully', 'success');
     }
   } else {
-    const newAsset = {id:genId(), category:cat, type, assetId, name, serial, location:loc, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty,
+    const newAsset = {id:genId(), category:cat, type, assetId, name, serial, location:loc, locDetail, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty,
       ack: status==='Assigned' ? 'Pending' : 'Not Applicable'};
     assets.push(newAsset);
     saveAssets(assets);
@@ -3320,6 +3344,8 @@ function checkNotifications() {
   const today = new Date(); today.setHours(0,0,0,0);
   const in7 = new Date(today); in7.setDate(today.getDate()+7);
   const in30 = new Date(today); in30.setDate(today.getDate()+30);
+  const in60 = new Date(today); in60.setDate(today.getDate()+60);
+  const in90 = new Date(today); in90.setDate(today.getDate()+90);
   const alerts = [];
 
   // Low stock: categories with 0 available
@@ -3343,6 +3369,8 @@ function checkNotifications() {
       if (d < today) alerts.push({type:'error', msg:`<strong>${escH(a.name)}</strong> — Warranty EXPIRED (${a.warranty})`, color:'#ef4444'});
       else if (d <= in7) alerts.push({type:'error', msg:`<strong>${escH(a.name)}</strong> — Warranty expires in <strong>${days}d</strong>`, color:'#ef4444'});
       else if (d <= in30) alerts.push({type:'warn', msg:`<strong>${escH(a.name)}</strong> — Warranty expires in ${days}d`, color:'#f97316'});
+      else if (d <= in60) alerts.push({type:'info', msg:`<strong>${escH(a.name)}</strong> — Warranty expires in ${days}d — plan renewal`, color:'#3b82f6'});
+      else if (d <= in90) alerts.push({type:'info', msg:`<strong>${escH(a.name)}</strong> — Warranty expires in ~${Math.round(days/30)} months`, color:'#6b7280'});
     }
   });
 
