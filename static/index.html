@@ -614,6 +614,12 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
           <input type="text" id="transfer-from" readonly style="background:#f9f9f9;color:#666">
         </div>
         <div class="section-divider">Transfer To</div>
+        <div class="form-group" style="position:relative">
+          <label>Select New Employee (Keka) 🔍</label>
+          <input type="text" id="transfer-emp-search" placeholder="Type employee name or Wiom ID..." autocomplete="off" oninput="transferEmpSearch(this.value)" onfocus="transferEmpSearch(this.value)">
+          <div id="transfer-emp-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:240px;overflow-y:auto;z-index:60"></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:5px">Naya employee chunte hi neeche ki details bhar jayengi.</div>
+        </div>
         <div class="form-row">
           <div class="form-group">
             <label>Employee Name *</label>
@@ -1083,6 +1089,12 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
           </div>
         </div>
         <div class="section-divider">Employee Details</div>
+        <div class="form-group" style="position:relative">
+          <label>Select Employee (Keka) 🔍</label>
+          <input type="text" id="assign-emp-search" placeholder="Type employee name or Wiom ID..." autocomplete="off" oninput="assignEmpSearch(this.value)" onfocus="assignEmpSearch(this.value)">
+          <div id="assign-emp-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:240px;overflow-y:auto;z-index:60"></div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:5px">Employee chunne par neeche ki saari details apne aap bhar jayengi — manual bhi edit kar sakte hain.</div>
+        </div>
         <div class="form-row">
           <div class="form-group">
             <label>Employee Name *</label>
@@ -3866,6 +3878,69 @@ function ackSubmitIssue() {
 }
 
 function openAssignModal(id) {
+  __openAssignModalBody(id);
+}
+function assignEmpSearch(q) {
+  const dd = document.getElementById('assign-emp-dropdown');
+  if (!dd) return;
+  q = (q||'').trim().toLowerCase();
+  let list = (typeof getEmployees==='function' ? getEmployees() : []);
+  if (q) list = list.filter(e =>
+    (e.name||'').toLowerCase().includes(q) || (e.wiomId||'').toLowerCase().includes(q) ||
+    (e.email||'').toLowerCase().includes(q) || (e.dept||'').toLowerCase().includes(q));
+  list = list.slice(0, 40);
+  if (!list.length) { dd.innerHTML = `<div style="padding:10px 12px;color:#9ca3af;font-size:13px">Koi employee nahi mila — manual bhar sakte hain</div>`; dd.style.display='block'; return; }
+  dd.innerHTML = list.map(e => `<div onmousedown="assignPickEmp('${escH(e.id)}')" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background='#F5F7FB'" onmouseout="this.style.background='#fff'">
+    <div style="font-weight:600;color:#1a1a2e;font-size:13px">${escH(e.name||'')} ${e.wiomId?`<span style="color:#9ca3af;font-weight:400;font-size:12px">· ${escH(e.wiomId)}</span>`:''}</div>
+    <div style="font-size:11px;color:#6b7280">${escH(e.dept||'—')}${e.email?' · '+escH(e.email):''}</div>
+  </div>`).join('');
+  dd.style.display = 'block';
+}
+function assignPickEmp(empId) {
+  const e = (typeof getEmployees==='function' ? getEmployees() : []).find(x=>x.id===empId);
+  if (!e) return;
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value = v||''; };
+  set('assign-emp-name', e.name); set('assign-wiom-id', e.wiomId); set('assign-dept', e.dept);
+  set('assign-email', e.email); set('assign-mgr-name', e.managerName); set('assign-mgr-email', e.managerEmail);
+  set('assign-emp-search', e.name);
+  const dd = document.getElementById('assign-emp-dropdown'); if (dd) dd.style.display='none';
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('assign-emp-dropdown');
+  const s = document.getElementById('assign-emp-search');
+  if (dd && s && !s.contains(e.target) && !dd.contains(e.target)) dd.style.display='none';
+});
+function transferEmpSearch(q) {
+  const dd = document.getElementById('transfer-emp-dropdown');
+  if (!dd) return;
+  q = (q||'').trim().toLowerCase();
+  let list = (typeof getEmployees==='function' ? getEmployees() : []);
+  if (q) list = list.filter(e =>
+    (e.name||'').toLowerCase().includes(q) || (e.wiomId||'').toLowerCase().includes(q) ||
+    (e.email||'').toLowerCase().includes(q) || (e.dept||'').toLowerCase().includes(q));
+  list = list.slice(0, 40);
+  if (!list.length) { dd.innerHTML = `<div style="padding:10px 12px;color:#9ca3af;font-size:13px">Koi employee nahi mila — manual bhar sakte hain</div>`; dd.style.display='block'; return; }
+  dd.innerHTML = list.map(e => `<div onmousedown="transferPickEmp('${escH(e.id)}')" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background='#F5F7FB'" onmouseout="this.style.background='#fff'">
+    <div style="font-weight:600;color:#1a1a2e;font-size:13px">${escH(e.name||'')} ${e.wiomId?`<span style="color:#9ca3af;font-weight:400;font-size:12px">· ${escH(e.wiomId)}</span>`:''}</div>
+    <div style="font-size:11px;color:#6b7280">${escH(e.dept||'—')}${e.email?' · '+escH(e.email):''}</div>
+  </div>`).join('');
+  dd.style.display = 'block';
+}
+function transferPickEmp(empId) {
+  const e = (typeof getEmployees==='function' ? getEmployees() : []).find(x=>x.id===empId);
+  if (!e) return;
+  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.value = v||''; };
+  set('transfer-to-name', e.name); set('transfer-to-wiomid', e.wiomId); set('transfer-to-dept', e.dept);
+  set('transfer-to-email', e.email); set('transfer-to-mgr-name', e.managerName); set('transfer-to-mgr-email', e.managerEmail);
+  set('transfer-emp-search', e.name);
+  const dd = document.getElementById('transfer-emp-dropdown'); if (dd) dd.style.display='none';
+}
+document.addEventListener('click', e => {
+  const dd = document.getElementById('transfer-emp-dropdown');
+  const s = document.getElementById('transfer-emp-search');
+  if (dd && s && !s.contains(e.target) && !dd.contains(e.target)) dd.style.display='none';
+});
+function __openAssignModalBody(id) {
   const a = getAssets().find(a=>a.id===id);
   if (!a) return;
   document.getElementById('assign-asset-id').value = id;
@@ -3877,6 +3952,7 @@ function openAssignModal(id) {
   document.getElementById('assign-email').value = '';
   document.getElementById('assign-mgr-name').value = '';
   document.getElementById('assign-mgr-email').value = '';
+  { const s=document.getElementById('assign-emp-search'); if(s) s.value=''; const dd=document.getElementById('assign-emp-dropdown'); if(dd) dd.style.display='none'; }
   document.getElementById('assign-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('assign-condition').value = a.condition||'';
   document.getElementById('assign-notes').value = '';
@@ -4824,6 +4900,7 @@ function openTransferModal(assetId) {
   document.getElementById('transfer-to-email').value = '';
   document.getElementById('transfer-to-mgr-name').value = '';
   document.getElementById('transfer-to-mgr-email').value = '';
+  { const s=document.getElementById('transfer-emp-search'); if(s) s.value=''; const dd=document.getElementById('transfer-emp-dropdown'); if(dd) dd.style.display='none'; }
   document.getElementById('transfer-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('transfer-reason').value = '';
 
