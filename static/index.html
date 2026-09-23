@@ -5699,6 +5699,43 @@ function renderDashboard() {
   const underRepair = assets.filter(a=>a.status==='Under Repair').length;
   const returnedCount = (DB.get('return_history',[])||[]).length;
   const lostDamaged = assets.filter(a=>a.status==='Lost'||a.condition==='Damaged'||a.condition==='Critical').length;
+
+  // ── IT Alerts (action-needed) ──
+  const issuesReported = assets.filter(a=>a.ack==='Issue Reported').length;
+  const openRequests = (DB.get('employee_requests',[])||[]).filter(r=>r.status==='Open').length;
+  const repairOver7 = (DB.get('repair_log',[])||[]).filter(r=>{
+    if (r.status==='Completed'||r.status==='Returned') return false;
+    if (!r.sentDate) return false;
+    const sd = new Date(r.sentDate); sd.setHours(0,0,0,0);
+    return Math.round((today-sd)/(1000*60*60*24)) > 7;
+  }).length;
+  const itAlerts = [
+    {n:issuesReported, txt:'assets with employee-reported issues', icon:'exclamation-triangle-fill', col:'#EF4444', bg:'#fef2f2', view:'inbox'},
+    {n:pendingAck, txt:'acknowledgements pending', icon:'hourglass-split', col:'#F59E0B', bg:'#fffbeb', view:'ack'},
+    {n:expiringWarranty.length, txt:'warranties expiring in 30 days', icon:'shield-exclamation', col:'#F59E0B', bg:'#fffbeb', view:'reports'},
+    {n:repairOver7, txt:'assets under repair over 7 days', icon:'tools', col:'#EF4444', bg:'#fef2f2', view:'repairs'},
+    {n:openRequests, txt:'open employee requests', icon:'inbox-fill', col:'#8B5CF6', bg:'#f5f3ff', view:'inbox'},
+  ].filter(a=>a.n>0);
+  const hh = new Date().getHours();
+  const greetWord = hh<12 ? 'Good Morning' : hh<17 ? 'Good Afternoon' : 'Good Evening';
+  const firstName = ((typeof currentUser!=='undefined' && currentUser && currentUser.name) ? currentUser.name : 'Sajan').split(' ')[0];
+  const alertsHTML = `
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+    <div>
+      <div style="font-size:22px;font-weight:800;color:#0B1220">${greetWord}, ${escH(firstName)} 👋</div>
+      <div style="font-size:13px;color:#6b7280;margin-top:2px">Wiom IT Asset Overview — ${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+    </div>
+  </div>
+  <div style="background:#fff;border:1px solid #e8e8f0;border-radius:14px;padding:16px 18px;margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#0B1220;margin-bottom:${itAlerts.length?'12px':'0'}"><i class="bi bi-bell-fill" style="color:#2563EB"></i> IT Alerts — Aaj ka action</div>
+    ${itAlerts.length ? `<div style="display:flex;flex-direction:column;gap:8px">${itAlerts.map(a=>`
+      <div onclick="navGo('${a.view}')" style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:${a.bg};border-radius:10px;cursor:pointer;transition:transform .1s" onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform='none'">
+        <div style="width:30px;height:30px;border-radius:8px;background:${a.col}22;color:${a.col};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="bi bi-${a.icon}"></i></div>
+        <div style="font-size:14px;color:#1a1a2e"><strong style="color:${a.col};font-size:15px">${a.n}</strong> ${a.txt}</div>
+        <div style="margin-left:auto;color:${a.col};font-size:12px;font-weight:600">View →</div>
+      </div>`).join('')}</div>`
+    : `<div style="display:flex;align-items:center;gap:10px;color:#10B981;font-size:14px;padding:4px 0"><i class="bi bi-check-circle-fill"></i> Sab clear hai — koi pending action nahi 🎉</div>`}
+  </div>`;
   const statCards = [
     {label:'Total Assets', val:total, icon:'bi-boxes', bg:'#DBEAFE', col:'#2563EB', view:'list'},
     {label:'Assigned', val:assigned, icon:'bi-person-check', bg:'#dbeafe', col:'#3b82f6', view:'assigned'},
@@ -5725,6 +5762,7 @@ function renderDashboard() {
   }).join('') : `<div style="color:#aaa;font-size:13px;padding:12px">No assets expiring in next 30 days</div>`;
 
   document.getElementById('main-content').innerHTML = `
+  ${alertsHTML}
   ${syncBarHTML()}
   ${lowStockBarHTML()}
   <div class="dash-stat-cards">
