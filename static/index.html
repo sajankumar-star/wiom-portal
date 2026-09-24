@@ -1,4 +1,4 @@
-﻿ï»¿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -379,9 +379,16 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
 <!-- Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â AUTH Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â -->
 <div id="auth-screen">
   <div class="auth-brand">
-    <div class="ab-logo">Wiom</div>
+    <div class="ab-logo" style="background:#fff;border-radius:18px;padding:20px 30px;display:inline-block;box-shadow:0 12px 30px rgba(0,0,0,.18);margin-bottom:22px">
+      <svg width="250" height="104" viewBox="0 0 250 104" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wiom - Sapno se zyada">
+        <path d="M46 50 C46 34 22 34 22 50 C22 66 46 66 46 50 C46 34 70 34 70 50 C70 66 46 66 46 50 Z" stroke="#EC008C" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M24 33 C22 27 26 23 31 25" stroke="#EC008C" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="24" cy="22" r="2.6" fill="#EC008C"/>
+        <text x="84" y="58" font-family="Georgia, 'Times New Roman', serif" font-size="50" font-weight="700" fill="#EC008C">Wiom</text>
+        <text x="86" y="90" font-family="'Noto Sans Devanagari', 'Nirmala UI', system-ui, sans-serif" font-size="21" font-weight="700" fill="#EC008C" letter-spacing="0.5">&#2360;&#2346;&#2344;&#2379;&#2306; &#2360;&#2375; &#2332;&#2381;&#2351;&#2366;&#2342;&#2366;</text>
+      </svg>
+    </div>
     <h1>IT Asset Management Portal</h1>
-    <div class="ab-tag">Har laptop, monitor aur device — kiske paas hai, kab mila, warranty kab tak — sab ek jagah, live Keka sync ke saath.</div>
     <div class="ab-icons">
       <i class="bi bi-laptop"></i><i class="bi bi-display"></i><i class="bi bi-phone"></i><i class="bi bi-hdd-network"></i><i class="bi bi-qr-code"></i>
     </div>
@@ -392,7 +399,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
       <div class="auth-logo"><div class="lm">W</div><span>Wiom</span></div>
       <h2>IT Asset Portal</h2>
       <div class="sub">Sign in to manage company assets</div>
-      <div class="help">Apne Wiom account se login karein. Koi dikkat ho to IT team se sampark karein.</div>
+      <div class="help"></div>
       <label>Username</label>
       <input type="text" id="auth-user" placeholder="e.g. sajan" autocomplete="username">
       <label>Password</label>
@@ -493,7 +500,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
     </div>
     <div style="padding:16px">
       <div id="qr-reader" style="width:100%"></div>
-      <div id="qr-scan-status" style="font-size:12px;color:#888;margin-top:10px;text-align:center">Camera se asset ka QR label scan karein</div>
+      <div id="qr-scan-status" style="font-size:12px;color:#888;margin-top:10px;text-align:center">Scan the asset's QR label with your camera</div>
     </div>
   </div>
 </div>
@@ -654,7 +661,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
           <label>Select New Employee (Keka) 🔍</label>
           <input type="text" id="transfer-emp-search" placeholder="Type employee name or Wiom ID..." autocomplete="off" oninput="transferEmpSearch(this.value)" onfocus="transferEmpSearch(this.value)">
           <div id="transfer-emp-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:240px;overflow-y:auto;z-index:60"></div>
-          <div style="font-size:11px;color:#9ca3af;margin-top:5px">Naya employee chunte hi neeche ki details bhar jayengi.</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:5px">Selecting a new employee will auto-fill the details below.</div>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -1155,7 +1162,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
           <label>Select Employee (Keka) 🔍</label>
           <input type="text" id="assign-emp-search" placeholder="Type employee name or Wiom ID..." autocomplete="off" oninput="assignEmpSearch(this.value)" onfocus="assignEmpSearch(this.value)">
           <div id="assign-emp-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:240px;overflow-y:auto;z-index:60"></div>
-          <div style="font-size:11px;color:#9ca3af;margin-top:5px">Employee chunne par neeche ki saari details apne aap bhar jayengi — manual bhi edit kar sakte hain.</div>
+          <div style="font-size:11px;color:#9ca3af;margin-top:5px">Selecting an employee auto-fills all the details below — you can also edit them manually.</div>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -1487,11 +1494,11 @@ function togglePw() {
   else { inp.type = 'password'; if (ic) ic.className = 'bi bi-eye'; }
 }
 function forgotPw() {
-  const msg = 'Password reset ke liye IT admin (Sajan Kumar — sajan.kumar@wiom.in) se contact karein.';
+  const msg = 'To reset your password, contact the IT admin (Sajan Kumar — sajan.kumar@wiom.in).';
   if (typeof showToast === 'function') showToast(msg, 'info'); else alert(msg);
 }
 function ssoLogin(provider) {
-  const msg = provider + ' SSO abhi enable nahi hua. IT admin ' + provider + ' OAuth (client ID) configure karein, phir yeh chalu ho jayega. Tab tak username/password se login karein.';
+  const msg = provider + ' SSO is not enabled yet. The IT admin needs to configure ' + provider + ' OAuth (client ID); then it will start working. Until then, sign in with username/password.';
   if (typeof showToast === 'function') showToast(msg, 'info'); else alert(msg);
 }
 
@@ -2024,7 +2031,7 @@ function globalSearch(q) {
     (a.empEmail||'').toLowerCase().includes(ql)
   ).slice(0, 25);
   if (!matches.length) {
-    dd.innerHTML = `<div style="padding:14px;color:#9ca3af;font-size:13px">Koi asset nahi mila for "<strong>${escH(trimmed)}</strong>"</div>`;
+    dd.innerHTML = `<div style="padding:14px;color:#9ca3af;font-size:13px">No asset found for "<strong>${escH(trimmed)}</strong>"</div>`;
     dd.style.display = 'block'; return;
   }
   dd.innerHTML = `<div style="padding:8px 14px;font-size:11px;color:#9ca3af;font-weight:600;border-bottom:1px solid #f3f4f6">${matches.length} result${matches.length>1?'s':''}</div>` +
@@ -2235,7 +2242,7 @@ function renderExpenses() {
         </table>
       </div>
     </div>`;
-  }).join('') : '<div class="empty-state"><i class="bi bi-receipt"></i><p>Koi expense nahi add kiya abhi tak.<br><strong>Add Expense</strong> button se shuru karein.</p></div>'}`;
+  }).join('') : '<div class="empty-state"><i class="bi bi-receipt"></i><p>No expenses added yet.<br>Get started with the <strong>Add Expense</strong> button.</p></div>'}`;
 }
 
 function openExpenseModal(id) {
@@ -2317,7 +2324,7 @@ function saveExpense() {
 }
 
 function deleteExpense(id) {
-  if (!confirm('Is expense ko delete karein?')) return;
+  if (!confirm('Delete this expense?')) return;
   saveExpenses(getExpenses().filter(e=>e.id!==id));
   renderExpenses();
 }
@@ -2327,7 +2334,7 @@ function exportExpensesCSV() {
   const headers = ['Date','Category','Item','Vendor','Amount','Note'];
   const rows = expenses.map(e=>[e.date,e.category,e.item,e.vendor||'',e.amount,e.note||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
   const csv = [headers.join(','),...rows].join('\r\n');
-  const blob = new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const blob = new Blob([''+csv],{type:'text/csv;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href=url; a.download='IT_Expenses_'+new Date().toISOString().slice(0,10)+'.csv';
@@ -2354,7 +2361,7 @@ function renderNotes() {
   <div class="white-card" style="margin-bottom:20px">
     <div style="font-weight:700;color:#0B1220;margin-bottom:12px;font-size:14px"><i class="bi bi-plus-circle"></i> New Note / Task</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
-      <textarea id="note-input" placeholder="Aaj ka kaam, reminder, ya koi note likhein... (Ctrl+Enter se add karein)" rows="2"
+      <textarea id="note-input" placeholder="Write today's task, a reminder, or any note... (Ctrl+Enter to add)" rows="2"
         style="flex:1;min-width:200px;padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:14px;resize:vertical;outline:none;font-family:inherit"
         onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#e0e0e0'"
         onkeydown="if(event.key==='Enter'&&(event.ctrlKey||event.metaKey)){addNote();}"></textarea>
@@ -2382,7 +2389,7 @@ function renderNotes() {
     ${notes.filter(n=>n.done).slice(0,30).map(n=>noteItemHTML(n)).join('')}
   </div>` : ''}
 
-  ${!notes.length ? '<div class="empty-state"><i class="bi bi-journal-text"></i><p>Koi note nahi hai.<br>Upar box mein likhein aur Add karein.</p></div>' : ''}`;
+  ${!notes.length ? '<div class="empty-state"><i class="bi bi-journal-text"></i><p>No notes yet.<br>Write in the box above and click Add.</p></div>' : ''}`;
 }
 
 function noteItemHTML(n) {
@@ -2422,13 +2429,13 @@ function toggleNote(id) {
 }
 
 function deleteNote(id) {
-  if (!confirm('Is note ko delete karein?')) return;
+  if (!confirm('Delete this note?')) return;
   saveNotes(getNotes().filter(n=>n.id!==id));
   renderNotes();
 }
 
 function clearDoneNotes() {
-  if (!confirm('Saare completed notes delete karein?')) return;
+  if (!confirm('Delete all completed notes?')) return;
   saveNotes(getNotes().filter(n=>!n.done));
   renderNotes();
 }
@@ -2453,7 +2460,7 @@ function filterAssignedTable() {
   const countEl = document.getElementById('assigned-count');
   if (countEl) countEl.textContent = `(${assets.length})`;
   if (!tbody) return;
-  if (!assets.length) { tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="bi bi-inbox"></i><p>Koi result nahi mila</p></div></td></tr>`; return; }
+  if (!assets.length) { tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="bi bi-inbox"></i><p>No results found</p></div></td></tr>`; return; }
   tbody.innerHTML = assets.map(a=>`
     <tr>
       <td>
@@ -2748,11 +2755,11 @@ function sendAckReminder(id) {
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank', 'width=680,height=800');
   incrementReminder(id);
-  showToast(`Reminder preview khula — ${a.assignedTo} ko bhejo`, 'success');
+  showToast(`Reminder preview opened — send it to ${a.assignedTo}`, 'success');
 }
 
 function markAckIssue(id) {
-  const note = prompt('Employee ne kya issue report kiya? (short note likhein):');
+  const note = prompt('What issue did the employee report? (write a short note):');
   if (note===null) return;
   const assets = getAssets();
   const idx = assets.findIndex(a=>a.id===id);
@@ -2826,12 +2833,12 @@ function bulkAddAssets() {
       <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1e40af">
         <div style="font-weight:700;margin-bottom:6px"><i class="bi bi-info-circle"></i> CSV format (pehli row header honi chahiye):</div>
         <code style="font-size:11px;color:#6b7280;word-break:break-all">${cols}</code>
-        <div style="margin-top:8px"><a href="#" onclick="downloadBulkTemplate();return false" style="color:#2563EB;font-weight:600;text-decoration:none"><i class="bi bi-download"></i> Sample template download karein</a></div>
+        <div style="margin-top:8px"><a href="#" onclick="downloadBulkTemplate();return false" style="color:#2563EB;font-weight:600;text-decoration:none"><i class="bi bi-download"></i> Download sample template</a></div>
         <div style="margin-top:4px;color:#6b7280">Zaroori columns: <b>category, type, assetId, name</b>. Baaki optional.</div>
       </div>
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-        <label class="btn btn-outline btn-sm" style="cursor:pointer;margin:0"><i class="bi bi-file-earmark-spreadsheet"></i> CSV file choose karein<input type="file" accept=".csv,text/csv" style="display:none" onchange="bulkFileChosen(this)"></label>
-        <span style="font-size:12px;color:#888">ya neeche CSV text paste karein</span>
+        <label class="btn btn-outline btn-sm" style="cursor:pointer;margin:0"><i class="bi bi-file-earmark-spreadsheet"></i> Choose CSV file<input type="file" accept=".csv,text/csv" style="display:none" onchange="bulkFileChosen(this)"></label>
+        <span style="font-size:12px;color:#888">or paste CSV text below</span>
       </div>
       <textarea id="bulk-csv-text" placeholder="${cols}&#10;IT,Laptop,LP-101,Dell Latitude,SN123,Delhi HO,Good,2025-01-10,2027-01-10,In Store,,INV-9,Dell,55000" style="width:100%;height:120px;padding:10px;border:1px solid #ddd;border-radius:8px;font-family:monospace;font-size:12px" oninput="document.getElementById('bulk-preview-wrap').innerHTML=''"></textarea>
       <div style="display:flex;gap:10px;margin-top:12px">
@@ -2890,7 +2897,7 @@ function bulkRowsFromText() {
 function bulkPreview() {
   const rows = bulkRowsFromText();
   const wrap = document.getElementById('bulk-preview-wrap');
-  if (!rows.length) { wrap.innerHTML = '<div style="color:#dc2626;font-size:13px">Koi valid row nahi mili. CSV check karein.</div>'; return; }
+  if (!rows.length) { wrap.innerHTML = '<div style="color:#dc2626;font-size:13px">No valid rows found. Please check the CSV.</div>'; return; }
   const existing = getAssets();
   let valid=0, invalid=0, dup=0;
   const body = rows.map(r=>{
@@ -2915,7 +2922,7 @@ function bulkPreview() {
 
 function bulkImport() {
   const rows = bulkRowsFromText();
-  if (!rows.length) { showToast('Koi row nahi mili', 'error'); return; }
+  if (!rows.length) { showToast('No rows found', 'error'); return; }
   const assets = getAssets();
   let added=0, skipped=0;
   rows.forEach(r=>{
@@ -3314,7 +3321,7 @@ function openEmailTemplates() {
       <button onclick="document.getElementById('email-tpl-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888">&times;</button>
     </div>
     <div style="padding:20px 22px">
-      <div style="font-size:12px;color:#6b7280;margin-bottom:14px">Placeholders {employee} / {asset} / {assetId} / {serial} ko apne hisaab se replace karein. "Copy" dabakar Gmail me paste karein.</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:14px">Replace the placeholders {employee} / {asset} / {assetId} / {serial} as needed. Click "Copy" and paste into Gmail.</div>
       ${EMAIL_TEMPLATES.map((t,i)=>`<div style="border:1px solid #e8e8f0;border-radius:10px;padding:12px 14px;margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div style="font-weight:700;font-size:13px;color:#0F172A">${escH(t.k)}</div>
@@ -3466,7 +3473,7 @@ function saveAsset() {
   const dupSerial = serial && others.find(a => (a.serial||'').toLowerCase() === serial.toLowerCase());
   if (dupSerial) { showToast('⚠️ Duplicate Serial No — pehle se maujood: ' + dupSerial.name + ' (' + dupSerial.assetId + ')', 'error'); return; }
   const dupInv = invoice && others.find(a => (a.invoice||'').toLowerCase() === invoice.toLowerCase());
-  if (dupInv) { if (!confirm('⚠️ Invoice "' + invoice + '" pehle se ' + dupInv.name + ' par hai. Phir bhi save karein?')) return; }
+  if (dupInv) { if (!confirm('⚠️ Invoice "' + invoice + '" already exists on ' + dupInv.name + '. Save anyway?')) return; }
 
   const nowStamp = new Date().toISOString();
 
@@ -4019,7 +4026,7 @@ function renderSelfService(myId) {
         <button onclick="ssRequest('${escH(a.id)}','Return')" style="background:#fff;color:#f97316;border:1.5px solid #fed7aa;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer"><i class="bi bi-box-arrow-in-left"></i> Return Request</button>
       </div>
     </div>`;
-  }).join('') : `<div style="background:#fff;border-radius:14px;padding:40px;text-align:center;color:#888"><i class="bi bi-inbox" style="font-size:40px;color:#ccc"></i><div style="margin-top:10px">Aapke naam koi asset assigned nahi mili.<br>Agar galat lage to IT team se contact karein.</div></div>`;
+  }).join('') : `<div style="background:#fff;border-radius:14px;padding:40px;text-align:center;color:#888"><i class="bi bi-inbox" style="font-size:40px;color:#ccc"></i><div style="margin-top:10px">No assets are assigned to you.<br>If this looks incorrect, contact the IT team.</div></div>`;
   host.innerHTML = `
     <div style="min-height:100vh;background:#f4f5f9;padding:0 0 40px">
       <div style="background:linear-gradient(135deg,#0B1220,#2563EB);color:#fff;padding:28px 20px 24px">
@@ -4136,7 +4143,7 @@ function ssToast(msg) {
 function copySelfServiceLink(empKey) {
   const url = window.location.origin + '/?myassets=' + encodeURIComponent(empKey);
   if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(url).then(()=>showToast('Portal link copied — employee ko bhej dein','success'))
+    navigator.clipboard.writeText(url).then(()=>showToast('Portal link copied — send it to the employee','success'))
       .catch(()=>showToast(url,'info'));
   } else { showToast(url, 'info'); }
 }
@@ -4232,7 +4239,7 @@ function ackSubmitIssue() {
   if (modal) modal.firstElementChild.innerHTML = `
     <div style="font-size:52px;margin-bottom:14px">📝</div>
     <div style="font-size:20px;font-weight:700;color:#dc2626;margin-bottom:8px">Issue reported</div>
-    <div style="font-size:13px;color:#888;margin-bottom:24px">IT team ko notify kar diya gaya hai. Aapse jaldi contact kiya jayega.</div>
+    <div style="font-size:13px;color:#888;margin-bottom:24px">The IT team has been notified. They will contact you shortly.</div>
     <button onclick="document.getElementById('ack-choice-modal').remove()" style="background:#2563EB;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">OK</button>`;
   checkNotifications();
 }
@@ -4249,7 +4256,7 @@ function assignEmpSearch(q) {
     (e.name||'').toLowerCase().includes(q) || (e.wiomId||'').toLowerCase().includes(q) ||
     (e.email||'').toLowerCase().includes(q) || (e.dept||'').toLowerCase().includes(q));
   list = list.slice(0, 40);
-  if (!list.length) { dd.innerHTML = `<div style="padding:10px 12px;color:#9ca3af;font-size:13px">Koi employee nahi mila — manual bhar sakte hain</div>`; dd.style.display='block'; return; }
+  if (!list.length) { dd.innerHTML = `<div style="padding:10px 12px;color:#9ca3af;font-size:13px">No employee found — you can enter manually</div>`; dd.style.display='block'; return; }
   dd.innerHTML = list.map(e => `<div onmousedown="assignPickEmp('${escH(e.id)}')" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background='#F5F7FB'" onmouseout="this.style.background='#fff'">
     <div style="font-weight:600;color:#1a1a2e;font-size:13px">${escH(e.name||'')} ${e.wiomId?`<span style="color:#9ca3af;font-weight:400;font-size:12px">· ${escH(e.wiomId)}</span>`:''}</div>
     <div style="font-size:11px;color:#6b7280">${escH(e.dept||'—')}${e.email?' · '+escH(e.email):''}</div>
@@ -4279,7 +4286,7 @@ function transferEmpSearch(q) {
     (e.name||'').toLowerCase().includes(q) || (e.wiomId||'').toLowerCase().includes(q) ||
     (e.email||'').toLowerCase().includes(q) || (e.dept||'').toLowerCase().includes(q));
   list = list.slice(0, 40);
-  if (!list.length) { dd.innerHTML = `<div style="padding:10px 12px;color:#9ca3af;font-size:13px">Koi employee nahi mila — manual bhar sakte hain</div>`; dd.style.display='block'; return; }
+  if (!list.length) { dd.innerHTML = `<div style="padding:10px 12px;color:#9ca3af;font-size:13px">No employee found — you can enter manually</div>`; dd.style.display='block'; return; }
   dd.innerHTML = list.map(e => `<div onmousedown="transferPickEmp('${escH(e.id)}')" style="padding:9px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6" onmouseover="this.style.background='#F5F7FB'" onmouseout="this.style.background='#fff'">
     <div style="font-weight:600;color:#1a1a2e;font-size:13px">${escH(e.name||'')} ${e.wiomId?`<span style="color:#9ca3af;font-weight:400;font-size:12px">· ${escH(e.wiomId)}</span>`:''}</div>
     <div style="font-size:11px;color:#6b7280">${escH(e.dept||'—')}${e.email?' · '+escH(e.email):''}</div>
@@ -4449,7 +4456,7 @@ function openReturnModal(id) {
     const others = emp ? getAssets().filter(x => x.id!==a.id && x.status==='Assigned' && (x.assignedTo||'').toLowerCase().trim()===emp) : [];
     if (others.length) {
       warnEl.innerHTML = `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:#92400e">
-        <div style="font-weight:700;margin-bottom:4px"><i class="bi bi-exclamation-triangle-fill"></i> ${escH(a.assignedTo)} ke paas ${others.length} aur asset hai — inhe bhi collect karein:</div>
+        <div style="font-weight:700;margin-bottom:4px"><i class="bi bi-exclamation-triangle-fill"></i> ${escH(a.assignedTo)} has ${others.length} more asset(s) — collect these too:</div>
         ${others.map(x=>`<div style="padding:2px 0">• ${escH(x.name)} <code style="font-size:10px">${escH(x.assetId)}</code></div>`).join('')}
       </div>`;
     } else { warnEl.innerHTML = ''; }
@@ -4608,7 +4615,7 @@ function renderAccessories() {
       <h2><i class="bi bi-plugin" style="color:#2563EB"></i> Accessories Inventory</h2>
       <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> Add Accessory</button>
     </div>
-    <div style="font-size:13px;color:#6b7280;margin-bottom:18px">Har charger / mouse / monitor ka apna unique ID — kaun sa kis employee ke paas hai, sab yahan.</div>
+    <div style="font-size:13px;color:#6b7280;margin-bottom:18px">Every charger / mouse / monitor has its own unique ID — which one is with which employee, all in one place.</div>
     ${summaryCards}
     <div style="font-size:12px;font-weight:700;color:#0B1220;margin-bottom:8px">Quick Add</div>
     ${quickAdd}
@@ -4622,7 +4629,7 @@ function renderAccessories() {
           <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">Assigned To</th>
           <th style="padding:10px 12px;text-align:right;font-size:11px;font-weight:700;color:#888;text-transform:uppercase">Action</th>
         </tr></thead>
-        <tbody>${rows || `<tr><td colspan="6"><div class="empty-state"><i class="bi bi-plugin"></i><p>Koi accessory nahi. "Quick Add" se shuru karein.</p></div></td></tr>`}</tbody>
+        <tbody>${rows || `<tr><td colspan="6"><div class="empty-state"><i class="bi bi-plugin"></i><p>No accessories yet. Get started with "Quick Add".</p></div></td></tr>`}</tbody>
       </table></div>
     </div>`;
 }
@@ -4716,7 +4723,7 @@ function renderInbox() {
       <h2>Requests &amp; Issues</h2>
       <div style="font-size:13px;color:#888">${issues.length} issue${issues.length!==1?'s':''} · ${openReqs.length} request${openReqs.length!==1?'s':''}</div>
     </div>
-    <div style="font-size:13px;color:#888;margin-bottom:18px">Employee self-service submissions — resolve karein yahan se.</div>
+    <div style="font-size:13px;color:#888;margin-bottom:18px">Employee self-service submissions — resolve them from here.</div>
     <div style="font-weight:700;font-size:14px;color:#dc2626;margin-bottom:10px"><i class="bi bi-exclamation-triangle"></i> Reported Issues</div>
     ${issueRows}
     <div style="font-weight:700;font-size:14px;color:#7c3aed;margin:22px 0 10px"><i class="bi bi-send"></i> Employee Requests</div>
@@ -4897,7 +4904,7 @@ function renderSettings() {
     <!-- Section B2: Keka HRMS Sync -->
     <div class="white-card" style="padding:24px;margin-bottom:20px">
       <h3 style="font-size:15px;font-weight:700;color:#0B1220;margin-bottom:6px"><i class="bi bi-arrow-repeat"></i> Keka HRMS Sync</h3>
-      <p style="font-size:12px;color:#888;margin-bottom:16px">Keka se saare employees aur assets automatically laayein (existing data ke saath merge hoga).</p>
+      <p style="font-size:12px;color:#888;margin-bottom:16px">Automatically pull all employees and assets from Keka (will merge with existing data).</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
         <button class="btn btn-primary" id="keka-sync-btn" onclick="kekaSyncNow()"><i class="bi bi-arrow-repeat"></i> Sync from Keka</button>
       </div>
@@ -5063,7 +5070,7 @@ function openEmailPreview(a, toList, type) {
 
   const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Email Preview</title></head><body style="margin:0;padding:0;background:#1a1a2e;font-family:Arial,sans-serif">
   <div style="position:fixed;top:0;left:0;right:0;background:#0f0f23;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:99;box-shadow:0 2px 12px rgba(0,0,0,.4)">
-    <div style="color:#2563EB;font-weight:700;font-size:14px">ð§ Email Preview — Wiom IT Portal</div>
+    <div style="color:#2563EB;font-weight:700;font-size:14px">📧 Email Preview — Wiom IT Portal</div>
     <div style="flex:1"></div>
     <div style="font-size:12px;color:#aaa;margin-right:8px">To: ${toList.join(', ')}</div>
     <button id="copyBtn" onclick="copyEmail()" style="background:#2563EB;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">ð Copy Email</button>
@@ -5090,7 +5097,7 @@ function openEmailPreview(a, toList, type) {
 </body></html>`], {type:'text/html'});
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank', 'width=680,height=800');
-  showToast('Email preview khul raha hai — Copy karke Gmail mein paste karo', 'success');
+  showToast('Email preview is opening — copy and paste it into Gmail', 'success');
 }
 
 function getNotifRecipients() {
@@ -5101,17 +5108,17 @@ function getNotifRecipients() {
 async function kekaSyncNow() {
   const btn = document.getElementById('keka-sync-btn');
   const out = document.getElementById('keka-sync-result');
-  if (!confirm('Keka se employees + assets sync karein? Existing data ke saath merge hoga.')) return;
+  if (!confirm('Sync employees + assets from Keka? This will merge with existing data.')) return;
   const old = btn.innerHTML;
   btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Syncing...';
-  out.innerHTML = '<span style="color:#888">Keka se data aa raha hai, thoda ruko...</span>';
+  out.innerHTML = '<span style="color:#888">Fetching data from Keka, please wait...</span>';
   try {
     const r = await fetch('/api/keka-sync', { method: 'POST' });
     const d = await r.json();
     if (d.ok) {
       out.innerHTML = '<span style="color:#16a34a;font-weight:600">&#10003; Sync complete!</span> '
         + d.employeesFromKeka + ' employees, ' + d.assetsFromKeka + ' assets Keka se aaye. '
-        + '(Total ab: ' + d.employees + ' employees, ' + d.assets + ' assets). Page reload ho raha hai...';
+        + '(Total now: ' + d.employees + ' employees, ' + d.assets + ' assets). Reloading page...';
       setTimeout(function(){ location.reload(); }, 1600);
     } else {
       out.innerHTML = '<span style="color:#dc2626;font-weight:600">&#10007; ' + (d.error || 'Sync fail') + '</span>';
@@ -5139,7 +5146,7 @@ function exportBackup() {
 }
 
 function clearAndImportExcel() {
-  if (!confirm('â ï¸ Yeh sare purane asset data delete kar dega aur Excel ka data load karega.\n\nKya aap sure hain?')) return;
+  if (!confirm('⚠️ This will delete all old asset data and load the Excel data.\n\nAre you sure?')) return;
   fetch('wiom-excel-import.json')
     .then(r => { if (!r.ok) throw new Error('File not found'); return r.json(); })
     .then(data => {
@@ -5155,7 +5162,7 @@ function clearAndImportExcel() {
         showToast('Invalid file format', 'error');
       }
     })
-    .catch(e => showToast('â wiom-excel-import.json not found. Server par check karo.', 'error'));
+    .catch(e => showToast('❌ wiom-excel-import.json not found. Please check on the server.', 'error'));
 }
 
 function importBackup(e) {
@@ -5665,14 +5672,14 @@ function openEmpProfile(empId) {
       <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${escH(a.name)}</div><div style="font-size:11px;color:#888"><code>${escH(a.assetId)}</code>${a.serial?' · '+escH(a.serial):''}</div></div>
       ${ackChip(a)}
       <button class="btn btn-sm btn-outline" onclick="closeEmpProfile();viewAsset('${escH(a.id)}')"><i class="bi bi-eye"></i></button>
-    </div>`).join('') : '<div style="color:#9ca3af;font-size:13px;padding:10px 0">Koi asset assigned nahi</div>';
+    </div>`).join('') : '<div style="color:#9ca3af;font-size:13px;padding:10px 0">No assets assigned</div>';
   // History from audit log + returns mentioning this employee
   const hist = (DB.get('audit_log',[])||[]).filter(l=> (l.details||'').toLowerCase().includes((e.name||'').toLowerCase())).slice(0,8);
   const histHtml = hist.length ? hist.map(l=>`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px">
       <span style="color:#2563EB;font-weight:600;white-space:nowrap">${escH(l.action)}</span>
       <span style="color:#555;flex:1;min-width:0">${escH(l.details||'')}</span>
       <span style="color:#bbb;white-space:nowrap">${escH((l.timestamp||'').slice(0,10))}</span>
-    </div>`).join('') : '<div style="color:#9ca3af;font-size:13px;padding:8px 0">Koi history nahi</div>';
+    </div>`).join('') : '<div style="color:#9ca3af;font-size:13px;padding:8px 0">No history</div>';
   const pendingAckCount = mine.filter(a=>a.ack!=='Completed').length;
   let m = document.getElementById('emp-profile-modal');
   if (m) m.remove();
@@ -6293,7 +6300,7 @@ function syncBarHTML() {
   const failed = st && st.ok === false;
   const bg = failed ? '#fef2f2' : '#f0fdf4', bd = failed ? '#fecaca' : '#bbf7d0', col = failed ? '#dc2626' : '#16a34a';
   const icon = failed ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill';
-  const msg = !st ? 'Keka: abhi tak koi sync nahi hua'
+  const msg = !st ? 'Keka: no sync yet'
     : failed ? ('Keka sync FAIL — ' + escH(String(st.error||'').slice(0,90)))
     : ('Keka synced ' + syncTimeAgo(st.at) + ' · ' + (st.employees||0) + ' employees, ' + (st.assets||0) + ' assets');
   return `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;background:${bg};border:1.5px solid ${bd};border-radius:12px">
@@ -6412,7 +6419,7 @@ function renderDashboard() {
         <div style="font-size:14px;color:#1a1a2e"><strong style="color:${a.col};font-size:15px">${a.n}</strong> ${a.txt}</div>
         <div style="margin-left:auto;color:${a.col};font-size:12px;font-weight:600">View →</div>
       </div>`).join('')}</div>`
-    : `<div style="display:flex;align-items:center;gap:10px;color:#10B981;font-size:14px;padding:4px 0"><i class="bi bi-check-circle-fill"></i> Sab clear hai — koi pending action nahi 🎉</div>`}
+    : `<div style="display:flex;align-items:center;gap:10px;color:#10B981;font-size:14px;padding:4px 0"><i class="bi bi-check-circle-fill"></i> All clear — no pending actions 🎉</div>`}
   </div>`;
   const statCards = [
     {label:'Total Assets', val:total, icon:'bi-boxes', bg:'#DBEAFE', col:'#2563EB', view:'list'},
@@ -6496,7 +6503,7 @@ function renderDashboard() {
     <div class="dash-card">
       <div class="dash-section-title"><i class="bi bi-person-lines-fill"></i> Employee Asset Lookup</div>
       <div style="margin-bottom:10px">
-        <input type="text" id="emp-lookup-input" placeholder="Employee naam ya Wiom ID likhein..." oninput="empLookupSearch(this.value)"
+        <input type="text" id="emp-lookup-input" placeholder="Enter employee name or Wiom ID..." oninput="empLookupSearch(this.value)"
           style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none">
       </div>
       <div id="emp-lookup-results" style="max-height:200px;overflow-y:auto"></div>
@@ -6792,16 +6799,16 @@ function openQRScanner() {
   modal.classList.add('show');
   const status = document.getElementById('qr-scan-status');
   if (typeof Html5Qrcode === 'undefined') {
-    status.textContent = 'Scanner library load nahi hui — internet check karein.';
+    status.textContent = 'Scanner library failed to load — please check your internet.';
     return;
   }
-  status.textContent = 'Camera shuru ho raha hai…';
+  status.textContent = 'Starting camera…';
   _qrScanner = new Html5Qrcode('qr-reader');
   _qrScanner.start({ facingMode: 'environment' }, { fps: 10, qrbox: 220 },
     (decoded) => onQRDecoded(decoded),
     () => {}
-  ).then(() => { status.textContent = 'Asset ka QR label camera ke saamne laayein'; })
-   .catch(e => { status.textContent = 'Camera nahi khul paya: ' + e; });
+  ).then(() => { status.textContent = 'Hold the asset QR label in front of the camera'; })
+   .catch(e => { status.textContent = 'Could not open camera: ' + e; });
 }
 function closeQRScanner() {
   const modal = document.getElementById('qr-scan-modal');
@@ -6817,7 +6824,7 @@ function onQRDecoded(text) {
   const a = getAssets().find(x => (x.assetId || '').toUpperCase() === code || (x.serial || '').toUpperCase() === code);
   closeQRScanner();
   if (a) viewAsset(a.id);
-  else showToast('Is QR ka asset nahi mila: ' + code, 'error');
+  else showToast('No asset found for this QR: ' + code, 'error');
 }
 
 function printQRLabel(id) {
@@ -6950,7 +6957,7 @@ function empLookupSearch(q) {
     a.assignedTo.toLowerCase().includes(q) || (a.wiomId||'').toLowerCase().includes(q)
   ));
   if (!assets.length) {
-    box.innerHTML = '<div style="color:#aaa;font-size:12px;padding:8px">Koi result nahi mila</div>';
+    box.innerHTML = '<div style="color:#aaa;font-size:12px;padding:8px">No results found</div>';
     return;
   }
   const byEmp = {};
@@ -7030,7 +7037,7 @@ function showEmpDetail(idx) {
 
 function sendAllReminders() {
   const pending = getAssets().filter(a => a.ack === 'Pending');
-  if (!pending.length) { showToast('Koi pending ACK nahi hai', 'error'); return; }
+  if (!pending.length) { showToast('No pending acknowledgements', 'error'); return; }
   const es = DB.get('email_settings', {hrEmail:'hr@wiom.in', itHeadEmail:'sajan.kumar@wiom.in'});
   const notifRecips = getNotifRecipients();
   const assetLines = pending.map(a =>
@@ -7038,12 +7045,12 @@ function sendAllReminders() {
   ).join('\n');
   const subject = encodeURIComponent('â° Reminder: Asset Acknowledgement Pending — Wiom IT');
   const body = encodeURIComponent(
-    `Dear Team,\n\nYeh ek reminder hai — neeche diye gaye ${pending.length} assets ka acknowledgement abhi bhi pending hai.\n\nKripya apne asset ko acknowledge karein as soon as possible.\n\nPending Assets:\n${assetLines}\n\nKisi bhi query ke liye IT team se contact karein.\n\nRegards,\nWiom IT Team\n${es.itHeadEmail||''}`
+    `Dear Team,\n\nThis is a reminder — the acknowledgement for the ${pending.length} assets listed below is still pending.\n\nPlease acknowledge your asset as soon as possible.\n\nPending Assets:\n${assetLines}\n\nFor any queries, please contact the IT team.\n\nRegards,\nWiom IT Team\n${es.itHeadEmail||''}`
   );
   const toList = [es.hrEmail, es.itHeadEmail, ...notifRecips].filter(Boolean);
   const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toList.join(','))}&su=${subject}&body=${body}`;
   window.open(gmailUrl, '_blank');
-  showToast(`ð§ Gmail khul raha hai — ${pending.length} pending assets ka reminder`, 'success');
+  showToast(`📧 Gmail is opening — reminder for ${pending.length} pending assets`, 'success');
 }
 
 // ââââââââââââââââââââââââââââââââââââââââââââââ
