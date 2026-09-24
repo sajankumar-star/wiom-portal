@@ -1,4 +1,4 @@
-ï»¿<!DOCTYPE html>
+﻿ï»¿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -26,7 +26,7 @@
 })();
 function pwaInstall(){ if (window.__pwaPrompt){ window.__pwaPrompt.prompt(); window.__pwaPrompt.userChoice.finally(function(){ window.__pwaPrompt=null; }); } else { alert("Install: Chrome menu (three dots) se 'Install app' / 'Add to Home screen' chunein."); } }
 </script>
-<title>Wiom Ã¢â¬â Asset Management</title>
+<title>Wiom — Asset Management</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -560,13 +560,13 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
         <select id="u-role">
           <option value="super_admin">Super Admin — Full control + user management</option>
           <option value="it_admin">IT Admin — Full asset control + users</option>
-          <option value="__old_admin" hidden>Admin â Full access (add/edit/delete/manage users)</option>
+          <option value="__old_admin" hidden>Admin — Full access (add/edit/delete/manage users)</option>
           <option value="it_executive" selected>IT Executive — Add/edit/assign/return (no delete)</option>
           <option value="manager">Manager — View + reports (read-only)</option>
           <option value="auditor">Auditor — Read-only, all data</option>
           <option value="employee">Employee — Limited view</option>
-          <option value="__old_it_staff" hidden>IT Staff â Manage assets, assign, return</option>
-          <option value="__old_viewer" hidden>Viewer â View only, no changes</option>
+          <option value="__old_it_staff" hidden>IT Staff — Manage assets, assign, return</option>
+          <option value="__old_viewer" hidden>Viewer — View only, no changes</option>
         </select>
       </div>
     </div>
@@ -1288,7 +1288,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
           <textarea id="return-damage-details" rows="2" placeholder="Describe the damage or missing parts in detail..."></textarea>
         </div>
         <div class="form-group" id="penalty-group" style="display:none">
-          <label>Penalty Amount (Ã¢âÂ¹)</label>
+          <label>Penalty Amount (₹)</label>
           <input type="number" id="return-penalty" placeholder="0" min="0" step="100">
         </div>
         <div class="form-group">
@@ -1557,11 +1557,11 @@ function renderUserList() {
   const rows = users.map(u => `<tr>
     <td><div style="display:flex;align-items:center;gap:10px">
       <div style="width:34px;height:34px;border-radius:50%;background:#2563EB;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">${escH(u.initials||getUserInitials(u.name))}</div>
-      <div><div style="font-weight:600">${escH(u.name)}</div><div style="font-size:11px;color:#888">${escH(u.email||'â')}</div></div>
+      <div><div style="font-weight:600">${escH(u.name)}</div><div style="font-size:11px;color:#888">${escH(u.email||'—')}</div></div>
     </div></td>
     <td><code style="font-size:11px">${escH(u.username)}</code></td>
-    <td>${escH(u.wiomId||'â')}</td>
-    <td>${escH(u.dept||'â')}</td>
+    <td>${escH(u.wiomId||'—')}</td>
+    <td>${escH(u.dept||'—')}</td>
     <td>${roleBadge(u.role)}</td>
     <td>
       <button class="icon-btn" onclick="openEditUser('${u.id}')" title="Edit"><i class="bi bi-pencil"></i></button>
@@ -1638,18 +1638,18 @@ function saveUser() {
   saveUsers(users);
   closeAddUserModal();
   renderUserList();
-  showToast(id ? 'User updated' : 'User added â email ready to send', 'success');
+  showToast(id ? 'User updated' : 'User added — email ready to send', 'success');
 }
 
 function sendUserEmail(toEmail, name, username, password, role, wiomId, dept, isUpdate) {
   const roleLabel = new Proxy({}, {get:(t,k)=>roleLabelOf(String(k))});
   const subject = isUpdate
-    ? `Wiom IT Portal â Password Updated for ${name}`
-    : `Wiom IT Portal â Your Login Credentials`;
+    ? `Wiom IT Portal — Password Updated for ${name}`
+    : `Wiom IT Portal — Your Login Credentials`;
 
   const body = isUpdate
-    ? `Dear ${name},\n\nYour password for the Wiom IT Asset Portal has been updated.\n\nLogin Details\nâââââââââââââ\nPortal      : Wiom IT Asset Management Portal\nUsername    : ${username}\nNew Password: ${password}\nRole        : ${roleLabel[role]||role}\n\nPlease login and change your password if needed.\n\nRegards,\nIT Team â Wiom\n${currentUser ? currentUser.email : 'sajan.kumar@wiom.in'}`
-    : `Dear ${name},\n\nWelcome to the Wiom IT Asset Management Portal!\n\nYour account has been created. Please use the details below to login.\n\nLogin Details\nâââââââââââââ\nPortal      : Wiom IT Asset Management Portal\nUsername    : ${username}\nPassword    : ${password}\nRole        : ${roleLabel[role]||role}\nWiom ID     : ${wiomId||'â'}\nDepartment  : ${dept||'â'}\n\nPlease keep your credentials safe and do not share your password.\n\nFor any issues, contact IT team.\n\nRegards,\nIT Team â Wiom\n${currentUser ? currentUser.email : 'sajan.kumar@wiom.in'}`;
+    ? `Dear ${name},\n\nYour password for the Wiom IT Asset Portal has been updated.\n\nLogin Details\nâââââââââââââ\nPortal      : Wiom IT Asset Management Portal\nUsername    : ${username}\nNew Password: ${password}\nRole        : ${roleLabel[role]||role}\n\nPlease login and change your password if needed.\n\nRegards,\nIT Team — Wiom\n${currentUser ? currentUser.email : 'sajan.kumar@wiom.in'}`
+    : `Dear ${name},\n\nWelcome to the Wiom IT Asset Management Portal!\n\nYour account has been created. Please use the details below to login.\n\nLogin Details\nâââââââââââââ\nPortal      : Wiom IT Asset Management Portal\nUsername    : ${username}\nPassword    : ${password}\nRole        : ${roleLabel[role]||role}\nWiom ID     : ${wiomId||'—'}\nDepartment  : ${dept||'—'}\n\nPlease keep your credentials safe and do not share your password.\n\nFor any issues, contact IT team.\n\nRegards,\nIT Team — Wiom\n${currentUser ? currentUser.email : 'sajan.kumar@wiom.in'}`;
 
   const mailto = `mailto:${encodeURIComponent(toEmail)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   window.open(mailto, '_blank');
@@ -1853,37 +1853,10 @@ function filterSummaryChart(cat) {
 //  ASSET LIST VIEW
 // Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
 function renderAssetList() {
-  const assets = getAssets();
-
-  // Build sidebar
-  let sidebarHtml = '';
-  for (const [cat, types] of Object.entries(getMergedCategories())) {
-    const catCount = assets.filter(a=>a.category===cat).length;
-    sidebarHtml += `<div class="cat-group" id="cg-${escH(cat)}">
-      <div class="cat-group-header" onclick="toggleCatGroup('${escH(cat)}')">
-        ${escH(cat)} <i class="bi bi-chevron-down"></i>
-      </div>
-      <div class="cat-items">
-        ${types.map(t => {
-          const tc = assets.filter(a=>a.category===cat&&a.type===t).length;
-          const active = selectedCategory===cat && selectedType===t;
-          return `<div class="cat-item ${active?'active':''}" onclick="selectType('${escH(cat)}','${escH(t)}')">
-            <i class="bi bi-${catIcon(cat)}"></i>
-            ${escH(t)}
-            <span class="ci-count">${tc}</span>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }
-
+  // Show ALL assets directly in one full-width table (no category-picking panel).
+  // Users can still narrow down via the "All Types" dropdown in the filters row.
   document.getElementById('main-content').innerHTML = `
-  <div class="asset-list-layout">
-    <div class="cat-sidebar" id="cat-sidebar">${sidebarHtml}</div>
-    <div class="asset-main" id="asset-main">
-      ${selectedType ? renderAssetTable() : `<div class="empty-state"><i class="bi bi-arrow-left-circle"></i><p>Select a category from the left panel to view assets</p></div>`}
-    </div>
-  </div>`;
+  <div class="asset-main" id="asset-main" style="width:100%">${renderAssetTable()}</div>`;
 }
 
 function catIcon(cat) {
@@ -1908,12 +1881,15 @@ function renderAssetTable() {
   const filterStatus = document.getElementById('f-stat')?.value||'';
   const filterSearch = document.getElementById('f-search')?.value||'';
   const filterDept = document.getElementById('f-dept')?.value||'';
+  const filterType = document.getElementById('f-typefilter')?.value||'';
 
-  // Global search: search all assets; otherwise filter by selected category/type
+  // Show ALL assets by default; optionally narrow to one category|type via the Type dropdown.
   const allAssets = getAssets();
-  const assets = filterSearch
-    ? allAssets
-    : allAssets.filter(a => a.category===selectedCategory && a.type===selectedType);
+  let cat0='', type0='';
+  if (filterType) { const p = filterType.split('|'); cat0 = p[0]||''; type0 = p[1]||''; }
+  const assets = filterType
+    ? allAssets.filter(a => a.category===cat0 && a.type===type0)
+    : allAssets;
 
   let filtered = assets.filter(a => {
     if (filterLoc && a.location!==filterLoc) return false;
@@ -1964,14 +1940,18 @@ function renderAssetTable() {
 
   return `
     <div class="asset-main-header">
-      <h2>${escH(selectedType)} <span style="color:#aaa;font-weight:400;font-size:13px">(${filtered.length} of ${assets.length})</span></h2>
+      <h2>${filterType ? escH(type0) : 'All Assets'} <span style="color:#aaa;font-weight:400;font-size:13px">(${filtered.length} of ${assets.length})</span></h2>
       <div class="hdr-right">
         <button class="btn btn-outline btn-sm" onclick="bulkAddAssets()"><i class="bi bi-upload"></i> Bulk Add/Update</button>
         <button class="btn btn-outline btn-sm" onclick="toggleBulkAssign()"><i class="bi bi-people"></i> Bulk Assign</button>
-        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> Add ${escH(selectedType)}</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> Add Asset</button>
       </div>
     </div>
     <div class="filters-row">
+      <select id="f-typefilter" onchange="applyFilters()">
+        <option value="">All Types</option>
+        ${Object.entries(getMergedCategories()).map(([cat,types])=>`<optgroup label="${escH(cat)}">${types.map(t=>{const c=getAssets().filter(a=>a.category===cat&&a.type===t).length;return `<option value="${escH(cat)}|${escH(t)}">${escH(t)} (${c})</option>`;}).join('')}</optgroup>`).join('')}
+      </select>
       <select id="f-dept" onchange="applyFilters()">
         <option value="">All Departments</option>
         ${[...new Set(getAssets().map(a=>a.dept).filter(Boolean))].sort().map(d=>`<option>${escH(d)}</option>`).join('')}
@@ -1991,7 +1971,7 @@ function renderAssetTable() {
       </select>
       <div class="fi-wrap">
         <i class="bi bi-search"></i>
-        <input class="search-input" type="text" id="f-search" placeholder="Search by name or IDÃ¢â¬Â¦" oninput="applyFilters()">
+        <input class="search-input" type="text" id="f-search" autocomplete="off" placeholder="Search by name or ID..." data-x="Ã¢â¬Â¦" oninput="applyFilters()">
       </div>
     </div>
     <div class="asset-table-wrap">
@@ -2001,13 +1981,21 @@ function renderAssetTable() {
           <th>S/NO</th><th>ASSET NAME</th><th>ASSET ID</th><th>LOCATION</th><th>CONDITION</th>
           <th>STATUS</th><th>ACKNOWLEDGMENT</th><th>AGE</th><th>ACTIONS</th>
         </tr></thead>
-        <tbody>${rows || `<tr><td colspan="${bulkAssignMode?9:8}"><div class="empty-state"><i class="bi bi-inbox"></i><p>No assets found</p></div></td></tr>`}</tbody>
+        <tbody>${rows || `<tr><td colspan="${bulkAssignMode?10:9}"><div class="empty-state"><i class="bi bi-inbox"></i><p>No assets found</p></div></td></tr>`}</tbody>
       </table>
     </div>`;
 }
 
 function applyFilters() {
+  const ids = ['f-search','f-dept','f-loc','f-cond','f-stat','f-typefilter'];
+  const s = document.getElementById('f-search');
+  const caret = s ? s.selectionStart : null;
+  const wasFocused = s === document.activeElement;
+  const vals = {}; ids.forEach(id => { const e = document.getElementById(id); vals[id] = e ? e.value : ''; });
   document.getElementById('asset-main').innerHTML = renderAssetTable();
+  ids.forEach(id => { const e = document.getElementById(id); if (e && vals[id] != null) e.value = vals[id]; });
+  const s2 = document.getElementById('f-search');
+  if (s2 && wasFocused) { s2.focus(); try { s2.setSelectionRange(caret, caret); } catch(e) {} }
 }
 
 function _globalSearchDD() {
@@ -2476,9 +2464,9 @@ function filterAssignedTable() {
       </td>
       <td><strong>${escH(a.name)}</strong><br><span style="font-size:11px;color:#aaa">${escH(a.category)} / ${escH(a.type)}</span></td>
       <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
-      <td>${escH(a.empEmail||'â')}</td>
-      <td>${escH(a.assignDate||a.purchased||'â')}</td>
-      <td>${(a.itemsGiven&&a.itemsGiven.length)?`<span style="font-size:11px;color:#555">${a.itemsGiven.join(', ')}</span>`:'â'}</td>
+      <td>${escH(a.empEmail||'—')}</td>
+      <td>${escH(a.assignDate||a.purchased||'—')}</td>
+      <td>${(a.itemsGiven&&a.itemsGiven.length)?`<span style="font-size:11px;color:#555">${a.itemsGiven.join(', ')}</span>`:'—'}</td>
       <td>${badgeAck(a.ack||'Pending')}</td>
       <td>
         <button class="btn btn-outline btn-sm" onclick="viewAsset('${escH(a.id)}')"><i class="bi bi-eye"></i></button>
@@ -2499,9 +2487,9 @@ function renderAssigned() {
       </td>
       <td><strong>${escH(a.name)}</strong><br><span style="font-size:11px;color:#aaa">${escH(a.category)} / ${escH(a.type)}</span></td>
       <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
-      <td>${escH(a.empEmail||'Ã¢â¬â')}</td>
-      <td>${escH(a.assignDate||a.purchased||'Ã¢â¬â')}</td>
-      <td>${(a.itemsGiven&&a.itemsGiven.length)?`<span style="font-size:11px;color:#555">${a.itemsGiven.join(', ')}</span>`:'Ã¢â¬â'}</td>
+      <td>${escH(a.empEmail||'—')}</td>
+      <td>${escH(a.assignDate||a.purchased||'—')}</td>
+      <td>${(a.itemsGiven&&a.itemsGiven.length)?`<span style="font-size:11px;color:#555">${a.itemsGiven.join(', ')}</span>`:'—'}</td>
       <td>${badgeAck(a.ack||'Pending')}</td>
       <td>
         <button class="btn btn-outline btn-sm" onclick="viewAsset('${escH(a.id)}')"><i class="bi bi-eye"></i></button>
@@ -2602,7 +2590,7 @@ function renderAck() {
   const rows = [...issueAssets, ...pendingAssets].map(a=>{
     const mailtoLink = `javascript:sendAckReminder('${escH(a.id)}')`;
     // Days pending
-    let daysPendingHtml = 'â';
+    let daysPendingHtml = '—';
     if (a.assignDate) {
       const ad = new Date(a.assignDate); ad.setHours(0,0,0,0);
       const days = Math.round((today - ad)/(1000*60*60*24));
@@ -2614,14 +2602,14 @@ function renderAck() {
     <tr>
       <td style="text-align:center;width:36px"><input type="checkbox" class="ack-row-check" data-id="${escH(a.id)}" onchange="updateAckSelCount()" style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer"></td>
       <td>
-        <div style=âfont-weight:600â>${escH(a.assignedTo||'â')}</div>
+        <div style=âfont-weight:600â>${escH(a.assignedTo||'—')}</div>
         ${a.wiomId?`<div style=âfont-size:11px;color:#888â>${escH(a.wiomId)}</div>`:''}
         ${a.empEmail?`<div style=âfont-size:11px;color:#2563EBâ>${escH(a.empEmail)}</div>`:''}
       </td>
       <td><strong>${escH(a.name)}</strong></td>
       <td><code style=âbackground:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11pxâ>${escH(a.assetId)}</code></td>
       <td>${escH(a.category)} / ${escH(a.type)}</td>
-      <td>${escH(a.assignDate||'â')}</td>
+      <td>${escH(a.assignDate||'—')}</td>
       <td style=âtext-align:centerâ>${daysPendingHtml}</td>
       <td>${badgeAck('Pending')}${a.reminderCount?`<span style=âfont-size:10px;color:#888;margin-left:6pxâ>${a.reminderCount} reminder${a.reminderCount>1?'s':''} sent</span>`:''}</td>
       <td>
@@ -2683,24 +2671,24 @@ function sendAckReminder(id) {
   const reminderAsset = {
     ...a,
     assignedTo: a.assignedTo||'Employee',
-    desc: a.desc||'â', ram: a.ram||'â', storage: a.storage||'â', processor: a.processor||'â'
+    desc: a.desc||'—', ram: a.ram||'—', storage: a.storage||'—', processor: a.processor||'—'
   };
 
   // Build HTML email for reminder
   const es2 = DB.get('email_settings', {itHeadName:'Sajan Kumar', itHeadEmail:'sajan.kumar@wiom.in'});
   const reminderCount = (a.reminderCount||0) + 1;
-  const rowHtml = (rows) => rows.filter(r=>r[1]&&r[1]!=='â').map(([label, val]) => `
+  const rowHtml = (rows) => rows.filter(r=>r[1]&&r[1]!=='—').map(([label, val]) => `
     <tr>
       <td style="padding:8px 14px;color:#0B1220;font-weight:600;font-size:13px;white-space:nowrap;width:160px;border-bottom:1px solid #DBEAFE">${label}</td>
       <td style="padding:8px 14px;color:#222;font-size:13px;border-bottom:1px solid #DBEAFE">${val}</td>
     </tr>`).join('');
 
   const detailRows = [
-    ['Asset Name', a.name], ['Asset ID', a.assetId], ['Serial No', a.serial||'â'],
+    ['Asset Name', a.name], ['Asset ID', a.assetId], ['Serial No', a.serial||'—'],
     ['Category', (a.category||'')+(a.type?' / '+a.type:'')],
-    ['Processor', a.processor||'â'], ['RAM', a.ram||'â'],
-    ['Storage', a.storage||'â'], ['Configuration', a.desc||'â'],
-    ['Assigned On', a.assignDate||'â'], ['Items Given', (a.itemsGiven||[]).join(', ')||'â']
+    ['Processor', a.processor||'—'], ['RAM', a.ram||'—'],
+    ['Storage', a.storage||'—'], ['Configuration', a.desc||'—'],
+    ['Assigned On', a.assignDate||'—'], ['Items Given', (a.itemsGiven||[]).join(', ')||'—']
   ];
 
   const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f4f8;font-family:Arial,sans-serif">
@@ -2733,7 +2721,7 @@ function sendAckReminder(id) {
   <div style="background:#0B1220;padding:20px 32px;display:flex;align-items:center;justify-content:space-between">
     <div>
       <div style="color:#fff;font-weight:700;font-size:14px">${es2.itHeadName||'Sajan Kumar'}</div>
-      <div style="color:rgba(255,255,255,.7);font-size:12px">IT Department â Wiom</div>
+      <div style="color:rgba(255,255,255,.7);font-size:12px">IT Department — Wiom</div>
       <div style="color:#DBEAFE;font-size:12px;margin-top:2px">${es2.itHeadEmail||'sajan.kumar@wiom.in'}</div>
     </div>
     <div style="color:rgba(255,255,255,.4);font-size:11px;text-align:right">Reminder ${reminderCount}<br>Wiom IT Portal</div>
@@ -2747,7 +2735,7 @@ function sendAckReminder(id) {
 
   const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reminder Email</title></head><body style="margin:0;padding:0;background:#1a1a2e;font-family:Arial,sans-serif">
   <div style="position:fixed;top:0;left:0;right:0;background:#0f0f23;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:99;box-shadow:0 2px 12px rgba(0,0,0,.4)">
-    <div style="color:#2563EB;font-weight:700;font-size:14px">ð ACK Reminder â ${a.assignedTo||'Employee'}</div>
+    <div style="color:#2563EB;font-weight:700;font-size:14px">ð ACK Reminder — ${a.assignedTo||'Employee'}</div>
     <div style="flex:1"></div>
     <div style="font-size:12px;color:#aaa;margin-right:8px">To: ${toList.join(', ')}</div>
     <button id="copyBtn" onclick="copyEmail()" style="background:#2563EB;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">ð Copy Email</button>
@@ -2761,7 +2749,7 @@ function sendAckReminder(id) {
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank', 'width=680,height=800');
   incrementReminder(id);
-  showToast(`Reminder preview khula â ${a.assignedTo} ko bhejo`, 'success');
+  showToast(`Reminder preview khula — ${a.assignedTo} ko bhejo`, 'success');
 }
 
 function markAckIssue(id) {
@@ -2791,7 +2779,7 @@ function markAckComplete(id) {
     delete assets[idx].issueNote; delete assets[idx].issueDate;
     saveAssets(assets);
     renderAck();
-    showToast(`â ${assets[idx].assignedTo||'Employee'} â Acknowledgement complete, list se hata diya`, 'success');
+    showToast(`â ${assets[idx].assignedTo||'Employee'} — Acknowledgement complete, list se hata diya`, 'success');
   }
 }
 
@@ -3106,7 +3094,7 @@ function viewAsset(id) {
   if (!a) return;
   document.querySelectorAll('.dropdown-menu.show').forEach(m=>m.classList.remove('show'));
 
-  const infoRow = (label, val) => `<div class="info-row"><span class="info-label">${label}</span><span class="info-val">${val||'Ã¢â¬â'}</span></div>`;
+  const infoRow = (label, val) => `<div class="info-row"><span class="info-label">${label}</span><span class="info-val">${val||'—'}</span></div>`;
 
   let html = ``;
   if (a.photo) {
@@ -3117,7 +3105,7 @@ function viewAsset(id) {
       <div style="width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0"><i class="bi bi-${catIcon(a.category)}"></i></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:17px;font-weight:700">${escH(a.name)}</div>
-        <div style="font-size:12px;opacity:.8;margin-top:3px">${escH(a.category)} &bull; ${escH(a.type)} &bull; ${escH(a.location||'Ã¢â¬â')}</div>
+        <div style="font-size:12px;opacity:.8;margin-top:3px">${escH(a.category)} &bull; ${escH(a.type)} &bull; ${escH(a.location||'—')}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">${badgeStatus(a.status)}${assetHealthHTML(a)}</div>
     </div>
@@ -3143,7 +3131,7 @@ function viewAsset(id) {
           ${infoRow('Vendor', escH(a.vendor))}
           ${infoRow('Invoice No', escH(a.invoice))}
           ${infoRow('Purchase Date', escH(a.purchased))}
-          ${infoRow('Warranty Expiry', a.warranty ? `<span style="color:${new Date(a.warranty)<new Date()?'#ef4444':'#059669'};font-weight:600">${escH(a.warranty)}</span>` : 'Ã¢â¬â')}
+          ${infoRow('Warranty Expiry', a.warranty ? `<span style="color:${new Date(a.warranty)<new Date()?'#ef4444':'#059669'};font-weight:600">${escH(a.warranty)}</span>` : '—')}
         </div>
       </div>
       <div>`;
@@ -3155,11 +3143,11 @@ function viewAsset(id) {
           ${infoRow('Employee', `<strong>${escH(a.assignedTo)}</strong>`)}
           ${infoRow('Wiom ID', escH(a.wiomId))}
           ${infoRow('Department', escH(a.dept))}
-          ${infoRow('Email', a.empEmail?`<a href="mailto:${escH(a.empEmail)}" style="color:#2563EB">${escH(a.empEmail)}</a>`:'Ã¢â¬â')}
+          ${infoRow('Email', a.empEmail?`<a href="mailto:${escH(a.empEmail)}" style="color:#2563EB">${escH(a.empEmail)}</a>`:'—')}
           ${infoRow('Manager', escH(a.managerName))}
-          ${infoRow('Manager Email', a.managerEmail?`<a href="mailto:${escH(a.managerEmail)}" style="color:#2563EB">${escH(a.managerEmail)}</a>`:'Ã¢â¬â')}
+          ${infoRow('Manager Email', a.managerEmail?`<a href="mailto:${escH(a.managerEmail)}" style="color:#2563EB">${escH(a.managerEmail)}</a>`:'—')}
           ${infoRow('Assign Date', escH(a.assignDate))}
-          ${infoRow('Items Given', (a.itemsGiven&&a.itemsGiven.length)?a.itemsGiven.map(i=>`<span style="background:#DBEAFE;color:#2563EB;padding:2px 8px;border-radius:10px;font-size:11px;margin-right:4px">${escH(i)}</span>`).join(''):'Ã¢â¬â')}
+          ${infoRow('Items Given', (a.itemsGiven&&a.itemsGiven.length)?a.itemsGiven.map(i=>`<span style="background:#DBEAFE;color:#2563EB;padding:2px 8px;border-radius:10px;font-size:11px;margin-right:4px">${escH(i)}</span>`).join(''):'—')}
           ${infoRow('Ack Status', badgeAck(a.ack||'Pending'))}
           ${a.ack==='Completed' && (a.ackBy||a.ackDate) ? infoRow('Acknowledged', `${escH(a.ackBy||a.assignedTo||'')}${a.ackDate?' · '+escH(a.ackDate):''}${a.ackTime?' '+escH(a.ackTime):''}`) : ''}
         </div>`;
@@ -3207,12 +3195,12 @@ function viewAsset(id) {
         </tr></thead>
         <tbody>
           ${a.returnHistory.map(r=>`<tr style="border-bottom:1px solid #f5f5f5">
-            <td style="padding:9px 14px;font-size:13px">${escH(r.empName||'Ã¢â¬â')}</td>
-            <td style="padding:9px 14px;font-size:13px">${escH(r.returnDate||'Ã¢â¬â')}</td>
-            <td style="padding:9px 14px;font-size:12px">${(r.itemsReturned||[]).join(', ')||'Ã¢â¬â'}</td>
+            <td style="padding:9px 14px;font-size:13px">${escH(r.empName||'—')}</td>
+            <td style="padding:9px 14px;font-size:13px">${escH(r.returnDate||'—')}</td>
+            <td style="padding:9px 14px;font-size:12px">${(r.itemsReturned||[]).join(', ')||'—'}</td>
             <td style="padding:9px 14px">${badgeCondition(r.condition)}</td>
-            <td style="padding:9px 14px;font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(r.damageDetails||'Ã¢â¬â')}</td>
-            <td style="padding:9px 14px;font-size:13px">${r.penalty&&r.penalty>0?`<span style="color:#ef4444;font-weight:600">Ã¢âÂ¹${r.penalty}</span>`:'Ã¢â¬â'}</td>
+            <td style="padding:9px 14px;font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(r.damageDetails||'—')}</td>
+            <td style="padding:9px 14px;font-size:13px">${r.penalty&&r.penalty>0?`<span style="color:#ef4444;font-weight:600">₹${r.penalty}</span>`:'—'}</td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -3238,11 +3226,11 @@ function viewAsset(id) {
         <tbody>
           ${repairLog.map(r=>`<tr style="border-bottom:1px solid #f5f5f5">
             <td style="padding:9px 14px;font-size:12px"><code>${escH(r.id)}</code></td>
-            <td style="padding:9px 14px;font-size:13px">${escH(r.vendor||'Ã¢â¬"')}</td>
-            <td style="padding:9px 14px;font-size:12px;max-width:160px">${escH(r.issue||'Ã¢â¬"')}</td>
-            <td style="padding:9px 14px;font-size:12px">${escH(r.sentDate||'Ã¢â¬"')}</td>
+            <td style="padding:9px 14px;font-size:13px">${escH(r.vendor||'–')}</td>
+            <td style="padding:9px 14px;font-size:12px;max-width:160px">${escH(r.issue||'–')}</td>
+            <td style="padding:9px 14px;font-size:12px">${escH(r.sentDate||'–')}</td>
             <td style="padding:9px 14px">${repairStatusBadge(r.status)}</td>
-            <td style="padding:9px 14px;font-size:13px">${r.actualCost?`<span style="color:#059669;font-weight:600">Ã¢âÂ¹${r.actualCost}</span>`:(r.estimatedCost?`<span style="color:#888">~Ã¢âÂ¹${r.estimatedCost}</span>`:'Ã¢â¬"')}</td>
+            <td style="padding:9px 14px;font-size:13px">${r.actualCost?`<span style="color:#059669;font-weight:600">₹${r.actualCost}</span>`:(r.estimatedCost?`<span style="color:#888">~₹${r.estimatedCost}</span>`:'–')}</td>
           </tr>`).join('')}
         </tbody>
       </table>
@@ -3551,7 +3539,7 @@ function switchModule(mod) {
   }
 }
 // Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
-//  REPORTS Ã¢â¬â Charts + Warranty
+//  REPORTS — Charts + Warranty
 // Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â
 function renderReports() {
   const assets = getAssets();
@@ -3704,7 +3692,7 @@ function renderReports() {
         <td>${escH(a.category)}</td>
         <td>${escH(a.purchased)}</td>
         <td style="text-align:center;font-weight:700;color:#ef4444">${a._age.toFixed(1)}</td>
-        <td>${escH(a.condition||'â')}</td>
+        <td>${escH(a.condition||'—')}</td>
       </tr>`).join('');
       const thStyle='padding:8px 12px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1.5px solid #e5e7eb;text-align:left';
       const cardStyle=(bg,fg)=>`background:${bg};border-radius:10px;padding:16px;text-align:center`;
@@ -3762,7 +3750,7 @@ function renderReports() {
           <div style="background:#DBEAFE;border-radius:10px;padding:16px;text-align:center"><div style="font-size:10px;font-weight:700;color:#7c3aed;margin-bottom:4px">ASSETS PURCHASED THIS MONTH</div><div style="font-size:28px;font-weight:700;color:#4c1d95">${curM.count}</div></div>
           <div style="background:#dbeafe;border-radius:10px;padding:16px;text-align:center"><div style="font-size:10px;font-weight:700;color:#1e40af;margin-bottom:4px">TOTAL SPEND THIS MONTH</div><div style="font-size:22px;font-weight:700;color:#1e40af">${formatINR(curM.total)}</div></div>
         </div>
-        <h5 style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px">Last 12 Months â Purchase Value</h5>
+        <h5 style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px">Last 12 Months — Purchase Value</h5>
         <div style="height:240px;margin-bottom:20px"><canvas id="monthly-chart"></canvas></div>
         ${tableRows ? `<h5 style="font-size:13px;font-weight:700;color:#374151;margin-bottom:10px">Monthly Summary</h5>
         <div class="asset-table-wrap"><table style="width:100%;border-collapse:collapse">
@@ -3822,7 +3810,7 @@ function renderReports() {
         <td style="text-align:center;color:#22c55e;font-weight:600">${r.underWar}</td>
         <td style="text-align:center;color:#ef4444;font-weight:600">${r.expWar}</td>
         <td style="text-align:center">${r.repCnt}</td>
-        <td style="text-align:center">${r.avgWar!==null?r.avgWar+' mo':'â'}</td>
+        <td style="text-align:center">${r.avgWar!==null?r.avgWar+' mo':'—'}</td>
         <td style="text-align:center;color:#f59e0b;font-size:14px" title="${(r.repRate*100).toFixed(0)}% repair rate">${starStr(r.stars)}</td>
       </tr>`).join('');
       const topCard = topVendor ? `<div style="background:linear-gradient(135deg,#DBEAFE,#dbeafe);border-radius:10px;padding:16px;margin-bottom:20px;display:flex;align-items:center;gap:16px">
@@ -3892,7 +3880,7 @@ function openBulkImport() {
         assets.push({
           id:genId(), assetId:get('asset id')||get('assetid')||'AST-'+String(Date.now()+i).slice(-6),
           name, serial:get('serial no')||get('serial'), category:get('category')||'Others',
-          type:get('type')||'General', location:get('location')||'Ã¢â¬â',
+          type:get('type')||'General', location:get('location')||'—',
           condition:get('condition')||'Good', status:get('status')||'Available',
           assignedTo:get('assigned to'), purchased:get('purchase date'),
           warranty:get('warranty'), invoice:get('invoice no'), vendor:get('vendor')
@@ -4173,7 +4161,7 @@ function checkAckFromUrl() {
     <div style="font-size:56px;margin-bottom:16px">â</div>
     <div style="font-size:22px;font-weight:700;color:#065f46;margin-bottom:8px">Acknowledged!</div>
     <div style="font-size:15px;color:#555;margin-bottom:6px"><strong>${escH(a.name)}</strong></div>
-    <div style="font-size:13px;color:#888;margin-bottom:24px">Asset ID: ${escH(a.assetId)} â Assigned to: ${escH(a.assignedTo||'â')}</div>
+    <div style="font-size:13px;color:#888;margin-bottom:24px">Asset ID: ${escH(a.assetId)} — Assigned to: ${escH(a.assignedTo||'—')}</div>
     <button onclick="this.closest('div[style*=fixed]').remove()" style="background:#2563EB;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">OK</button>
   </div>`;
   */
@@ -4318,7 +4306,7 @@ function __openAssignModalBody(id) {
   if (!a) return;
   document.getElementById('assign-asset-id').value = id;
   document.getElementById('assign-asset-name').textContent = a.name;
-  document.getElementById('assign-asset-meta').textContent = `Asset ID: ${a.assetId}  |  S/No: ${a.serial||'Ã¢â¬â'}  |  ${a.category} / ${a.type}`;
+  document.getElementById('assign-asset-meta').textContent = `Asset ID: ${a.assetId}  |  S/No: ${a.serial||'—'}  |  ${a.category} / ${a.type}`;
   document.getElementById('assign-emp-name').value = '';
   document.getElementById('assign-wiom-id').value = '';
   document.getElementById('assign-dept').value = '';
@@ -4407,7 +4395,7 @@ function saveAssign() {
 
 function buildAssignEmailBody(a) {
   const es = DB.get('email_settings', {itHeadName:'Sajan Kumar', itHeadEmail:'sajan.kumar@wiom.in'});
-  return `Dear ${a.assignedTo},\n\nAn asset has been assigned to you. Please acknowledge receipt at the earliest.\n\nAsset Details\nâââââââââââââââââââââ\nAsset Name     : ${a.name}\nAsset ID       : ${a.assetId}\nSerial No      : ${a.serial||'â'}\nCategory       : ${a.category} / ${a.type}\nConfiguration  : ${a.desc||'â'}\nRAM            : ${a.ram||'â'}\nStorage        : ${a.storage||'â'}\nProcessor      : ${a.processor||'â'}\n\nAssignment Details\nâââââââââââââââââââââ\nEmployee Name  : ${a.assignedTo}\nWiom ID        : ${a.wiomId||'â'}\nDepartment     : ${a.dept||'â'}\nManager        : ${a.managerName||'â'}\nAssign Date    : ${a.assignDate||'â'}\nItems Given    : ${(a.itemsGiven||[]).join(', ')||'â'}\nCondition      : ${a.assignCondition||'â'}\n${a.assignNotes?'Notes          : '+a.assignNotes+'\n':''}\nACTION REQUIRED: Please reply to this email confirming receipt.\n\nRegards,\n${es.itHeadName||'Sajan Kumar'}\nIT Team â Wiom\n${es.itHeadEmail||'sajan.kumar@wiom.in'}`;
+  return `Dear ${a.assignedTo},\n\nAn asset has been assigned to you. Please acknowledge receipt at the earliest.\n\nAsset Details\nâââââââââââââââââââââ\nAsset Name     : ${a.name}\nAsset ID       : ${a.assetId}\nSerial No      : ${a.serial||'—'}\nCategory       : ${a.category} / ${a.type}\nConfiguration  : ${a.desc||'—'}\nRAM            : ${a.ram||'—'}\nStorage        : ${a.storage||'—'}\nProcessor      : ${a.processor||'—'}\n\nAssignment Details\nâââââââââââââââââââââ\nEmployee Name  : ${a.assignedTo}\nWiom ID        : ${a.wiomId||'—'}\nDepartment     : ${a.dept||'—'}\nManager        : ${a.managerName||'—'}\nAssign Date    : ${a.assignDate||'—'}\nItems Given    : ${(a.itemsGiven||[]).join(', ')||'—'}\nCondition      : ${a.assignCondition||'—'}\n${a.assignNotes?'Notes          : '+a.assignNotes+'\n':''}\nACTION REQUIRED: Please reply to this email confirming receipt.\n\nRegards,\n${es.itHeadName||'Sajan Kumar'}\nIT Team — Wiom\n${es.itHeadEmail||'sajan.kumar@wiom.in'}`;
 }
 
 function showEmailNotification(a) {
@@ -4436,7 +4424,7 @@ function openReturnModal(id) {
   if (!a) return;
   document.getElementById('return-asset-id').value = id;
   document.getElementById('return-asset-name').textContent = a.name;
-  document.getElementById('return-asset-meta').textContent = `Asset ID: ${a.assetId}  |  Assigned to: ${a.assignedTo||'Ã¢â¬â'}`;
+  document.getElementById('return-asset-meta').textContent = `Asset ID: ${a.assetId}  |  Assigned to: ${a.assignedTo||'—'}`;
   document.getElementById('return-emp-name').value = a.assignedTo||'';
   document.getElementById('return-date').value     = new Date().toISOString().slice(0,10);
   document.getElementById('return-condition').value      = '';
@@ -4509,8 +4497,8 @@ function saveReturn() {
   const a = assets[idx];
 
   const record = {
-    empName:a.assignedTo, dept:a.dept||'Ã¢â¬â', wiomId:a.wiomId||'Ã¢â¬â',
-    empEmail:a.empEmail||'Ã¢â¬â', assignDate:a.assignDate||'Ã¢â¬â',
+    empName:a.assignedTo, dept:a.dept||'—', wiomId:a.wiomId||'—',
+    empEmail:a.empEmail||'—', assignDate:a.assignDate||'—',
     returnDate, itemsReturned, condition, damageDetails,
     responsibility, penalty:responsibility==='Employee'?penalty:0,
     notes, returnedBy:'Sajan Kumar',
@@ -4539,7 +4527,7 @@ function saveReturn() {
   closeReturnModal();
   checkNotifications();
   showReturnEmailNotification(a, record);
-  showToast('Asset returned successfully Ã¢â¬â status: Available','success');
+  showToast('Asset returned successfully — status: Available','success');
   if (currentView==='list') renderAssetList();
   else if (currentView==='assigned') renderAssigned();
   else if (currentView==='returns') renderReturnHistory();
@@ -4760,18 +4748,18 @@ function renderReturnHistory() {
   const history = DB.get('return_history', []);
   const rows = history.map(r=>`
     <tr>
-      <td><strong>${escH(r.assetName||'Ã¢â¬â')}</strong></td>
-      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(r.assetId||'Ã¢â¬â')}</code></td>
+      <td><strong>${escH(r.assetName||'—')}</strong></td>
+      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(r.assetId||'—')}</code></td>
       <td>
-        <div style="font-weight:600">${escH(r.empName||'Ã¢â¬â')}</div>
-        ${r.wiomId&&r.wiomId!=='Ã¢â¬â'?`<div style="font-size:11px;color:#888">${escH(r.wiomId)}</div>`:''}
+        <div style="font-weight:600">${escH(r.empName||'—')}</div>
+        ${r.wiomId&&r.wiomId!=='—'?`<div style="font-size:11px;color:#888">${escH(r.wiomId)}</div>`:''}
       </td>
-      <td>${escH(r.dept||'Ã¢â¬â')}</td>
-      <td>${escH(r.returnDate||'Ã¢â¬â')}</td>
+      <td>${escH(r.dept||'—')}</td>
+      <td>${escH(r.returnDate||'—')}</td>
       <td>${badgeCondition(r.condition)}</td>
-      <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(r.damageDetails||'Ã¢â¬â')}</td>
-      <td>${r.penalty&&r.penalty>0?`<span style="color:#ef4444;font-weight:600">Ã¢âÂ¹${r.penalty}</span>`:'Ã¢â¬â'}</td>
-      <td>${escH(r.returnedBy||'Ã¢â¬â')}</td>
+      <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(r.damageDetails||'—')}</td>
+      <td>${r.penalty&&r.penalty>0?`<span style="color:#ef4444;font-weight:600">₹${r.penalty}</span>`:'—'}</td>
+      <td>${escH(r.returnedBy||'—')}</td>
     </tr>`).join('');
 
   document.getElementById('main-content').innerHTML = `
@@ -4959,7 +4947,7 @@ function testEmailFlow() {
     category:'Laptops', type:'Laptop', desc:'i5 11th Gen', ram:'16 GB',
     storage:'512 GB SSD', processor:'Intel Core i5 11th Gen',
     assignedTo:'Sajan Kumar', wiomId:'WM-SK-001', dept:'IT',
-    managerName:'â', assignDate:new Date().toLocaleDateString('en-IN'),
+    managerName:'—', assignDate:new Date().toLocaleDateString('en-IN'),
     itemsGiven:['Laptop','Charger/Adapter'], assignCondition:'Good', assignNotes:''
   };
   openEmailPreview(mockAsset, toList, 'assign');
@@ -4974,28 +4962,28 @@ function buildHtmlEmailBody(a, type) {
     ? 'The above asset has been successfully returned to the IT department.'
     : `Please click the button below to acknowledge receipt of this asset.<br><br><a href="${portalAckUrl}" style="display:inline-block;background:#2563EB;color:#fff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:700;margin-top:4px">â Click Here to Acknowledge</a>`;
   const detailRows = isReturn ? [
-    ['Asset Name', a.name], ['Asset ID', a.assetId], ['Serial No', a.serial||'â'],
+    ['Asset Name', a.name], ['Asset ID', a.assetId], ['Serial No', a.serial||'—'],
     ['Category', (a.category||'') + ' / ' + (a.type||'')],
-    ['Processor', a.processor||'â'], ['RAM', a.ram||'â'], ['Storage', a.storage||'â'],
-    ['Configuration', a.desc||'â']
+    ['Processor', a.processor||'—'], ['RAM', a.ram||'—'], ['Storage', a.storage||'—'],
+    ['Configuration', a.desc||'—']
   ] : [
-    ['Asset Name', a.name], ['Asset ID', a.assetId], ['Serial No', a.serial||'â'],
+    ['Asset Name', a.name], ['Asset ID', a.assetId], ['Serial No', a.serial||'—'],
     ['Category', (a.category||'') + ' / ' + (a.type||'')],
-    ['Processor', a.processor||'â'], ['RAM', a.ram||'â'], ['Storage', a.storage||'â'],
-    ['Configuration', a.desc||'â']
+    ['Processor', a.processor||'—'], ['RAM', a.ram||'—'], ['Storage', a.storage||'—'],
+    ['Configuration', a.desc||'—']
   ];
   const assignRows = isReturn ? [
-    ['Returned By', a.empName||a.assignedTo||'â'], ['Wiom ID', a.wiomId||'â'],
-    ['Department', a.dept||'â'], ['Return Date', a.returnDate||'â'],
-    ['Items Returned', (a.itemsReturned||[]).join(', ')||'â'], ['Condition', a.condition||'â']
+    ['Returned By', a.empName||a.assignedTo||'—'], ['Wiom ID', a.wiomId||'—'],
+    ['Department', a.dept||'—'], ['Return Date', a.returnDate||'—'],
+    ['Items Returned', (a.itemsReturned||[]).join(', ')||'—'], ['Condition', a.condition||'—']
   ] : [
-    ['Employee Name', a.assignedTo||'â'], ['Wiom ID', a.wiomId||'â'],
-    ['Department', a.dept||'â'], ['Manager', a.managerName||'â'],
-    ['Assign Date', a.assignDate||'â'],
-    ['Items Given', (a.itemsGiven||[]).join(', ')||'â'], ['Condition', a.assignCondition||'â']
+    ['Employee Name', a.assignedTo||'—'], ['Wiom ID', a.wiomId||'—'],
+    ['Department', a.dept||'—'], ['Manager', a.managerName||'—'],
+    ['Assign Date', a.assignDate||'—'],
+    ['Items Given', (a.itemsGiven||[]).join(', ')||'—'], ['Condition', a.assignCondition||'—']
   ];
 
-  const rowHtml = (rows) => rows.filter(r=>r[1]&&r[1]!=='â'||true).map(([label, val]) => `
+  const rowHtml = (rows) => rows.filter(r=>r[1]&&r[1]!=='—'||true).map(([label, val]) => `
     <tr>
       <td style="padding:8px 14px;color:#0B1220;font-weight:600;font-size:13px;white-space:nowrap;width:160px;border-bottom:1px solid #DBEAFE">${label}</td>
       <td style="padding:8px 14px;color:#222;font-size:13px;border-bottom:1px solid #DBEAFE">${val}</td>
@@ -5055,7 +5043,7 @@ function buildHtmlEmailBody(a, type) {
   <div style="background:#0B1220;padding:20px 32px;display:flex;align-items:center;justify-content:space-between">
     <div>
       <div style="color:#fff;font-weight:700;font-size:14px">${es.itHeadName||'Sajan Kumar'}</div>
-      <div style="color:rgba(255,255,255,.7);font-size:12px">IT Department â Wiom</div>
+      <div style="color:rgba(255,255,255,.7);font-size:12px">IT Department — Wiom</div>
       <div style="color:#DBEAFE;font-size:12px;margin-top:2px">${es.itHeadEmail||'sajan.kumar@wiom.in'}</div>
     </div>
     <div style="color:rgba(255,255,255,.4);font-size:11px;text-align:right">Wiom IT Portal</div>
@@ -5076,7 +5064,7 @@ function openEmailPreview(a, toList, type) {
 
   const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Email Preview</title></head><body style="margin:0;padding:0;background:#1a1a2e;font-family:Arial,sans-serif">
   <div style="position:fixed;top:0;left:0;right:0;background:#0f0f23;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:99;box-shadow:0 2px 12px rgba(0,0,0,.4)">
-    <div style="color:#2563EB;font-weight:700;font-size:14px">ð§ Email Preview â Wiom IT Portal</div>
+    <div style="color:#2563EB;font-weight:700;font-size:14px">ð§ Email Preview — Wiom IT Portal</div>
     <div style="flex:1"></div>
     <div style="font-size:12px;color:#aaa;margin-right:8px">To: ${toList.join(', ')}</div>
     <button id="copyBtn" onclick="copyEmail()" style="background:#2563EB;color:#fff;border:none;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">ð Copy Email</button>
@@ -5103,7 +5091,7 @@ function openEmailPreview(a, toList, type) {
 </body></html>`], {type:'text/html'});
   const url = URL.createObjectURL(blob);
   window.open(url, '_blank', 'width=680,height=800');
-  showToast('Email preview khul raha hai â Copy karke Gmail mein paste karo', 'success');
+  showToast('Email preview khul raha hai — Copy karke Gmail mein paste karo', 'success');
 }
 
 function getNotifRecipients() {
@@ -5180,7 +5168,7 @@ function importBackup(e) {
       const data = JSON.parse(ev.target.result);
       const keys = ['assets','users','audit_log','employees','maintenance_log','email_settings','email_log','return_history','custom_categories','repair_log','offboarding','daily_notes','wiom_asset_costs'];
       keys.forEach(k => { if (data[k] !== undefined && data[k] !== null) DB.set(k, data[k]); });
-      showToast('Backup imported â reloading...', 'success');
+      showToast('Backup imported — reloading...', 'success');
       setTimeout(() => location.reload(), 1500);
     } catch {
       showToast('Invalid backup file', 'error');
@@ -5334,7 +5322,7 @@ function saveMaintenanceLog() {
   }
 
   DB.set('maintenance_log', log);
-  logAudit('Maintenance Logged', (a?a.name:assetId) + ' â ' + type + ' (' + status + ')');
+  logAudit('Maintenance Logged', (a?a.name:assetId) + ' — ' + type + ' (' + status + ')');
   closeMaintenanceModal();
   showToast('Maintenance log saved', 'success');
   if (currentView === 'maintenance') renderMaintenance();
@@ -5360,12 +5348,12 @@ function renderMaintenance() {
 
   const rows = filtered.map(r => `
     <tr>
-      <td><strong>${escH(r.assetName||'â')}</strong></td>
-      <td>${escH(r.date||'â')}</td>
+      <td><strong>${escH(r.assetName||'—')}</strong></td>
+      <td>${escH(r.date||'—')}</td>
       <td><span class="badge" style="background:#fef3c7;color:#92400e">${escH(r.type)}</span></td>
-      <td style="max-width:200px;font-size:12px">${escH(r.desc||'â')}</td>
-      <td>${r.cost?`<span style="font-weight:600;color:#059669">&#8377;${r.cost.toLocaleString()}</span>`:'â'}</td>
-      <td>${escH(r.vendor||'â')}</td>
+      <td style="max-width:200px;font-size:12px">${escH(r.desc||'—')}</td>
+      <td>${r.cost?`<span style="font-weight:600;color:#059669">&#8377;${r.cost.toLocaleString()}</span>`:'—'}</td>
+      <td>${escH(r.vendor||'—')}</td>
       <td>${statusBadge(r.status)}</td>
       <td>
         <button class="btn btn-outline btn-sm" onclick="editMaintenanceLog('${escH(r.id)}')"><i class="bi bi-pencil"></i></button>
@@ -5424,7 +5412,7 @@ function openTransferModal(assetId) {
   const a = getAssets().find(x=>x.id===assetId);
   if (!a) return;
   document.getElementById('transfer-asset-id').value = assetId;
-  document.getElementById('transfer-from').value = a.assignedTo + (a.wiomId?' ('+a.wiomId+')':'') + (a.dept?' â '+a.dept:'');
+  document.getElementById('transfer-from').value = a.assignedTo + (a.wiomId?' ('+a.wiomId+')':'') + (a.dept?' — '+a.dept:'');
   document.getElementById('transfer-to-name').value = '';
   document.getElementById('transfer-to-wiomid').value = '';
   document.getElementById('transfer-to-dept').value = '';
@@ -5506,9 +5494,9 @@ function saveTransfer() {
   const body = encodeURIComponent(
     'Dear ' + toName + ',\n\nAn asset has been transferred to you.\n\nAsset: ' + a.name + '\nAsset ID: ' + a.assetId +
     '\nTransferred From: ' + a.assignedTo + '\nTransfer Date: ' + date +
-    '\nItems: ' + (items.join(', ')||'â') +
-    '\nReason: ' + (reason||'â') +
-    '\n\nPlease acknowledge receipt.\n\nRegards,\nIT Team â Wiom'
+    '\nItems: ' + (items.join(', ')||'—') +
+    '\nReason: ' + (reason||'—') +
+    '\n\nPlease acknowledge receipt.\n\nRegards,\nIT Team — Wiom'
   );
   window.open('mailto:' + encodeURIComponent(toRecip) + '?subject=' + subject + '&body=' + body, '_blank');
 
@@ -5571,13 +5559,13 @@ function exportPDF() {
     <td>${i+1}</td>
     <td>${(a.name||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td>
     <td>${(a.assetId||'').replace(/</g,'&lt;')}</td>
-    <td>${(a.serial||'â').replace(/</g,'&lt;')}</td>
+    <td>${(a.serial||'—').replace(/</g,'&lt;')}</td>
     <td>${a.category||''}</td>
-    <td>${a.location||'â'}</td>
-    <td>${a.condition||'â'}</td>
-    <td>${a.status||'â'}</td>
-    <td>${(a.assignedTo||'â').replace(/</g,'&lt;')}</td>
-    <td>${a.warranty||'â'}</td>
+    <td>${a.location||'—'}</td>
+    <td>${a.condition||'—'}</td>
+    <td>${a.status||'—'}</td>
+    <td>${(a.assignedTo||'—').replace(/</g,'&lt;')}</td>
+    <td>${a.warranty||'—'}</td>
   </tr>`).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Wiom Asset Report</title><style>
@@ -5594,7 +5582,7 @@ function exportPDF() {
     tr:nth-child(even){background:#f9f9f9}
     .footer{margin-top:20px;font-size:10px;color:#666;border-top:1px solid #ccc;padding-top:8px}
   </style></head><body>
-  <h1>${company} â Asset Management Report</h1>
+  <h1>${company} — Asset Management Report</h1>
   <div class="meta">Date: ${now}</div>
   <div class="summary">
     <div class="sum-box"><div class="label">Total</div><div class="val">${total}</div></div>
@@ -5610,7 +5598,7 @@ function exportPDF() {
   </body></html>`;
 
   const w = window.open('','_blank');
-  if (!w) { showToast('Popup blocked â allow popups to export PDF','error'); return; }
+  if (!w) { showToast('Popup blocked — allow popups to export PDF','error'); return; }
   w.document.write(html);
   w.document.close();
   w.focus();
@@ -5726,12 +5714,12 @@ function renderEmpDirectory() {
   const getAssetCount = name => assets.filter(a=>a.assignedTo&&a.assignedTo.toLowerCase()===name.toLowerCase()).length;
   const rows = employees.map(e=>`<tr>
     <td><div style="font-weight:600;color:#2563EB;cursor:pointer" onclick="openEmpProfile('${escH(e.id)}')">${escH(e.name)}</div></td>
-    <td><code style="font-size:11px">${escH(e.wiomId||'â')}</code></td>
-    <td>${escH(e.dept||'â')}</td>
+    <td><code style="font-size:11px">${escH(e.wiomId||'—')}</code></td>
+    <td>${escH(e.dept||'—')}</td>
     <td><a href="mailto:${escH(e.email)}" style="color:#2563EB">${escH(e.email)}</a></td>
-    <td>${escH(e.phone||'â')}</td>
-    <td>${escH(e.managerName||'â')}</td>
-    <td>${escH(e.joinDate||'â')}</td>
+    <td>${escH(e.phone||'—')}</td>
+    <td>${escH(e.managerName||'—')}</td>
+    <td>${escH(e.joinDate||'—')}</td>
     <td><span class="badge badge-assigned">${getAssetCount(e.name)}</span></td>
     <td>
       <button class="btn btn-primary btn-sm" onclick="openEmpProfile('${escH(e.id)}')"><i class="bi bi-eye"></i> Profile</button>
@@ -5770,10 +5758,10 @@ function renderEmpAssetSummary() {
         ? empAssets.map(a=>`<tr>
             <td>${escH(a.name)}</td>
             <td><code style="font-size:11px">${escH(a.assetId)}</code></td>
-            <td>${escH(a.serial||'â')}</td>
+            <td>${escH(a.serial||'—')}</td>
             <td>${escH(a.category)}</td>
-            <td>${escH(a.assignDate||'â')}</td>
-            <td>${badgeAck(a.ack||'â')}</td>
+            <td>${escH(a.assignDate||'—')}</td>
+            <td>${badgeAck(a.ack||'—')}</td>
             <td>
               <button class="btn btn-sm" style="background:#fff7ed;color:#f97316;border:1.5px solid #fed7aa;font-size:11px" onclick="openReturnModal('${escH(a.id)}')"><i class="bi bi-box-arrow-in-left"></i> Return</button>
               <button class="btn btn-outline btn-sm" style="font-size:11px" onclick="openTransferModal('${escH(a.id)}')"><i class="bi bi-arrow-left-right"></i> Transfer</button>
@@ -5785,7 +5773,7 @@ function renderEmpAssetSummary() {
           <div style="width:38px;height:38px;border-radius:50%;background:#2563EB;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0">${getUserInitials(e.name)}</div>
           <div>
             <div style="font-weight:700;color:#0B1220">${escH(e.name)} <span style="font-size:11px;color:#888">${escH(e.wiomId||'')}</span></div>
-            <div style="font-size:12px;color:#555">${escH(e.dept||'â')} &bull; <a href="mailto:${escH(e.email)}" style="color:#2563EB">${escH(e.email)}</a></div>
+            <div style="font-size:12px;color:#555">${escH(e.dept||'—')} &bull; <a href="mailto:${escH(e.email)}" style="color:#2563EB">${escH(e.email)}</a></div>
           </div>
           <span class="badge ${e.status==='Active'?'badge-available':'badge-na'}" style="margin-left:auto">${escH(e.status)}</span>
         </div>
@@ -5874,11 +5862,11 @@ function renderOffboarding() {
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
         <div>
           <div style="font-weight:700;font-size:15px;color:#0B1220">${escH(ob.empName)} <span style="font-size:12px;color:#888">${escH(ob.wiomId||'')}</span></div>
-          <div style="font-size:12px;color:#555;margin-top:2px">${escH(ob.dept||'â')}</div>
+          <div style="font-size:12px;color:#555;margin-top:2px">${escH(ob.dept||'—')}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:12px;color:#ef4444;font-weight:600">Last Day: ${escH(ob.lastDay||'â')}</div>
-          <div style="font-size:11px;color:#888">HR: ${escH(ob.hrContact||'â')}</div>
+          <div style="font-size:12px;color:#ef4444;font-weight:600">Last Day: ${escH(ob.lastDay||'—')}</div>
+          <div style="font-size:11px;color:#888">HR: ${escH(ob.hrContact||'—')}</div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -5907,7 +5895,7 @@ function renderOffboarding() {
   ${completed.length ? `<div style="margin-top:20px"><h4 style="font-size:14px;color:#888;margin-bottom:12px"><i class="bi bi-check-circle-fill" style="color:#059669"></i> Completed (${completed.length})</h4>
   ${completed.map(ob=>`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px">
     <i class="bi bi-check-circle-fill" style="color:#22c55e;font-size:18px"></i>
-    <div><strong>${escH(ob.empName)}</strong> â Last Day: ${escH(ob.lastDay||'â')}</div>
+    <div><strong>${escH(ob.empName)}</strong> — Last Day: ${escH(ob.lastDay||'—')}</div>
     <span class="badge badge-completed" style="margin-left:auto">Completed</span>
   </div>`).join('')}
   </div>` : ''}`;
@@ -5981,7 +5969,7 @@ function openOffboardModal() {
   const employees = getEmployees().filter(e=>e.status==='Active');
   const sel = document.getElementById('offboard-emp-id');
   sel.innerHTML = '<option value="">Select Active Employee</option>' +
-    employees.map(e=>`<option value="${escH(e.id)}">${escH(e.name)} (${escH(e.wiomId||'â')})</option>`).join('');
+    employees.map(e=>`<option value="${escH(e.id)}">${escH(e.name)} (${escH(e.wiomId||'—')})</option>`).join('');
   document.getElementById('offboard-last-day').value = '';
   document.getElementById('offboard-hr').value = '';
   document.getElementById('offboard-modal').classList.add('show');
@@ -6037,8 +6025,8 @@ function filterEmpAssetCards(val) {
     const assetRows = empAssets.length
       ? empAssets.map(a=>`<tr>
           <td>${escH(a.name)}</td><td><code style="font-size:11px">${escH(a.assetId)}</code></td>
-          <td>${escH(a.serial||'â')}</td><td>${escH(a.category)}</td>
-          <td>${escH(a.assignDate||'â')}</td><td>${badgeAck(a.ack||'â')}</td>
+          <td>${escH(a.serial||'—')}</td><td>${escH(a.category)}</td>
+          <td>${escH(a.assignDate||'—')}</td><td>${badgeAck(a.ack||'—')}</td>
           <td>
             <button class="btn btn-sm" style="background:#fff7ed;color:#f97316;border:1.5px solid #fed7aa;font-size:11px" onclick="openReturnModal('${escH(a.id)}')"><i class="bi bi-box-arrow-in-left"></i> Return</button>
             <button class="btn btn-outline btn-sm" style="font-size:11px" onclick="openTransferModal('${escH(a.id)}')"><i class="bi bi-arrow-left-right"></i> Transfer</button>
@@ -6048,7 +6036,7 @@ function filterEmpAssetCards(val) {
     return `<div class="emp-card"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
       <div style="width:38px;height:38px;border-radius:50%;background:#2563EB;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0">${getUserInitials(e.name)}</div>
       <div><div style="font-weight:700;color:#0B1220">${escH(e.name)} <span style="font-size:11px;color:#888">${escH(e.wiomId||'')}</span></div>
-      <div style="font-size:12px;color:#555">${escH(e.dept||'â')} &bull; <a href="mailto:${escH(e.email)}" style="color:#2563EB">${escH(e.email)}</a></div></div>
+      <div style="font-size:12px;color:#555">${escH(e.dept||'—')} &bull; <a href="mailto:${escH(e.email)}" style="color:#2563EB">${escH(e.email)}</a></div></div>
       <span class="badge ${e.status==='Active'?'badge-available':'badge-na'}" style="margin-left:auto">${escH(e.status)}</span></div>
       <div class="asset-table-wrap"><table>
         <thead><tr><th>ASSET NAME</th><th>ASSET ID</th><th>S/NO</th><th>CATEGORY</th><th>ASSIGN DATE</th><th>ACK</th><th>ACTIONS</th></tr></thead>
@@ -6077,7 +6065,7 @@ function completeOffboarding(obId) {
   const empIdx = employees.findIndex(e=>e.id===ob.empId);
   if (empIdx>=0) { employees[empIdx].status = 'Inactive'; saveEmployees(employees); }
 
-  showToast('Offboarding completed â ' + ob.empName + ' marked Inactive', 'success');
+  showToast('Offboarding completed — ' + ob.empName + ' marked Inactive', 'success');
   renderEmployeeModule('offboarding');
 }
 
@@ -6195,7 +6183,7 @@ function showCalDayDetail(day, month, year) {
   const panel = document.getElementById('cal-day-detail');
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   panel.style.display = 'block';
-  panel.innerHTML = `<strong style="color:#0B1220">${day} ${MONTHS[month]} ${year} â ${matched.length} asset(s)</strong>
+  panel.innerHTML = `<strong style="color:#0B1220">${day} ${MONTHS[month]} ${year} — ${matched.length} asset(s)</strong>
     <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px">
       ${matched.map(a=>{
         const wd = new Date(a.warranty);
@@ -6716,7 +6704,7 @@ function saveRepairLog() {
     };
     log.unshift(rec);
     assets[aIdx].status = 'Under Repair';
-    showToast('Repair logged â asset status set to Under Repair', 'success');
+    showToast('Repair logged — asset status set to Under Repair', 'success');
   }
 
   DB.set('repair_log', log);
@@ -6743,13 +6731,13 @@ function renderRepairs() {
 
   const rows = filtered.map(r=>`
     <tr>
-      <td><strong>${escH(r.assetName||'Ã¢â¬"')}</strong></td>
-      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(r.assetAssetId||'Ã¢â¬"')}</code></td>
-      <td>${escH(r.vendor||'Ã¢â¬"')}</td>
-      <td style="max-width:160px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.issue||'Ã¢â¬"')}</td>
-      <td>${escH(r.sentDate||'Ã¢â¬"')}</td>
-      <td>${escH(r.expectedReturn||'Ã¢â¬"')}</td>
-      <td>${r.estimatedCost?`<span style="color:#888">~Ã¢âÂ¹${Number(r.estimatedCost).toLocaleString()}</span>`:'Ã¢â¬"'}</td>
+      <td><strong>${escH(r.assetName||'–')}</strong></td>
+      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(r.assetAssetId||'–')}</code></td>
+      <td>${escH(r.vendor||'–')}</td>
+      <td style="max-width:160px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(r.issue||'–')}</td>
+      <td>${escH(r.sentDate||'–')}</td>
+      <td>${escH(r.expectedReturn||'–')}</td>
+      <td>${r.estimatedCost?`<span style="color:#888">~₹${Number(r.estimatedCost).toLocaleString()}</span>`:'–'}</td>
       <td><span class="badge ${r.priority==='Urgent'?'badge-urgent':'badge-normal'}">${escH(r.priority||'Normal')}</span></td>
       <td>${repairStatusBadge(r.status)}</td>
       <td>
@@ -6775,7 +6763,7 @@ function renderRepairs() {
     <div class="dash-stat-card" style="min-width:140px;flex:1;cursor:default">
       <div class="sc-icon" style="background:#DBEAFE;color:#2563EB"><i class="bi bi-currency-rupee"></i></div>
       <div class="sc-label">Total Repair Cost</div>
-      <div class="sc-val" style="color:#2563EB">Ã¢âÂ¹${Math.round(totalCost).toLocaleString('en-IN')}</div>
+      <div class="sc-val" style="color:#2563EB">₹${Math.round(totalCost).toLocaleString('en-IN')}</div>
     </div>
   </div>
   <div class="repair-filter-btns">
@@ -6855,15 +6843,15 @@ function printQRLabel(id) {
     <div class="qr"><img src="${qrUrl}" alt="QR"></div>
     <div class="info">
       <div class="info-row"><span class="info-label">Name:</span><span>${escH(a.name)}</span></div>
-      <div class="info-row"><span class="info-label">S/No:</span><span>${escH(a.serial||'Ã¢â¬"')}</span></div>
+      <div class="info-row"><span class="info-label">S/No:</span><span>${escH(a.serial||'–')}</span></div>
       <div class="info-row"><span class="info-label">Category:</span><span>${escH(a.category)} / ${escH(a.type)}</span></div>
-      <div class="info-row"><span class="info-label">Location:</span><span>${escH(a.location||'Ã¢â¬"')}</span></div>
+      <div class="info-row"><span class="info-label">Location:</span><span>${escH(a.location||'–')}</span></div>
     </div>
   </div>
   <script>window.onload=()=>{window.print()}<\/script>
   </body></html>`;
   const w = window.open('','_blank','width=400,height=500');
-  if (!w) { showToast('Popup blocked â allow popups to print QR label','error'); return; }
+  if (!w) { showToast('Popup blocked — allow popups to print QR label','error'); return; }
   w.document.write(html);
   w.document.close();
 }
@@ -6891,7 +6879,7 @@ function toggleBulkAssign() {
       <button class="btn btn-primary btn-sm" onclick="executeBulkAssign()" style="background:#2563EB;border:none"><i class="bi bi-check-lg"></i> Assign All</button>
       <button class="btn btn-sm" onclick="toggleBulkAssign()" style="background:rgba(255,255,255,.15);color:#fff;border:none"><i class="bi bi-x-lg"></i> Cancel</button>`;
     document.body.appendChild(panel);
-    showToast('Bulk Assign mode ON â check available assets to select', 'success');
+    showToast('Bulk Assign mode ON — check available assets to select', 'success');
   } else {
     showToast('Bulk Assign mode OFF');
   }
@@ -6943,7 +6931,7 @@ function executeBulkAssign() {
 
   // Mailto with all assigned assets
   const subject = encodeURIComponent('Assets Assigned: ' + assignedAssets.length + ' item(s)');
-  const body = encodeURIComponent('Dear ' + empName + ',\n\nThe following assets have been assigned to you:\n\n' + assignedAssets.join('\n') + '\n\nPlease acknowledge receipt.\n\nRegards,\nIT Team â Wiom');
+  const body = encodeURIComponent('Dear ' + empName + ',\n\nThe following assets have been assigned to you:\n\n' + assignedAssets.join('\n') + '\n\nPlease acknowledge receipt.\n\nRegards,\nIT Team — Wiom');
   window.open('mailto:' + encodeURIComponent(empEmail) + '?subject=' + subject + '&body=' + body, '_blank');
 
   // Exit bulk mode
@@ -6999,10 +6987,10 @@ function showEmpDetail(idx) {
     <tr>
       <td><strong>${escH(a.name)}</strong><br><span style="font-size:11px;color:#aaa">${escH(a.category)} / ${escH(a.type)}</span></td>
       <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
-      <td>${escH(a.location||'â')}</td>
+      <td>${escH(a.location||'—')}</td>
       <td>${badgeCondition(a.condition)}</td>
       <td>${badgeAck(a.ack||'Not Applicable')}</td>
-      <td>${escH(a.assignDate||'â')}</td>
+      <td>${escH(a.assignDate||'—')}</td>
     </tr>`).join('');
 
   const modal = document.createElement('div');
@@ -7047,16 +7035,16 @@ function sendAllReminders() {
   const es = DB.get('email_settings', {hrEmail:'hr@wiom.in', itHeadEmail:'sajan.kumar@wiom.in'});
   const notifRecips = getNotifRecipients();
   const assetLines = pending.map(a =>
-    `â¢ ${a.name} (ID: ${a.assetId}) â ${a.assignedTo||'â'} | ${a.dept||'â'} | Assigned: ${a.assignDate||'â'}`
+    `â¢ ${a.name} (ID: ${a.assetId}) — ${a.assignedTo||'—'} | ${a.dept||'—'} | Assigned: ${a.assignDate||'—'}`
   ).join('\n');
-  const subject = encodeURIComponent('â° Reminder: Asset Acknowledgement Pending â Wiom IT');
+  const subject = encodeURIComponent('â° Reminder: Asset Acknowledgement Pending — Wiom IT');
   const body = encodeURIComponent(
-    `Dear Team,\n\nYeh ek reminder hai â neeche diye gaye ${pending.length} assets ka acknowledgement abhi bhi pending hai.\n\nKripya apne asset ko acknowledge karein as soon as possible.\n\nPending Assets:\n${assetLines}\n\nKisi bhi query ke liye IT team se contact karein.\n\nRegards,\nWiom IT Team\n${es.itHeadEmail||''}`
+    `Dear Team,\n\nYeh ek reminder hai — neeche diye gaye ${pending.length} assets ka acknowledgement abhi bhi pending hai.\n\nKripya apne asset ko acknowledge karein as soon as possible.\n\nPending Assets:\n${assetLines}\n\nKisi bhi query ke liye IT team se contact karein.\n\nRegards,\nWiom IT Team\n${es.itHeadEmail||''}`
   );
   const toList = [es.hrEmail, es.itHeadEmail, ...notifRecips].filter(Boolean);
   const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(toList.join(','))}&su=${subject}&body=${body}`;
   window.open(gmailUrl, '_blank');
-  showToast(`ð§ Gmail khul raha hai â ${pending.length} pending assets ka reminder`, 'success');
+  showToast(`ð§ Gmail khul raha hai — ${pending.length} pending assets ka reminder`, 'success');
 }
 
 // ââââââââââââââââââââââââââââââââââââââââââââââ
