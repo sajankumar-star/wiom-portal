@@ -1858,6 +1858,7 @@ function renderAssetTable() {
   const filterCond = document.getElementById('f-cond')?.value||'';
   const filterStatus = document.getElementById('f-stat')?.value||'';
   const filterSearch = document.getElementById('f-search')?.value||'';
+  const filterDept = document.getElementById('f-dept')?.value||'';
 
   // Global search: search all assets; otherwise filter by selected category/type
   const allAssets = getAssets();
@@ -1867,6 +1868,7 @@ function renderAssetTable() {
 
   let filtered = assets.filter(a => {
     if (filterLoc && a.location!==filterLoc) return false;
+    if (filterDept && a.dept!==filterDept) return false;
     if (filterCond && a.condition!==filterCond) return false;
     if (filterStatus && a.status!==filterStatus) return false;
     if (filterSearch) {
@@ -1921,15 +1923,20 @@ function renderAssetTable() {
       </div>
     </div>
     <div class="filters-row">
+      <select id="f-dept" onchange="applyFilters()">
+        <option value="">All Departments</option>
+        ${[...new Set(getAssets().map(a=>a.dept).filter(Boolean))].sort().map(d=>`<option>${escH(d)}</option>`).join('')}
+      </select>
       <select id="f-loc" onchange="applyFilters()">
         <option value="">All Locations</option>
         <option>Gurugram</option><option>Mumbai</option><option>Saket</option><option>New Delhi</option>
       </select>
-      <select id="f-cond" onchange="applyFilters()">
+      <button class="btn btn-outline btn-sm" type="button" onclick="document.querySelectorAll('.more-f').forEach(function(x){x.style.display=x.style.display==='none'?'':'none'})"><i class="bi bi-sliders"></i> More Filters</button>
+      <select id="f-cond" class="more-f" style="display:none" onchange="applyFilters()">
         <option value="">All Conditions</option>
         <option>New</option><option>Good</option><option>Fair</option><option>Poor</option>
       </select>
-      <select id="f-stat" onchange="applyFilters()">
+      <select id="f-stat" class="more-f" style="display:none" onchange="applyFilters()">
         <option value="">All Statuses</option>
         <option>Available</option><option>Assigned</option><option>In Stock</option><option>Not Available</option><option>Under Repair</option><option>Retired</option>
       </select>
@@ -6130,11 +6137,13 @@ function renderDashboard() {
     {label:'Total Assets', val:total, icon:'bi-boxes', bg:'#DBEAFE', col:'#2563EB', view:'list'},
     {label:'Assigned', val:assigned, icon:'bi-person-check', bg:'#dbeafe', col:'#3b82f6', view:'assigned'},
     {label:'Available', val:available, icon:'bi-check-circle', bg:'#d1fae5', col:'#10b981', view:'list'},
-    {label:'Under Repair', val:underRepair, icon:'bi-tools', bg:'#fef9c3', col:'#ca8a04', view:'repairs'},
-    {label:'Returned', val:returnedCount, icon:'bi-box-arrow-in-left', bg:'#ffedd5', col:'#f97316', view:'returns'},
-    {label:'Lost / Damaged', val:lostDamaged, icon:'bi-exclamation-octagon', bg:'#fee2e2', col:'#dc2626', view:'list'},
     {label:'Pending ACK', val:pendingAck, icon:'bi-hourglass-split', bg:'#fef3c7', col:'#d97706', view:'ack'},
-    {label:'Expiring Warranty', val:expiringWarranty.length, icon:'bi-shield-exclamation', bg:'#fee2e2', col:'#ef4444', view:'reports'},
+  ];
+  const miniStats = [
+    {label:'Under Repair', val:underRepair, icon:'bi-tools', col:'#ca8a04', view:'repairs'},
+    {label:'Returned', val:returnedCount, icon:'bi-box-arrow-in-left', col:'#f97316', view:'returns'},
+    {label:'Lost / Damaged', val:lostDamaged, icon:'bi-exclamation-octagon', col:'#dc2626', view:'list'},
+    {label:'Expiring Warranty', val:expiringWarranty.length, icon:'bi-shield-exclamation', col:'#ef4444', view:'reports'},
   ];
 
   const warrantyStrip = expiringWarranty.length ? expiringWarranty.slice(0,10).map(a=>{
@@ -6155,11 +6164,18 @@ function renderDashboard() {
   ${alertsHTML}
   ${syncBarHTML()}
   ${lowStockBarHTML()}
-  <div class="dash-stat-cards">
+  <div class="dash-stat-cards" style="grid-template-columns:repeat(4,1fr)">
     ${statCards.map(c=>`<div class="dash-stat-card" onclick="switchView('${c.view}')">
       <div class="sc-icon" style="background:${c.bg};color:${c.col}"><i class="bi ${c.icon}"></i></div>
       <div class="sc-label">${c.label}</div>
       <div class="sc-val" style="color:${c.col}">${c.val}</div>
+    </div>`).join('')}
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+    ${miniStats.map(c=>`<div onclick="switchView('${c.view}')" style="flex:1;min-width:150px;background:#fff;border:1px solid #e8e8f0;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer">
+      <i class="bi ${c.icon}" style="color:${c.col};font-size:16px"></i>
+      <span style="font-size:12px;color:#6b7280;flex:1">${c.label}</span>
+      <span style="font-size:16px;font-weight:700;color:${c.col}">${c.val}</span>
     </div>`).join('')}
   </div>
 
