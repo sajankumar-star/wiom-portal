@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Wiom Assets">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='white'/><path d='M32 33 C32 23 19 23 19 33 C19 43 32 43 32 33 C32 23 45 23 45 33 C45 43 32 43 32 33 Z' fill='none' stroke='%23E6007E' stroke-width='5' stroke-linecap='round'/></svg>">
 <link rel="manifest" id="pwa-manifest">
 <link rel="apple-touch-icon" id="pwa-icon">
 <script>
@@ -26,7 +27,7 @@
 })();
 function pwaInstall(){ if (window.__pwaPrompt){ window.__pwaPrompt.prompt(); window.__pwaPrompt.userChoice.finally(function(){ window.__pwaPrompt=null; }); } else { alert("Install: Chrome menu (three dots) se 'Install app' / 'Add to Home screen' chunein."); } }
 </script>
-<title>Wiom — Asset Management</title>
+<title>Wiom IT Asset Management Portal</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -40,11 +41,12 @@ input,select,textarea{font-family:inherit}
 /* Ã¢ââ¬Ã¢ââ¬ AUTH Ã¢ââ¬Ã¢ââ¬ */
 #auth-screen{display:flex;min-height:100vh;background:#fff}
 .auth-brand{flex:1;background:linear-gradient(135deg,#0B1220 0%,#2563EB 60%,#60A5FA 100%);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:56px 60px;position:relative;overflow:hidden}
-.auth-brand .ab-logo{font-size:34px;font-weight:800;letter-spacing:.5px;margin-bottom:18px}
-.auth-brand h1{font-size:30px;font-weight:800;line-height:1.25;margin-bottom:14px;max-width:440px}
-.auth-brand .ab-tag{font-size:15px;opacity:.92;max-width:420px;line-height:1.6}
-.auth-brand .ab-icons{margin-top:38px;display:flex;gap:20px;font-size:26px;opacity:.92;z-index:1}
-.auth-brand .ab-deco{position:absolute;right:-50px;bottom:-70px;font-size:300px;opacity:.08;transform:rotate(-12deg)}
+.auth-brand .ab-logo{margin-bottom:26px;z-index:1}
+.auth-brand h1{font-size:30px;font-weight:800;line-height:1.25;margin-bottom:16px;max-width:440px;z-index:1}
+.auth-brand .ab-desc{font-size:16px;opacity:.94;max-width:400px;line-height:1.65;margin-bottom:26px;z-index:1}
+.auth-brand .ab-chips{font-size:13px;font-weight:600;letter-spacing:.4px;opacity:.85;z-index:1}
+@keyframes wiomFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.auth-brand>*{animation:wiomFadeUp .55s ease both}.auth-box{animation:wiomFadeUp .55s ease both}
 .auth-form-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px}
 .auth-box{background:#fff;border-radius:16px;padding:36px 34px;width:100%;max-width:400px}
 .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -56,6 +58,7 @@ input,select,textarea{font-family:inherit}
 .auth-box label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:6px;margin-top:16px}
 .auth-box input{width:100%;padding:11px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;outline:none;transition:border .2s}
 .auth-box input:focus{border-color:#2563EB}
+.auth-box .auth-help-line{text-align:center;font-size:12px;color:#94a3b8;margin-top:18px}
 .pw-wrap{position:relative}
 .pw-wrap input{padding-right:44px}
 .pw-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:#999;cursor:pointer;font-size:16px;padding:6px}
@@ -379,24 +382,30 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
 <!-- Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â AUTH Ã¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢ÂÃ¢â¢Â -->
 <div id="auth-screen">
   <div class="auth-brand">
-    <div class="ab-logo" style="background:#fff;border-radius:18px;padding:20px 30px;display:inline-block;box-shadow:0 12px 30px rgba(0,0,0,.18);margin-bottom:22px">
-      <svg width="250" height="104" viewBox="0 0 250 104" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wiom - Sapno se zyada">
-        <path d="M46 50 C46 34 22 34 22 50 C22 66 46 66 46 50 C46 34 70 34 70 50 C70 66 46 66 46 50 Z" stroke="#EC008C" stroke-width="5" fill="none" stroke-linecap="round"/>
-        <path d="M24 33 C22 27 26 23 31 25" stroke="#EC008C" stroke-width="4" fill="none" stroke-linecap="round"/>
-        <circle cx="24" cy="22" r="2.6" fill="#EC008C"/>
-        <text x="84" y="58" font-family="Georgia, 'Times New Roman', serif" font-size="50" font-weight="700" fill="#EC008C">Wiom</text>
-        <text x="86" y="90" font-family="'Noto Sans Devanagari', 'Nirmala UI', system-ui, sans-serif" font-size="21" font-weight="700" fill="#EC008C" letter-spacing="0.5">&#2360;&#2346;&#2344;&#2379;&#2306; &#2360;&#2375; &#2332;&#2381;&#2351;&#2366;&#2342;&#2366;</text>
+    <div class="ab-logo">
+      <svg width="270" height="112" viewBox="0 0 270 112" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wiom">
+        <path d="M46 54 C46 38 22 38 22 54 C22 70 46 70 46 54 C46 38 70 38 70 54 C70 70 46 70 46 54 Z" stroke="#fff" stroke-width="5.5" fill="none" stroke-linecap="round"/>
+        <path d="M24 37 C22 31 26 27 31 29" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round"/>
+        <circle cx="24" cy="26" r="2.8" fill="#fff"/>
+        <text x="86" y="62" font-family="Georgia,'Times New Roman',serif" font-size="54" font-weight="700" fill="#fff">Wiom</text>
+        <text x="88" y="96" font-family="'Noto Sans Devanagari','Nirmala UI',system-ui,sans-serif" font-size="22" font-weight="700" fill="#fff" letter-spacing="0.5">&#2360;&#2346;&#2344;&#2379;&#2306; &#2360;&#2375; &#2332;&#2381;&#2351;&#2366;&#2342;&#2366;</text>
       </svg>
     </div>
     <h1>IT Asset Management Portal</h1>
-    <div class="ab-icons">
-      <i class="bi bi-laptop"></i><i class="bi bi-display"></i><i class="bi bi-phone"></i><i class="bi bi-hdd-network"></i><i class="bi bi-qr-code"></i>
-    </div>
-    <i class="bi bi-boxes ab-deco"></i>
+    <p class="ab-desc">Manage, track and monitor all company IT assets in one place.</p>
+    <div class="ab-chips">Assets &bull; Employees &bull; Assignments &bull; Repairs &bull; Warranty</div>
   </div>
   <div class="auth-form-wrap">
     <div class="auth-box">
-      <div class="auth-logo"><div class="lm">W</div><span>Wiom</span></div>
+      <div class="auth-logo">
+        <svg width="176" height="60" viewBox="0 0 176 60" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Wiom">
+          <path d="M34 32 C34 20 16 20 16 32 C16 44 34 44 34 32 C34 20 52 20 52 32 C52 44 34 44 34 32 Z" stroke="#E6007E" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+          <path d="M18 19 C16 14 20 11 24 13" stroke="#E6007E" stroke-width="3.2" fill="none" stroke-linecap="round"/>
+          <circle cx="18" cy="10" r="2.2" fill="#E6007E"/>
+          <text x="64" y="38" font-family="Georgia,'Times New Roman',serif" font-size="38" font-weight="700" fill="#E6007E">Wiom</text>
+          <text x="66" y="55" font-family="'Noto Sans Devanagari','Nirmala UI',system-ui,sans-serif" font-size="12.5" font-weight="700" fill="#E6007E">&#2360;&#2346;&#2344;&#2379;&#2306; &#2360;&#2375; &#2332;&#2381;&#2351;&#2366;&#2342;&#2366;</text>
+        </svg>
+      </div>
       <h2>IT Asset Portal</h2>
       <div class="sub">Sign in to manage company assets</div>
       <div class="help"></div>
@@ -413,6 +422,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
       <div class="sso-div">or continue with</div>
       <button class="sso-btn" onclick="ssoLogin('Microsoft')"><i class="bi bi-microsoft"></i> Continue with Microsoft</button>
       <button class="sso-btn" onclick="ssoLogin('Google')"><i class="bi bi-google"></i> Continue with Google</button>
+      <div class="auth-help-line">Need help? Contact IT Helpdesk</div>
     </div>
   </div>
 </div>
