@@ -448,6 +448,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
 
       <div class="ng-title">ADMIN</div>
       <div class="nav-item" data-view="health" onclick="navGo('health')"><i class="bi bi-heart-pulse"></i><span>Data Health</span></div>
+      <div class="nav-item" onclick="openEmailTemplates()"><i class="bi bi-envelope-paper"></i><span>Email Templates</span></div>
       <div class="nav-item" data-view="notes" onclick="navGo('notes')"><i class="bi bi-journal-text"></i><span>My Notes</span></div>
       <div class="nav-item" data-view="settings" onclick="navGo('settings')"><i class="bi bi-gear"></i><span>Settings</span></div>
     </div>
@@ -945,7 +946,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
           </div>
           <div class="form-group">
             <label>Asset Type *</label>
-            <select id="f-type">
+            <select id="f-type" onchange="toggleLaptopFields()">
               <option value="">Select Type</option>
             </select>
           </div>
@@ -1004,6 +1005,10 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
               <option>In Stock</option>
               <option>Not Available</option>
               <option>Under Repair</option>
+              <option>Lost</option>
+              <option>Stolen</option>
+              <option>Under Investigation</option>
+              <option>Recovered</option>
               <option>Retired</option>
             </select>
           </div>
@@ -1032,6 +1037,20 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
         <div class="form-group">
           <label>Storage</label>
           <input type="text" id="f-storage" placeholder="e.g. 512 GB SSD">
+        </div>
+        <div id="laptop-fields" style="display:none">
+          <div class="form-row">
+            <div class="form-group"><label>Brand</label><input type="text" id="f-brand" placeholder="e.g. Dell, HP, Lenovo"></div>
+            <div class="form-group"><label>Model</label><input type="text" id="f-model" placeholder="e.g. Latitude 5420"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Operating System</label><input type="text" id="f-os" placeholder="e.g. Windows 11 Pro"></div>
+            <div class="form-group"><label>MAC Address</label><input type="text" id="f-mac" placeholder="e.g. 00:1A:2B:3C:4D:5E"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>Hostname</label><input type="text" id="f-hostname" placeholder="e.g. WIOM-LT-101"></div>
+            <div class="form-group"><label>Battery Health</label><input type="text" id="f-battery" placeholder="e.g. 92%"></div>
+          </div>
         </div>
 
         <div class="section-divider" style="margin-top:16px"><i class="bi bi-receipt"></i> Purchase &amp; Warranty</div>
@@ -1707,6 +1726,10 @@ function genId() { return 'A' + String(Date.now()).slice(-6); }
 function badgeStatus(s) {
   if (!s) return '';
   if (s==='Retired') return `<span class="badge" style="background:#e5e7eb;color:#4b5563;border:1px solid #d1d5db">♻ Retired</span>`;
+  if (s==='Lost') return `<span class="badge" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca">⚠ Lost</span>`;
+  if (s==='Stolen') return `<span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca">🚨 Stolen</span>`;
+  if (s==='Under Investigation') return `<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a">🔍 Investigating</span>`;
+  if (s==='Recovered') return `<span class="badge" style="background:#d1fae5;color:#065f46;border:1px solid #a7f3d0">✓ Recovered</span>`;
   const map = {'Available':'badge-available','Assigned':'badge-assigned','Not Available':'badge-na','In Stock':'badge-instock','Under Repair':'badge-repair'};
   return `<span class="badge ${map[s]||'badge-na'}">${s}</span>`;
 }
@@ -2969,7 +2992,16 @@ function openAddModal() {
   document.getElementById('f-qty').value = '';
   document.getElementById('f-minqty').value = '';
   clearPhoto();
+  ['f-brand','f-model','f-os','f-mac','f-hostname','f-battery'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
+  toggleLaptopFields();
   document.getElementById('asset-modal').classList.add('show');
+}
+function toggleLaptopFields() {
+  var t = document.getElementById('f-type');
+  var wrap = document.getElementById('laptop-fields');
+  if (!wrap) return;
+  var type = t ? t.value : '';
+  wrap.style.display = (type==='Laptop'||type==='Desktop') ? 'block' : 'none';
 }
 
 function editAsset(id) {
@@ -2999,6 +3031,8 @@ function editAsset(id) {
   document.getElementById('f-processor').value = a.processor||'';
   document.getElementById('f-ram').value = a.ram||'';
   document.getElementById('f-storage').value = a.storage||'';
+  { const sv=(id,v)=>{const e=document.getElementById(id); if(e)e.value=v||'';}; sv('f-brand',a.brand); sv('f-model',a.model); sv('f-os',a.os); sv('f-mac',a.mac); sv('f-hostname',a.hostname); sv('f-battery',a.battery); }
+  toggleLaptopFields();
   document.getElementById('f-price').value = a.price||'';
   document.getElementById('f-qty').value = (a.qty===0||a.qty) ? a.qty : '';
   document.getElementById('f-minqty').value = (a.minQty===0||a.minQty) ? a.minQty : '';
@@ -3088,6 +3122,8 @@ function viewAsset(id) {
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">${badgeStatus(a.status)}${assetHealthHTML(a)}</div>
     </div>
     ${a.lastUpdated?`<div style="font-size:11px;color:#9ca3af;margin:-10px 0 12px">Last updated: ${new Date(a.lastUpdated).toLocaleString('en-IN',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}${a.lastUpdatedBy?' by '+escH(a.lastUpdatedBy):''}</div>`:''}
+    ${a.disposalDate?`<div style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px">♻ DISPOSAL RECORD</div><div style="font-size:13px;color:#374151">Date: ${escH(a.disposalDate)}${a.disposalReason?' · Reason: '+escH(a.disposalReason):''}${a.disposalValue?' · Value: ₹'+escH(a.disposalValue):''}${a.disposalBuyer?' · Buyer: '+escH(a.disposalBuyer):''}</div></div>`:''}
+    ${(a.status==='Lost'||a.status==='Stolen')&&a.lostNote?`<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#dc2626;margin-bottom:6px">⚠ ${escH(a.status).toUpperCase()} REPORT</div><div style="font-size:13px;color:#374151">${escH(a.lostDate||'')} — "${escH(a.lostNote)}"${a.prevAssignedTo?' · Was with: '+escH(a.prevAssignedTo):''}</div></div>`:''}
     ${lifecycleStageHTML(a)}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
       <div>
@@ -3099,6 +3135,11 @@ function viewAsset(id) {
           ${infoRow('Condition', badgeCondition(a.condition))}
           ${(a.qty!=null) ? infoRow('Quantity in Stock', escH(String(a.qty)) + ((a.minQty!=null && Number(a.qty)<=Number(a.minQty)) ? ' <span style="color:#f97316;font-weight:700">(LOW STOCK)</span>' : '')) : ''}
           ${infoRow('Specs / Config', escH(a.desc))}
+          ${a.brand?infoRow('Brand / Model', escH([a.brand,a.model].filter(Boolean).join(' '))):''}
+          ${a.os?infoRow('Operating System', escH(a.os)):''}
+          ${a.mac?infoRow('MAC Address', `<code>${escH(a.mac)}</code>`):''}
+          ${a.hostname?infoRow('Hostname', `<code>${escH(a.hostname)}</code>`):''}
+          ${a.battery?infoRow('Battery Health', escH(a.battery)):''}
           ${infoRow('Vendor', escH(a.vendor))}
           ${infoRow('Invoice No', escH(a.invoice))}
           ${infoRow('Purchase Date', escH(a.purchased))}
@@ -3246,6 +3287,8 @@ function viewAsset(id) {
     <button class="btn btn-outline btn-sm" onclick="closeViewModal();openRepairModal('${escH(a.id)}')"><i class="bi bi-wrench"></i> Repair</button>
     <button class="btn btn-outline btn-sm" onclick="printQRLabel('${escH(a.id)}')"><i class="bi bi-qr-code"></i> QR Label</button>
     ${a.status==='Assigned' ? `<button class="btn btn-outline btn-sm" onclick="generateHandover('${escH(a.id)}')"><i class="bi bi-file-earmark-text"></i> Handover PDF</button>` : ''}
+    ${(a.status==='Lost'||a.status==='Stolen'||a.status==='Under Investigation') ? `<button class="btn btn-sm" style="background:#d1fae5;color:#065f46;border:1.5px solid #a7f3d0" onclick="markLostStolen('${escH(a.id)}','Recovered')"><i class="bi bi-check2-circle"></i> Mark Recovered</button>` : `<button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" onclick="markLostStolen('${escH(a.id)}')"><i class="bi bi-exclamation-octagon"></i> Report Lost/Stolen</button>`}
+    ${a.status!=='Retired' && a.status!=='Assigned' ? `<button class="btn btn-outline btn-sm" onclick="disposeAsset('${escH(a.id)}')"><i class="bi bi-recycle"></i> Retire / Dispose</button>` : ''}
     ${a.status==='Assigned' && (a.wiomId||a.empEmail)
       ? `<button class="btn btn-outline btn-sm" onclick="copySelfServiceLink('${escH(a.wiomId||a.empEmail)}')"><i class="bi bi-link-45deg"></i> Copy Portal Link</button>` : ''}
     ${a.status==='Assigned'
@@ -3259,6 +3302,98 @@ function viewAsset(id) {
 
 function closeViewModal() {
   document.getElementById('view-modal').classList.remove('show');
+}
+
+const EMAIL_TEMPLATES = [
+  {k:'Asset Assignment', s:'Your asset has been assigned', b:'Hi {employee},\n\nThe following asset has been assigned to you:\n\nAsset: {asset}\nAsset ID: {assetId}\nSerial No: {serial}\n\nPlease click Acknowledge in the portal to confirm receipt.\n\nThanks,\nWiom IT Team'},
+  {k:'Acknowledgement Reminder', s:'Reminder: Please acknowledge your asset', b:'Hi {employee},\n\nThis is a reminder to acknowledge receipt of {asset} ({assetId}) assigned to you.\n\nPlease reply "Acknowledged" or confirm in the portal.\n\nThanks,\nWiom IT Team'},
+  {k:'Asset Transfer', s:'Asset transferred to you', b:'Hi {employee},\n\n{asset} ({assetId}) has been transferred to you. Please confirm receipt.\n\nThanks,\nWiom IT Team'},
+  {k:'Asset Return Request', s:'Please return your assigned asset', b:'Hi {employee},\n\nPlease return {asset} ({assetId}) to the IT team at your earliest convenience along with all accessories (charger, mouse, etc.).\n\nThanks,\nWiom IT Team'},
+  {k:'Repair Update', s:'Update on your asset repair', b:'Hi {employee},\n\nYour asset {asset} ({assetId}) is currently under repair. We will update you once it is ready.\n\nThanks,\nWiom IT Team'},
+  {k:'Warranty Expiry', s:'Warranty expiring soon', b:'Hi Team,\n\nThe warranty for {asset} ({assetId}) is expiring soon. Please plan for renewal or replacement.\n\nThanks,\nWiom IT Team'},
+  {k:'Offboarding', s:'IT asset return — offboarding', b:'Hi {employee},\n\nAs part of your offboarding, please return all IT assets ({asset} etc.) and complete the IT clearance.\n\nThanks,\nWiom IT Team'},
+  {k:'Replacement Due', s:'Asset replacement recommendation', b:'Hi Team,\n\n{asset} ({assetId}) is over 3.5 years old and due for replacement. Please review.\n\nThanks,\nWiom IT Team'}
+];
+function openEmailTemplates() {
+  let m = document.getElementById('email-tpl-modal');
+  if (m) m.remove();
+  m = document.createElement('div');
+  m.id = 'email-tpl-modal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  m.onclick = e => { if (e.target===m) m.remove(); };
+  m.innerHTML = `<div style="background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:90vh;overflow:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #eee;position:sticky;top:0;background:#fff">
+      <h2 style="margin:0;font-size:18px;color:#0F172A"><i class="bi bi-envelope-paper" style="color:#2563EB"></i> Email Templates</h2>
+      <button onclick="document.getElementById('email-tpl-modal').remove()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#888">&times;</button>
+    </div>
+    <div style="padding:20px 22px">
+      <div style="font-size:12px;color:#6b7280;margin-bottom:14px">Placeholders {employee} / {asset} / {assetId} / {serial} ko apne hisaab se replace karein. "Copy" dabakar Gmail me paste karein.</div>
+      ${EMAIL_TEMPLATES.map((t,i)=>`<div style="border:1px solid #e8e8f0;border-radius:10px;padding:12px 14px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-weight:700;font-size:13px;color:#0F172A">${escH(t.k)}</div>
+          <button class="btn btn-sm btn-outline" onclick="copyTemplate(${i})"><i class="bi bi-clipboard"></i> Copy</button>
+        </div>
+        <div style="font-size:12px;color:#2563EB;margin-bottom:4px"><b>Subject:</b> ${escH(t.s)}</div>
+        <pre style="font-size:12px;color:#374151;white-space:pre-wrap;font-family:inherit;margin:0;background:#f8fafc;border-radius:6px;padding:8px 10px">${escH(t.b)}</pre>
+      </div>`).join('')}
+    </div>
+  </div>`;
+  document.body.appendChild(m);
+}
+function copyTemplate(i) {
+  const t = EMAIL_TEMPLATES[i]; if (!t) return;
+  const text = 'Subject: ' + t.s + '\n\n' + t.b;
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(()=>showToast('Template copied','success')).catch(()=>showToast('Copy failed','error'));
+  else showToast('Clipboard not available', 'error');
+}
+
+function disposeAsset(id) {
+  const assets = getAssets();
+  const idx = assets.findIndex(a=>a.id===id);
+  if (idx<0) return;
+  const a = assets[idx];
+  const reason = prompt('Disposal reason (e.g. old / damaged beyond repair / e-waste):', '');
+  if (reason === null) return;
+  const value = prompt('Disposal value / scrap amount (₹, optional):', '') || '';
+  const buyer = prompt('Buyer / Vendor / E-waste partner (optional):', '') || '';
+  assets[idx].status = 'Retired';
+  assets[idx].disposalDate = new Date().toISOString().slice(0,10);
+  assets[idx].disposalReason = reason;
+  assets[idx].disposalValue = value;
+  assets[idx].disposalBuyer = buyer;
+  assets[idx].assignedTo = '';
+  saveAssets(assets);
+  logAudit('Asset Retired/Disposed', a.name + ' (' + a.assetId + ')' + (reason?' — '+reason:''));
+  showToast('Asset retired & disposal recorded', 'success');
+  closeViewModal(); renderAssetList(); checkNotifications();
+}
+
+function markLostStolen(id, recover) {
+  const assets = getAssets();
+  const idx = assets.findIndex(a=>a.id===id);
+  if (idx<0) return;
+  const a = assets[idx];
+  if (recover === 'Recovered') {
+    assets[idx].status = 'Recovered';
+    assets[idx].recoveredDate = new Date().toISOString().slice(0,10);
+    saveAssets(assets);
+    logAudit('Asset Recovered', a.name + ' (' + a.assetId + ')');
+    showToast('Asset marked as Recovered', 'success');
+    closeViewModal(); renderAssetList(); checkNotifications();
+    return;
+  }
+  const kind = prompt('Lost ya Stolen? Type "lost" ya "stolen":', 'lost');
+  if (!kind) return;
+  const status = /stol/i.test(kind) ? 'Stolen' : 'Lost';
+  const note = prompt('Kya hua? (short detail — FIR no, location, etc.):', '') || '';
+  assets[idx].status = status;
+  assets[idx].lostDate = new Date().toISOString().slice(0,10);
+  assets[idx].lostNote = note;
+  assets[idx].prevAssignedTo = a.assignedTo || '';
+  saveAssets(assets);
+  logAudit(status + ' Reported', a.name + ' (' + a.assetId + ')' + (note?' — '+note:''));
+  showToast(status + ' reported — status updated', 'error');
+  closeViewModal(); renderAssetList(); checkNotifications();
 }
 
 function generateHandover(id) {
@@ -3319,6 +3454,8 @@ function saveAsset() {
   const processor = document.getElementById('f-processor').value.trim();
   const ram = document.getElementById('f-ram').value.trim();
   const storage = document.getElementById('f-storage').value.trim();
+  const gv = id => (document.getElementById(id)?.value||'').trim();
+  const brand = gv('f-brand'), model = gv('f-model'), os = gv('f-os'), mac = gv('f-mac'), hostname = gv('f-hostname'), battery = gv('f-battery');
   const desc = document.getElementById('f-desc').value.trim();
   const price = parseFloat(document.getElementById('f-price').value)||0;
   const photo = document.getElementById('f-photo-data').value||'';
@@ -3349,14 +3486,14 @@ function saveAsset() {
   if (editId) {
     const idx = assets.findIndex(a=>a.id===editId);
     if (idx>-1) {
-      assets[idx] = {...assets[idx], category:cat, type, assetId, name, serial, location:loc, locDetail, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty,
+      assets[idx] = {...assets[idx], category:cat, type, assetId, name, serial, location:loc, locDetail, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty, brand, model, os, mac, hostname, battery,
         lastUpdated: nowStamp, lastUpdatedBy: (typeof currentUser!=='undefined'&&currentUser)?currentUser.name:'IT',
         ack: status==='Assigned' ? (assets[idx].ack||'Pending') : 'Not Applicable'};
       saveAssets(assets);
       showToast('Asset updated successfully', 'success');
     }
   } else {
-    const newAsset = {id:genId(), category:cat, type, assetId, name, serial, location:loc, locDetail, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty,
+    const newAsset = {id:genId(), category:cat, type, assetId, name, serial, location:loc, locDetail, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty, brand, model, os, mac, hostname, battery,
       lastUpdated: nowStamp, lastUpdatedBy: (typeof currentUser!=='undefined'&&currentUser)?currentUser.name:'IT', createdOn: nowStamp,
       ack: status==='Assigned' ? 'Pending' : 'Not Applicable'};
     assets.push(newAsset);
