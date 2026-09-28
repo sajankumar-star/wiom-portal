@@ -111,10 +111,15 @@ input,select,textarea{font-family:inherit}
 .sb-brand .sb-sub{font-size:9.5px;font-weight:600;letter-spacing:1.5px;color:rgba(255,255,255,.4);margin-top:2px}
 .nav-scroll{flex:1;padding:10px 0 20px}
 .ng-title{font-size:10px;font-weight:700;letter-spacing:1.2px;color:rgba(255,255,255,.33);padding:14px 20px 5px}
-.nav-item{display:flex;align-items:center;gap:12px;padding:9px 18px;margin:1px 8px;border-radius:9px;color:rgba(255,255,255,.72);font-size:13.5px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s;border-left:3px solid transparent}
-.nav-item i{font-size:16px;width:18px;text-align:center;flex-shrink:0}
-.nav-item:hover{background:rgba(255,255,255,.06);color:#fff}
-.nav-item.active{background:rgba(37,99,235,.16);color:#fff;border-left-color:#2563EB}
+.nav-item{display:flex;align-items:center;gap:12px;padding:9px 18px;margin:1px 8px;border-radius:9px;color:rgba(255,255,255,.72);font-size:13.5px;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .18s ease,color .18s ease,border-color .18s ease;border-left:3px solid transparent;position:relative}
+.nav-item i{font-size:16px;width:18px;text-align:center;flex-shrink:0;transition:transform .18s ease,color .18s ease}
+.nav-item::after{content:'\2192';margin-left:auto;font-size:14px;font-weight:700;opacity:0;transform:translateX(-5px);transition:opacity .18s ease,transform .18s ease;color:#93c5fd}
+.nav-item:hover{background:rgba(37,99,235,.14);color:#fff}
+.nav-item:hover i{transform:translateX(2px);color:#93c5fd}
+.nav-item:hover::after{opacity:.6;transform:translateX(0)}
+.nav-item.active{background:rgba(37,99,235,.22);color:#fff;border-left-color:#2563EB}
+.nav-item.active i{color:#60A5FA}
+.nav-item.active::after{opacity:.9;transform:translateX(0);color:#60A5FA}
 .main-wrap{flex:1;display:flex;flex-direction:column;min-width:0}
 .topbar{background:#fff;border-bottom:1px solid #e8e8f0;display:flex;align-items:center;height:62px;padding:0 24px;gap:14px;position:sticky;top:0;z-index:50}
 .topbar .search-wrap{flex:1;max-width:440px;position:relative}
@@ -136,7 +141,7 @@ body.ro .btn-add-asset,body.ro .btn-danger,body.ro .quick-btn{display:none!impor
 body.ro .btn-primary:not(.ro-keep){display:none!important}
 .btn-scan{background:#fff;color:#2563EB;border:1px solid #bfdbfe;padding:9px 14px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap}
 .btn-scan:hover{background:#eff6ff}
-@media(max-width:860px){.sidebar{width:60px}.sb-brand .sb-txt,.ng-title,.nav-item span{display:none}.nav-item{justify-content:center;padding:11px 0;margin:1px 6px}.sb-brand{justify-content:center;padding:16px 0}.topbar .btn-add-asset span,.topbar .btn-scan span,.topbar .tb-meta{display:none}}
+@media(max-width:860px){.sidebar{width:60px}.sb-brand .sb-txt,.ng-title,.nav-item span,.nav-item::after{display:none}.nav-item{justify-content:center;padding:11px 0;margin:1px 6px}.sb-brand{justify-content:center;padding:16px 0}.topbar .btn-add-asset span,.topbar .btn-scan span,.topbar .tb-meta{display:none}}
 
 /* TOP NAV */
 .topnav{background:#0B1220;color:#fff;display:flex;align-items:center;height:56px;padding:0 24px;gap:16px;position:sticky;top:0;z-index:100}
@@ -2481,9 +2486,10 @@ function filterAssignedTable() {
   const countEl = document.getElementById('assigned-count');
   if (countEl) countEl.textContent = `(${assets.length})`;
   if (!tbody) return;
-  if (!assets.length) { tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><i class="bi bi-inbox"></i><p>No results found</p></div></td></tr>`; return; }
+  if (!assets.length) { tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="bi bi-inbox"></i><p>No results found</p></div></td></tr>`; return; }
   tbody.innerHTML = assets.map(a=>`
     <tr>
+      <td style="text-align:center"><input type="checkbox" class="ack-row-check" data-id="${escH(a.id)}" onchange="updateAckSelCount()" style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer"></td>
       <td>
         <div style="font-weight:600">${escH(a.assignedTo)}${a.exEmployee?` <span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;vertical-align:middle;white-space:nowrap">EX-EMPLOYEE</span>`:''}</div>
         ${a.wiomId?`<div style="font-size:11px;color:#888">${escH(a.wiomId)}</div>`:''}
@@ -2507,6 +2513,7 @@ function renderAssigned() {
   const allAssigned = getAssets().filter(a=>a.status==='Assigned' && a.assignedTo);
   const rows = allAssigned.map(a=>`
     <tr>
+      <td style="text-align:center"><input type="checkbox" class="ack-row-check" data-id="${escH(a.id)}" onchange="updateAckSelCount()" style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer"></td>
       <td>
         <div style="font-weight:600">${escH(a.assignedTo)}${a.exEmployee?` <span style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;vertical-align:middle;white-space:nowrap">EX-EMPLOYEE</span>`:''}</div>
         ${a.wiomId?`<div style="font-size:11px;color:#888">${escH(a.wiomId)}</div>`:''}
@@ -2545,7 +2552,7 @@ function renderAssigned() {
     <div class="ack-table-wrap">
       <table>
         <thead><tr><th style="width:36px;text-align:center"><input type="checkbox" id="ack-select-all" onchange="toggleAllAck(this.checked)" style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer"></th><th>EMPLOYEE</th><th>ASSET NAME</th><th>ASSET ID</th><th>EMAIL</th><th>ASSIGN DATE</th><th>ITEMS GIVEN</th><th>ACK STATUS</th><th>ACTIONS</th></tr></thead>
-        <tbody id="assigned-tbody">${rows||`<tr><td colspan="8"><div class="empty-state"><i class="bi bi-inbox"></i><p>No assigned assets</p></div></td></tr>`}</tbody>
+        <tbody id="assigned-tbody">${rows||`<tr><td colspan="9"><div class="empty-state"><i class="bi bi-inbox"></i><p>No assigned assets</p></div></td></tr>`}</tbody>
       </table>
     </div>
   </div>`;
