@@ -322,17 +322,19 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
 
 /* ── ACK PAGE ── */
 /* Reusable table column sizing (Assigned + Available share the same system) */
-.assigned-tbl{min-width:1400px}
-.assigned-tbl th:nth-child(1),.assigned-tbl td:nth-child(1){min-width:55px;width:55px}
-.assigned-tbl th:nth-child(2),.assigned-tbl td:nth-child(2){min-width:210px}
-.assigned-tbl th:nth-child(3),.assigned-tbl td:nth-child(3){min-width:280px}
-.assigned-tbl th:nth-child(4),.assigned-tbl td:nth-child(4){min-width:150px}
-.assigned-tbl th:nth-child(5),.assigned-tbl td:nth-child(5){min-width:260px}
-.assigned-tbl th:nth-child(6),.assigned-tbl td:nth-child(6){min-width:130px}
-.assigned-tbl th:nth-child(7),.assigned-tbl td:nth-child(7){min-width:150px}
-.assigned-tbl th:nth-child(8),.assigned-tbl td:nth-child(8){min-width:120px}
-.assigned-tbl th:nth-child(9),.assigned-tbl td:nth-child(9){min-width:220px}
-.assigned-tbl td:nth-child(2) > div:first-child{white-space:nowrap}
+.assigned-tbl{min-width:0;table-layout:fixed}
+.assigned-tbl th:nth-child(1),.assigned-tbl td:nth-child(1){width:4%}
+.assigned-tbl th:nth-child(2),.assigned-tbl td:nth-child(2){width:15%}
+.assigned-tbl th:nth-child(3),.assigned-tbl td:nth-child(3){width:17%}
+.assigned-tbl th:nth-child(4),.assigned-tbl td:nth-child(4){width:10%}
+.assigned-tbl th:nth-child(5),.assigned-tbl td:nth-child(5){width:15%}
+.assigned-tbl th:nth-child(6),.assigned-tbl td:nth-child(6){width:9%}
+.assigned-tbl th:nth-child(7),.assigned-tbl td:nth-child(7){width:8%}
+.assigned-tbl th:nth-child(8),.assigned-tbl td:nth-child(8){width:8%}
+.assigned-tbl th:nth-child(9),.assigned-tbl td:nth-child(9){width:14%}
+.assigned-tbl td:nth-child(2) > div:first-child{white-space:normal;line-height:1.3}
+.assigned-tbl td strong{line-height:1.3;word-break:break-word}
+.assigned-tbl code{white-space:normal;word-break:break-word}
 .asset-tbl{min-width:0;table-layout:fixed}
 .asset-tbl th:nth-child(1),.asset-tbl td:nth-child(1){width:12%}
 .asset-tbl th:nth-child(2),.asset-tbl td:nth-child(2){width:22%}
