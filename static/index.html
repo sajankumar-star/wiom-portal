@@ -502,7 +502,7 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
     <div class="topbar">
       <div class="search-wrap">
         <i class="bi bi-search si"></i>
-        <input type="text" id="global-search" placeholder="Search assets, employees, serial no..." autocomplete="off" oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}else if(event.key==='Enter'){event.preventDefault();globalSearchEnter();}">
+        <input type="text" id="global-search" placeholder="Search assets, employees, serials...  (Ctrl+K)" autocomplete="off" oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}else if(event.key==='Enter'){event.preventDefault();globalSearchEnter();}">
       </div>
       <div class="spacer"></div>
       <button class="btn-add-asset" onclick="openAddModal()"><i class="bi bi-plus-lg"></i><span>Add Asset</span></button>
@@ -1765,6 +1765,29 @@ function getAssets() { return DB.get('assets', []); }
 function saveAssets(a) { DB.set('assets', a); }
 function genId() { return 'A' + String(Date.now()).slice(-6); }
 
+// ── Favorites & Recently Viewed ──
+function getFavorites() { return DB.get('favorites', []) || []; }
+function isFavorite(id) { return getFavorites().includes(id); }
+function toggleFavorite(id, ev) {
+  if (ev) { ev.stopPropagation(); }
+  const f = getFavorites();
+  const i = f.indexOf(id);
+  if (i > -1) f.splice(i, 1); else f.unshift(id);
+  DB.set('favorites', f);
+  const a = getAssets().find(x=>x.id===id);
+  showToast((i>-1?'Removed from':'Added to') + ' favorites' + (a?': '+a.name:''), i>-1?'':'success');
+  if (currentView === 'dashboard') renderDashboard();
+  else if (currentView === 'list') renderAssetTable();
+  if (document.getElementById('view-modal')?.classList.contains('show')) { const cur=getAssets().find(x=>x.id===id); if(cur) viewAsset(id); }
+}
+function addRecentlyViewed(id) {
+  let r = DB.get('recently_viewed', []) || [];
+  r = r.filter(x => x !== id);
+  r.unshift(id);
+  if (r.length > 8) r = r.slice(0, 8);
+  DB.set('recently_viewed', r);
+}
+
 function badgeStatus(s) {
   if (!s) return '';
   if (s==='Retired') return `<span class="badge" style="background:#e5e7eb;color:#4b5563;border:1px solid #d1d5db">♻ Retired</span>`;
@@ -1989,6 +2012,7 @@ function renderAssetTable() {
       <div class="hdr-right">
         <button class="btn btn-outline btn-sm" onclick="bulkAddAssets()"><i class="bi bi-upload"></i> Bulk Add/Update</button>
         <button class="btn btn-outline btn-sm" onclick="toggleBulkAssign()"><i class="bi bi-people"></i> Bulk Assign</button>
+        <button class="btn btn-outline btn-sm" onclick="exportFilteredCSV()" title="Export the currently filtered rows"><i class="bi bi-funnel"></i> Export Filtered</button>
         <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="bi bi-plus-lg"></i> Add Asset</button>
       </div>
     </div>
@@ -2812,6 +2836,14 @@ function toggleMenu(e, menuId) {
 }
 document.addEventListener('click', () => document.querySelectorAll('.dropdown-menu.show').forEach(m=>m.classList.remove('show')));
 
+// Ctrl/Cmd + K → focus global search
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+    const gs = document.getElementById('global-search');
+    if (gs) { e.preventDefault(); gs.focus(); gs.select(); }
+  }
+});
+
 function bulkAddAssets() {
   let m = document.getElementById('bulk-upload-modal');
   if (m) m.remove();
@@ -3082,6 +3114,7 @@ function lifecycleStageHTML(a) {
 function viewAsset(id) {
   const a = getAssets().find(x=>x.id===id);
   if (!a) return;
+  addRecentlyViewed(id);
   document.querySelectorAll('.dropdown-menu.show').forEach(m=>m.classList.remove('show'));
 
   const infoRow = (label, val) => `<div class="info-row"><span class="info-label">${label}</span><span class="info-val">${val||'—'}</span></div>`;
@@ -3260,7 +3293,9 @@ function viewAsset(id) {
   document.getElementById('view-modal-title').textContent = a.name;
 
   const actionsDiv = document.getElementById('view-modal-actions');
+  const _fav = isFavorite(a.id);
   actionsDiv.innerHTML = `
+    <button class="btn btn-outline btn-sm" onclick="toggleFavorite('${escH(a.id)}',event)" title="${_fav?'Remove favorite':'Add favorite'}"><i class="bi bi-star${_fav?'-fill':''}" style="color:#f59e0b"></i> ${_fav?'Favorited':'Favorite'}</button>
     <button class="btn btn-outline btn-sm" onclick="closeViewModal();editAsset('${escH(a.id)}')"><i class="bi bi-pencil"></i> Edit</button>
     <button class="btn btn-outline btn-sm" onclick="closeViewModal();openRepairModal('${escH(a.id)}')"><i class="bi bi-wrench"></i> Repair</button>
     <button class="btn btn-outline btn-sm" onclick="printQRLabel('${escH(a.id)}')"><i class="bi bi-qr-code"></i> QR Label</button>
@@ -3446,6 +3481,9 @@ function saveAsset() {
   if (!type) { showToast('Please select a type', 'error'); return; }
   if (!assetId) { showToast('Please enter an Asset ID', 'error'); return; }
   if (!name) { showToast('Please enter Asset Name', 'error'); return; }
+  // Data-integrity: Assigned needs an employee; non-Assigned clears assignment fields
+  if (status === 'Assigned' && !assignedTo) { showToast('⚠️ Assigned status ke liye Employee naam zaroori hai', 'error'); return; }
+  const _asg = status === 'Assigned';
 
   const editId = document.getElementById('edit-id').value;
   const assets = getAssets();
@@ -3464,14 +3502,15 @@ function saveAsset() {
   if (editId) {
     const idx = assets.findIndex(a=>a.id===editId);
     if (idx>-1) {
-      assets[idx] = {...assets[idx], category:cat, type, assetId, name, serial, location:loc, locDetail, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty, brand, model, os, mac, hostname, battery,
+      assets[idx] = {...assets[idx], category:cat, type, assetId, name, serial, location:loc, locDetail, condition:cond, purchased, warranty, status, assignedTo: _asg?assignedTo:'', invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty, brand, model, os, mac, hostname, battery,
+        wiomId: _asg?assets[idx].wiomId:'', empEmail: _asg?assets[idx].empEmail:'', dept: _asg?assets[idx].dept:'', assignDate: _asg?assets[idx].assignDate:'', itemsGiven: _asg?(assets[idx].itemsGiven||[]):[],
         lastUpdated: nowStamp, lastUpdatedBy: (typeof currentUser!=='undefined'&&currentUser)?currentUser.name:'IT',
-        ack: status==='Assigned' ? (assets[idx].ack||'Pending') : 'Not Applicable'};
+        ack: _asg ? (assets[idx].ack||'Pending') : 'Not Applicable'};
       saveAssets(assets);
       showToast('Asset updated successfully', 'success');
     }
   } else {
-    const newAsset = {id:genId(), category:cat, type, assetId, name, serial, location:loc, locDetail, condition:cond, purchased, warranty, status, assignedTo, invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty, brand, model, os, mac, hostname, battery,
+    const newAsset = {id:genId(), category:cat, type, assetId, name, serial, location:loc, locDetail, condition:cond, purchased, warranty, status, assignedTo: _asg?assignedTo:'', invoice, vendor, processor, ram, storage, desc, price, photo, qty, minQty, brand, model, os, mac, hostname, battery,
       lastUpdated: nowStamp, lastUpdatedBy: (typeof currentUser!=='undefined'&&currentUser)?currentUser.name:'IT', createdOn: nowStamp,
       ack: status==='Assigned' ? 'Pending' : 'Not Applicable'};
     assets.push(newAsset);
@@ -3493,6 +3532,10 @@ let confirmCallback = null;
 function deleteAsset(id) {
   const a = getAssets().find(a=>a.id===id);
   if (!a) return;
+  if (typeof canDelete === 'function' && !canDelete()) {
+    showToast('❌ Permanent delete ki permission nahi. "Retire / Dispose" use karein — history safe rehti hai.', 'error');
+    return;
+  }
   document.getElementById('confirm-title').textContent = 'Delete Asset';
   document.getElementById('confirm-msg').textContent = `Are you sure you want to delete "${a.name}" (${a.assetId})? This cannot be undone.`;
   confirmCallback = () => {
@@ -3843,6 +3886,45 @@ function exportCSV() {
   a.download = 'Wiom_Assets_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
   showToast('CSV exported successfully','success');
+}
+
+// Export only the currently-filtered rows from the Asset List
+function getFilteredAssetsForExport() {
+  const fLoc = document.getElementById('f-loc')?.value||'';
+  const fCond = document.getElementById('f-cond')?.value||'';
+  const fStat = document.getElementById('f-stat')?.value||'';
+  const fSearch = (document.getElementById('f-search')?.value||'').toLowerCase();
+  const fDept = document.getElementById('f-dept')?.value||'';
+  const fType = document.getElementById('f-typefilter')?.value||'';
+  let cat0='', type0='';
+  if (fType) { const p=fType.split('|'); cat0=p[0]||''; type0=p[1]||''; }
+  return getAssets().filter(a => {
+    if (fType && !(a.category===cat0 && a.type===type0)) return false;
+    if (fLoc && a.location!==fLoc) return false;
+    if (fDept && a.dept!==fDept) return false;
+    if (fCond && a.condition!==fCond) return false;
+    if (fStat && a.status!==fStat) return false;
+    if (fSearch) {
+      const m = (a.name||'').toLowerCase().includes(fSearch) || (a.assetId||'').toLowerCase().includes(fSearch)
+        || (a.assignedTo||'').toLowerCase().includes(fSearch) || (a.wiomId||'').toLowerCase().includes(fSearch)
+        || (a.dept||'').toLowerCase().includes(fSearch) || (a.location||'').toLowerCase().includes(fSearch);
+      if (!m) return false;
+    }
+    return true;
+  });
+}
+function exportFilteredCSV() {
+  const assets = getFilteredAssetsForExport();
+  if (!assets.length) { showToast('Filtered list khaali hai — kuch export nahi hua', 'error'); return; }
+  const headers = ['Asset ID','Asset Name','Serial No','Category','Type','Location','Condition','Status','Assigned To','Purchase Date','Warranty','Invoice No','Vendor'];
+  const rows = assets.map(a=>[a.assetId,a.name,a.serial||'',a.category,a.type,a.location,a.condition,a.status,a.assignedTo||'',a.purchased||'',a.warranty||'',a.invoice||'',a.vendor||''].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
+  const csv = [headers.join(','),...rows].join('\r\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Wiom_Assets_filtered_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  showToast(assets.length+' filtered assets exported','success');
 }
 
 // ══════════════════════════════════════════════
@@ -6340,6 +6422,17 @@ function lowStockBarHTML() {
     <span style="font-size:13px;color:#c2410c;font-weight:600">Low stock (${low.length}): ${items}${low.length>8?' …':''}</span>
   </div>`;
 }
+function favRecentHTML() {
+  const assets = getAssets();
+  const byId = id => assets.find(a => a.id === id);
+  const chip = (a) => `<span onclick="viewAsset('${escH(a.id)}')" style="display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;white-space:nowrap"><i class="bi bi-${catIcon(a.category)}" style="color:#9ca3af"></i> ${escH(a.name)}</span>`;
+  const favs = getFavorites().map(byId).filter(Boolean);
+  const recent = (DB.get('recently_viewed', [])||[]).map(byId).filter(Boolean);
+  let html = '';
+  if (favs.length) html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-size:12px;font-weight:700;color:#92400e"><i class="bi bi-star-fill" style="color:#f59e0b"></i> Favorites:</span>${favs.slice(0,10).map(chip).join('')}</div>`;
+  if (recent.length) html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span style="font-size:12px;font-weight:700;color:#6b7280"><i class="bi bi-clock-history"></i> Recently viewed:</span>${recent.slice(0,8).map(chip).join('')}</div>`;
+  return html;
+}
 async function doSyncNow() {
   const btn = document.getElementById('sync-now-btn');
   if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Syncing...'; }
@@ -6474,6 +6567,7 @@ function renderDashboard() {
   ${alertsHTML}
   ${syncBarHTML()}
   ${lowStockBarHTML()}
+  ${favRecentHTML()}
   <div class="dash-stat-cards" style="grid-template-columns:repeat(4,1fr)">
     ${statCards.map(c=>`<div class="dash-stat-card" onclick="switchView('${c.view}')">
       <div class="sc-icon" style="background:${c.bg};color:${c.col}"><i class="bi ${c.icon}"></i></div>
@@ -6511,8 +6605,10 @@ function renderDashboard() {
       <div class="quick-btns">
         <button class="quick-btn" onclick="openAddModal()"><i class="bi bi-plus-circle-fill" style="color:#2563EB"></i> Add Asset</button>
         <button class="quick-btn" onclick="switchView('list')"><i class="bi bi-person-plus-fill" style="color:#3b82f6"></i> Assign Asset</button>
+        <button class="quick-btn" onclick="switchView('assigned')"><i class="bi bi-box-arrow-in-left" style="color:#f97316"></i> Return Asset</button>
+        <button class="quick-btn" onclick="switchView('assigned')"><i class="bi bi-arrow-left-right" style="color:#8b5cf6"></i> Transfer Asset</button>
+        <button class="quick-btn" onclick="openQRScanner()"><i class="bi bi-qr-code-scan" style="color:#0ea5e9"></i> Scan QR</button>
         <button class="quick-btn" onclick="switchView('reports')"><i class="bi bi-bar-chart-fill" style="color:#10b981"></i> View Reports</button>
-        
         <button class="quick-btn" onclick="toggleNotifPanel()"><i class="bi bi-bell-fill" style="color:#ef4444"></i> View Alerts</button>
       </div>
     </div>
