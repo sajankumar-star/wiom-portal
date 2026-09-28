@@ -233,24 +233,25 @@ body.ro .btn-primary:not(.ro-keep){display:none!important}
 /* TABLE */
 .asset-table-wrap,.ack-table-wrap{width:100%;max-width:100%;min-width:0;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse}
-thead th{padding:10px 14px;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid #ececf5;white-space:nowrap;background:#fafafa}
-tbody tr{border-bottom:1px solid #f5f5f5;transition:background .15s}
-tbody tr:hover{background:#f8f7ff}
-tbody td{padding:11px 14px;font-size:13px;color:#333}
-.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
-.badge-available{background:#d1fae5;color:#065f46}
-.badge-assigned{background:#dbeafe;color:#1e40af}
-.badge-na{background:#fee2e2;color:#991b1b}
-.badge-good{background:#d1fae5;color:#065f46}
-.badge-fair{background:#fef3c7;color:#92400e}
-.badge-poor{background:#fee2e2;color:#991b1b}
-.badge-new{background:#DBEAFE;color:#4c1d95}
-.badge-pending{background:#fef3c7;color:#92400e}
-.badge-completed{background:#d1fae5;color:#065f46}
-.badge-notapplicable{background:#f3f4f6;color:#6b7280}
-.badge-instock{background:#dbeafe;color:#1e40af}
-.badge-repair{background:#fef3c7;color:#92400e}
-.badge-returned{background:#f3f4f6;color:#374151}
+thead th{padding:12px 14px;font-size:11px;font-weight:700;color:#5b6478;text-transform:uppercase;letter-spacing:.6px;border-bottom:2px solid #e6e9f5;white-space:nowrap;background:linear-gradient(180deg,#f7f8ff,#eef1fb)}
+tbody tr{border-bottom:1px solid #f0f1f6;transition:background .15s}
+tbody tr:nth-child(even){background:#fafbff}
+tbody tr:hover{background:#f0edff}
+tbody td{padding:12px 14px;font-size:13px;color:#374151}
+.badge{display:inline-block;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid transparent;line-height:1.4}
+.badge-available{background:#dcfce7;color:#15803d;border-color:#bbf7d0}
+.badge-assigned{background:#dbeafe;color:#1d4ed8;border-color:#bfdbfe}
+.badge-na{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
+.badge-good{background:#dcfce7;color:#15803d;border-color:#bbf7d0}
+.badge-fair{background:#fef3c7;color:#b45309;border-color:#fde68a}
+.badge-poor{background:#fee2e2;color:#b91c1c;border-color:#fecaca}
+.badge-new{background:#ede9fe;color:#6d28d9;border-color:#ddd6fe}
+.badge-pending{background:#fef3c7;color:#b45309;border-color:#fde68a}
+.badge-completed{background:#dcfce7;color:#15803d;border-color:#bbf7d0}
+.badge-notapplicable{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}
+.badge-instock{background:#dbeafe;color:#1d4ed8;border-color:#bfdbfe}
+.badge-repair{background:#fef3c7;color:#b45309;border-color:#fde68a}
+.badge-returned{background:#f1f5f9;color:#64748b;border-color:#e2e8f0}
 .ack-badge{display:inline-flex;align-items:center;justify-content:center;background:#ef4444;color:#fff;font-size:10px;font-weight:700;border-radius:50%;min-width:16px;height:16px;line-height:16px;padding:0 3px;margin-left:4px}
 .section-divider{font-size:11px;font-weight:700;color:#2563EB;text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #DBEAFE;margin-top:4px}
 .info-grid{background:#fafafa;border-radius:8px;padding:4px 14px;margin-bottom:16px}
@@ -314,7 +315,8 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
 /* ── ASSIGNED ASSETS ── */
 .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .page-header h2{font-size:17px;font-weight:700;color:#0B1220}
-.white-card{background:#fff;border-radius:12px;border:1px solid #ececf5;overflow:hidden}
+.white-card{background:#fff;border-radius:12px;border:1px solid #ececf5;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,.05)}
+.ack-table-wrap code,.asset-table-wrap code{background:#eef2ff!important;color:#4338ca;border:1px solid #e3e8ff;font-weight:600}
 
 /* ── REPORTS ── */
 .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
