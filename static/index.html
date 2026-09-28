@@ -2126,48 +2126,6 @@ function exportAssignedCSV() {
   document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
-function openTransferModal(id) {
-  const a = getAssets().find(x=>x.id===id);
-  if (!a) return;
-  const employees = typeof getEmployees==='function' ? getEmployees() : [];
-  const empOpts = employees.length
-    ? employees.filter(e=>e.name!==a.assignedTo).map(e=>`<option value="${escH(e.name)}" data-wiomid="${escH(e.wiomId||'')}" data-dept="${escH(e.dept||'')}" data-email="${escH(e.email||'')}">${escH(e.name)}${e.wiomId?' ('+e.wiomId+')':''}</option>`).join('')
-    : '';
-  const d = document.createElement('div');
-  d.className = 'modal-overlay active';
-  d.id = 'transfer-modal';
-  d.innerHTML = `<div class="modal-box" style="max-width:480px"><div class="modal-header" style="background:linear-gradient(135deg,#10b981,#059669)"><h3 style="color:#fff"><i class="bi bi-arrow-left-right"></i> Transfer Asset</h3><button class="modal-close" onclick="document.getElementById('transfer-modal').remove()" style="color:#fff;font-size:20px">&times;</button></div><div class="modal-body"><div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px;margin-bottom:16px"><div style="font-weight:700;color:#065f46">${escH(a.name)}</div><div style="font-size:12px;color:#374151;margin-top:4px">Currently: <strong>${escH(a.assignedTo||'')}</strong></div></div><div class="form-group" style="margin-bottom:14px"><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Transfer To Employee</label><select id="transfer-to-emp" style="width:100%;padding:10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px"><option value="">-- Select Employee --</option>${empOpts}</select><div style="margin-top:8px;display:flex;gap:8px"><input id="transfer-manual-name" placeholder="Or type employee name manually" style="flex:1;padding:8px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px"><input id="transfer-manual-wiomid" placeholder="Wiom ID" style="width:100px;padding:8px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px"></div></div><div class="form-group" style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px">Transfer Date</label><input type="date" id="transfer-date" value="${new Date().toISOString().slice(0,10)}" style="width:100%;padding:10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px"></div><div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn btn-outline" onclick="document.getElementById('transfer-modal').remove()">Cancel</button><button class="btn btn-primary" onclick="doTransferAsset('${escH(id)}')"><i class="bi bi-arrow-left-right"></i> Confirm Transfer</button></div></div></div>`;
-  document.body.appendChild(d);
-}
-
-function doTransferAsset(id) {
-  const sel = document.getElementById('transfer-to-emp');
-  const manualName = (document.getElementById('transfer-manual-name')?.value||'').trim();
-  const manualWiomId = (document.getElementById('transfer-manual-wiomid')?.value||'').trim();
-  const transferDate = document.getElementById('transfer-date')?.value || new Date().toISOString().slice(0,10);
-  let newName = (sel?.value||'') || manualName;
-  if (!newName) { alert('Please select or enter the employee to transfer to.'); return; }
-  const opt = sel?.options[sel.selectedIndex];
-  const newWiomId = opt?.dataset?.wiomid || manualWiomId || '';
-  const newDept = opt?.dataset?.dept || '';
-  const newEmail = opt?.dataset?.email || '';
-  const assets = getAssets();
-  const idx = assets.findIndex(a=>a.id===id);
-  if (idx<0) return;
-  const oldEmp = assets[idx].assignedTo;
-  assets[idx].assignedTo = newName;
-  if (newWiomId) assets[idx].wiomId = newWiomId;
-  if (newDept) assets[idx].dept = newDept;
-  if (newEmail) assets[idx].empEmail = newEmail;
-  assets[idx].assignDate = transferDate;
-  assets[idx].ack = 'Pending';
-  saveAssets(assets);
-  logAudit('Transfer', assets[idx].name+' transferred from '+oldEmp+' to '+newName, currentUser?.name||'Admin');
-  document.getElementById('transfer-modal')?.remove();
-  showToast('Asset transferred to '+newName);
-  if (typeof renderAssigned==='function') renderAssigned();
-}
-
 function toggleAllAck(checked) {
   document.querySelectorAll('.ack-row-check').forEach(cb=>{cb.checked=checked;});
   updateAckSelCount();
@@ -2983,19 +2941,6 @@ function bulkImport() {
 // ══════════════════════════════════════════════
 //  ADD / EDIT MODAL
 // ══════════════════════════════════════════════
-function populateCategoryOptions(selectedCat) {
-  const sel = document.getElementById('f-category');
-  sel.innerHTML = '<option value="">Select Category</option>' +
-    Object.keys(CATEGORIES).map(c=>`<option value="${escH(c)}" ${c===selectedCat?'selected':''}>${escH(c)}</option>`).join('');
-}
-
-function updateTypeOptions() {
-  const cat = document.getElementById('f-category').value;
-  const types = cat ? CATEGORIES[cat]||[] : [];
-  document.getElementById('f-type').innerHTML = '<option value="">Select Type</option>' +
-    types.map(t=>`<option value="${escH(t)}">${escH(t)}</option>`).join('');
-}
-
 function openAddModal() {
   document.getElementById('modal-title').textContent = 'Add Asset';
   document.getElementById('edit-id').value = '';
@@ -4927,6 +4872,44 @@ function renderSettings() {
   document.getElementById('main-content').innerHTML = `
   <div style="max-width:820px">
     <div class="page-header"><h2><i class="bi bi-gear" style="color:#2563EB"></i> Settings</h2></div>
+
+    <!-- Section A: Email Settings -->
+    <div class="white-card" style="padding:24px;margin-bottom:20px">
+      <h3 style="font-size:15px;font-weight:700;color:#0B1220;margin-bottom:6px"><i class="bi bi-envelope-at"></i> Email Settings</h3>
+      <p style="font-size:12px;color:#888;margin-bottom:16px">Asset assignment, acknowledgement aur reminder emails in addresses par jaate hain / CC hote hain.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">HR Email</label>
+          <input type="email" id="set-hr-email" value="${escH(es.hrEmail||'')}" placeholder="hr@wiom.in" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">CC Email</label>
+          <input type="email" id="set-cc-email" value="${escH(es.ccEmail||'')}" placeholder="cc@wiom.in" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">IT Head Name</label>
+          <input type="text" id="set-it-head-name" value="${escH(es.itHeadName||'')}" placeholder="Sajan Kumar" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">IT Head Email</label>
+          <input type="email" id="set-it-head-email" value="${escH(es.itHeadEmail||'')}" placeholder="sajan.kumar@wiom.in" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">Portal Name</label>
+          <input type="text" id="set-portal-name" value="${escH(es.portalName||'')}" placeholder="Wiom IT Portal" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none">
+        </div>
+      </div>
+      <div style="margin-top:16px;font-size:12px;font-weight:600;color:#374151;margin-bottom:8px">Extra Notification Recipients (optional)</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+        <input type="email" id="set-notif1" value="${escH(es.notif1||'')}" placeholder="notify1@wiom.in" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none">
+        <input type="email" id="set-notif2" value="${escH(es.notif2||'')}" placeholder="notify2@wiom.in" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none">
+        <input type="email" id="set-notif3" value="${escH(es.notif3||'')}" placeholder="notify3@wiom.in" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none">
+        <input type="email" id="set-notif4" value="${escH(es.notif4||'')}" placeholder="notify4@wiom.in" style="width:100%;padding:8px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;outline:none">
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn btn-primary" onclick="saveEmailSettings()"><i class="bi bi-save"></i> Save Email Settings</button>
+      </div>
+    </div>
 
     <!-- Section B: Data Backup -->
     <div class="white-card" style="padding:24px;margin-bottom:20px">
