@@ -1787,6 +1787,9 @@ function badgeAck(a) {
   return `<span class="badge ${cls}">${a}</span>`;
 }
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Robust element lookup: falls back to substring id match for elements whose id got mojibake-corrupted quotes
+function $el(id){ return document.getElementById(id) || document.querySelector('[id*="'+id+'"]'); }
+function $val(id){ const e=$el(id); return e?(e.value||''):''; }
 
 function showToast(msg, type='') {
   const tc = document.getElementById('toast-container');
@@ -2172,8 +2175,8 @@ function toggleAllAck(checked) {
 
 function updateAckSelCount() {
   const count = document.querySelectorAll('.ack-row-check:checked').length;
-  const btn = document.getElementById('bulk-ack-btn');
-  const countEl = document.getElementById('ack-sel-count');
+  const btn = $el('bulk-ack-btn');
+  const countEl = $el('ack-sel-count');
   if (countEl) countEl.textContent = count;
   if (btn) btn.style.display = count>0?'inline-flex':'none';
 }
@@ -3567,9 +3570,9 @@ let currentModule = 'assets';
 function switchModule(mod) {
   currentModule = mod;
   document.querySelectorAll('.mod-tab').forEach(t => t.classList.remove('active'));
-  const me = document.getElementById('mod-employees');
-  const ma = document.getElementById('mod-assets');
-  const sb = document.getElementById('sub-bar');
+  const me = $el('mod-employees');
+  const ma = $el('mod-assets');
+  const sb = $el('sub-bar');
   if (mod === 'employees') {
     if (me) me.classList.add('active');
     if (sb) sb.style.display = 'none';
@@ -4967,15 +4970,15 @@ function renderSettings() {
 
 function saveEmailSettings() {
   const es = {
-    hrEmail: document.getElementById('set-hr-email').value.trim(),
-    ccEmail: document.getElementById('set-cc-email').value.trim(),
-    itHeadName: document.getElementById('set-it-head-name').value.trim(),
-    itHeadEmail: document.getElementById('set-it-head-email').value.trim(),
-    portalName: document.getElementById('set-portal-name').value.trim(),
-    notif1: document.getElementById('set-notif1').value.trim(),
-    notif2: document.getElementById('set-notif2').value.trim(),
-    notif3: document.getElementById('set-notif3').value.trim(),
-    notif4: document.getElementById('set-notif4').value.trim()
+    hrEmail: $val('set-hr-email').trim(),
+    ccEmail: $val('set-cc-email').trim(),
+    itHeadName: $val('set-it-head-name').trim(),
+    itHeadEmail: $val('set-it-head-email').trim(),
+    portalName: $val('set-portal-name').trim(),
+    notif1: $val('set-notif1').trim(),
+    notif2: $val('set-notif2').trim(),
+    notif3: $val('set-notif3').trim(),
+    notif4: $val('set-notif4').trim()
   };
   DB.set('email_settings', es);
   showToast('Email settings saved', 'success');
