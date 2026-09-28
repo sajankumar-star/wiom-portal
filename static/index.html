@@ -321,7 +321,9 @@ tbody td{padding:11px 14px;font-size:13px;color:#333}
 @media(max-width:700px){.report-grid{grid-template-columns:1fr}}
 
 /* ── ACK PAGE ── */
-.ack-table-wrap{overflow-x:auto}
+.ack-table-wrap{overflow-x:auto;overflow-y:visible;max-width:100%;-webkit-overflow-scrolling:touch}
+.assigned-tbl{min-width:940px}
+.assigned-tbl .email-cell{max-width:210px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* TOAST */
 .toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
@@ -2532,7 +2534,7 @@ function filterAssignedTable() {
       </td>
       <td><strong>${escH(a.name)}</strong><br><span style="font-size:11px;color:#aaa">${escH(a.category)} / ${escH(a.type)}</span></td>
       <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
-      <td>${escH(a.empEmail||'—')}</td>
+      <td class="email-cell" title="${escH(a.empEmail||'')}">${escH(a.empEmail||'—')}</td>
       <td>${escH(a.assignDate||a.purchased||'—')}</td>
       <td>${(a.itemsGiven&&a.itemsGiven.length)?`<span style="font-size:11px;color:#555">${a.itemsGiven.join(', ')}</span>`:'—'}</td>
       <td>${badgeAck(a.ack||'Pending')}</td>
@@ -2556,7 +2558,7 @@ function renderAssigned() {
       </td>
       <td><strong>${escH(a.name)}</strong><br><span style="font-size:11px;color:#aaa">${escH(a.category)} / ${escH(a.type)}</span></td>
       <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
-      <td>${escH(a.empEmail||'—')}</td>
+      <td class="email-cell" title="${escH(a.empEmail||'')}">${escH(a.empEmail||'—')}</td>
       <td>${escH(a.assignDate||a.purchased||'—')}</td>
       <td>${(a.itemsGiven&&a.itemsGiven.length)?`<span style="font-size:11px;color:#555">${a.itemsGiven.join(', ')}</span>`:'—'}</td>
       <td>${badgeAck(a.ack||'Pending')}</td>
@@ -2585,7 +2587,7 @@ function renderAssigned() {
   </div>
   <div class="white-card">
     <div class="ack-table-wrap">
-      <table>
+      <table class="assigned-tbl">
         <thead><tr><th style="width:36px;text-align:center"><input type="checkbox" id="ack-select-all" onchange="toggleAllAck(this.checked)" style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer"></th><th>EMPLOYEE</th><th>ASSET NAME</th><th>ASSET ID</th><th>EMAIL</th><th>ASSIGN DATE</th><th>ITEMS GIVEN</th><th>ACK STATUS</th><th>ACTIONS</th></tr></thead>
         <tbody id="assigned-tbody">${rows||`<tr><td colspan="9"><div class="empty-state"><i class="bi bi-inbox"></i><p>No assigned assets</p></div></td></tr>`}</tbody>
       </table>
