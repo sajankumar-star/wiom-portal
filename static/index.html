@@ -6559,7 +6559,7 @@ function renderDashboard() {
 
   // ── IT Alerts (action-needed) — baseline: pre-2026-09-29 backlog cleared, track new items from today ──
   const ALERT_BASE = new Date('2026-09-29'); ALERT_BASE.setHours(0,0,0,0);
-  const afterBase = d => !!d && new Date(d) >= ALERT_BASE;
+  const afterBase = d => { if(!d) return false; const dt=new Date(d); return dt>=ALERT_BASE && dt<=today; };
   const issuesReported = assets.filter(a=>a.ack==='Issue Reported' && afterBase(a.issueDate)).length;
   const openRequests = (DB.get('employee_requests',[])||[]).filter(r=>r.status==='Open').length;
   const repairOver7 = (DB.get('repair_log',[])||[]).filter(r=>{
