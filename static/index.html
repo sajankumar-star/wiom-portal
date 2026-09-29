@@ -6002,7 +6002,7 @@ function autoOffboardFromKeka() {
         empId: '', empName: name, wiomId: list[0].wiomId || '', dept: list[0].dept || '',
         lastDay: '', hrContact: '', status: 'In Progress',
         checklist: {}, assets: list.map(a => a.id),
-        startedBy: 'Keka Auto-sync', startedAt: new Date().toLocaleString('en-IN'),
+        startedBy: 'Keka Auto-sync', startedAt: new Date().toLocaleString('en-IN'), startedAtISO: new Date().toISOString(),
         source: 'keka-auto'
       });
       added++;
@@ -6557,27 +6557,30 @@ function renderDashboard() {
   const returnedCount = (DB.get('return_history',[])||[]).length;
   const lostDamaged = assets.filter(a=>a.status==='Lost'||a.condition==='Damaged'||a.condition==='Critical').length;
 
-  // ── IT Alerts (action-needed) ──
-  const issuesReported = assets.filter(a=>a.ack==='Issue Reported').length;
+  // ── IT Alerts (action-needed) — baseline: pre-2026-09-29 backlog cleared, track new items from today ──
+  const ALERT_BASE = new Date('2026-09-29'); ALERT_BASE.setHours(0,0,0,0);
+  const afterBase = d => !!d && new Date(d) >= ALERT_BASE;
+  const issuesReported = assets.filter(a=>a.ack==='Issue Reported' && afterBase(a.issueDate)).length;
   const openRequests = (DB.get('employee_requests',[])||[]).filter(r=>r.status==='Open').length;
   const repairOver7 = (DB.get('repair_log',[])||[]).filter(r=>{
     if (r.status==='Completed'||r.status==='Returned') return false;
     if (!r.sentDate) return false;
     const sd = new Date(r.sentDate); sd.setHours(0,0,0,0);
+    if (sd < ALERT_BASE) return false;
     return Math.round((today-sd)/(1000*60*60*24)) > 7;
   }).length;
-  const offboardPending = (DB.get('offboarding',[])||[]).filter(o=>o.status!=='Completed').length;
-  // Missing accessories: laptop holders without a charger or mouse assigned
+  const offboardPending = (DB.get('offboarding',[])||[]).filter(o=>o.status!=='Completed' && afterBase(o.startedAtISO)).length;
+  // Missing accessories: laptop holders (assigned on/after baseline) without a charger or mouse
   const holders = {};
   assets.filter(a=>a.status==='Assigned'&&a.assignedTo).forEach(a=>{
     const emp=(a.assignedTo||'').toLowerCase().trim();
-    if(!holders[emp]) holders[emp]={laptop:false,charger:false,mouse:false};
-    if(a.type==='Laptop') holders[emp].laptop=true;
+    if(!holders[emp]) holders[emp]={laptop:false,charger:false,mouse:false,lapDate:null};
+    if(a.type==='Laptop'){holders[emp].laptop=true; holders[emp].lapDate=a.assignDate;}
     if(a.type==='Adapter') holders[emp].charger=true;
     if(a.type==='Mouse') holders[emp].mouse=true;
   });
-  const missingAcc = Object.values(holders).filter(e=>e.laptop && (!e.charger||!e.mouse)).length;
-  const missingSerial = assets.filter(a=>!a.serial && a.type!=='SIM' && a.type!=='Bags' && a.qty==null).length;
+  const missingAcc = Object.values(holders).filter(e=>e.laptop && (!e.charger||!e.mouse) && afterBase(e.lapDate)).length;
+  const missingSerial = assets.filter(a=>!a.serial && a.type!=='SIM' && a.type!=='Bags' && a.qty==null && afterBase(a.createdOn)).length;
   const replaceDue = assets.filter(a=>{
     if(a.type!=='Laptop'&&a.type!=='Desktop') return false;
     if(!a.purchased) return false;
@@ -6586,7 +6589,7 @@ function renderDashboard() {
   }).length;
   const itAlerts = [
     {n:issuesReported, txt:'assets with employee-reported issues', icon:'exclamation-triangle-fill', col:'#EF4444', bg:'#fef2f2', view:'inbox'},
-    {n:pendingAck, txt:'acknowledgements pending', icon:'hourglass-split', col:'#F59E0B', bg:'#fffbeb', view:'ack'},
+    {n:assets.filter(a=>a.ack==='Pending' && afterBase(a.assignDate)).length, txt:'acknowledgements pending', icon:'hourglass-split', col:'#F59E0B', bg:'#fffbeb', view:'ack'},
     {n:expiringWarranty.length, txt:'warranties expiring in 30 days', icon:'shield-exclamation', col:'#F59E0B', bg:'#fffbeb', view:'reports'},
     {n:repairOver7, txt:'assets under repair over 7 days', icon:'tools', col:'#EF4444', bg:'#fef2f2', view:'repairs'},
     {n:offboardPending, txt:'employee offboarding pending', icon:'person-dash-fill', col:'#3B82F6', bg:'#eff6ff', view:'__employees'},
