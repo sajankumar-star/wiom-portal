@@ -530,7 +530,6 @@ tbody td{padding:12px 14px;font-size:13px;color:#374151}
       <div class="ng-title">OPERATIONS</div>
       <div class="nav-sub">
       <div class="nav-item" data-view="inbox" onclick="navGo('inbox')"><i class="bi bi-inbox"></i><span>Requests &amp; Issues</span></div>
-      <div class="nav-item" onclick="openQRScanner()"><i class="bi bi-qr-code-scan"></i><span>QR Scanner</span></div>
       <div class="nav-item" data-view="maintenance" onclick="navGo('maintenance')"><i class="bi bi-wrench-adjustable"></i><span>Maintenance</span></div>
       </div></div>
 
@@ -564,7 +563,6 @@ tbody td{padding:12px 14px;font-size:13px;color:#374151}
       </div>
       <div class="spacer"></div>
       <button class="btn-add-asset" onclick="openAddModal()"><i class="bi bi-plus-lg"></i><span>Add Asset</span></button>
-      <button class="btn-scan" onclick="openQRScanner()"><i class="bi bi-qr-code-scan"></i><span>Scan QR</span></button>
       <button id="pwa-install-btn" class="btn-scan" style="display:none" onclick="pwaInstall()"><i class="bi bi-download"></i><span>Install App</span></button>
       <div style="position:relative" id="notif-bell">
         <button class="icon-btn" onclick="toggleNotifPanel()" title="Notifications"><i class="bi bi-bell"></i></button>
@@ -6689,7 +6687,6 @@ function renderDashboard() {
         <button class="quick-btn" onclick="switchView('list')"><i class="bi bi-person-plus-fill" style="color:#3b82f6"></i> Assign Asset</button>
         <button class="quick-btn" onclick="switchView('assigned')"><i class="bi bi-box-arrow-in-left" style="color:#f97316"></i> Return Asset</button>
         <button class="quick-btn" onclick="switchView('assigned')"><i class="bi bi-arrow-left-right" style="color:#8b5cf6"></i> Transfer Asset</button>
-        <button class="quick-btn" onclick="openQRScanner()"><i class="bi bi-qr-code-scan" style="color:#0ea5e9"></i> Scan QR</button>
         <button class="quick-btn" onclick="switchView('reports')"><i class="bi bi-bar-chart-fill" style="color:#10b981"></i> View Reports</button>
         <button class="quick-btn" onclick="toggleNotifPanel()"><i class="bi bi-bell-fill" style="color:#ef4444"></i> View Alerts</button>
       </div>
