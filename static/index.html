@@ -469,12 +469,12 @@ tbody td{padding:12px 14px;font-size:13px;color:#374151}
       <label for="auth-user">Username</label>
       <div class="auth-ip">
         <i class="bi bi-person auth-ic"></i>
-        <input type="text" id="auth-user" placeholder="Enter your Wiom username" autocomplete="username">
+        <input type="text" id="auth-user" placeholder="Enter your Wiom username" autocomplete="off">
       </div>
       <label for="auth-pass">Password</label>
       <div class="auth-ip pw-wrap">
         <i class="bi bi-lock auth-ic"></i>
-        <input type="password" id="auth-pass" placeholder="Enter your password" autocomplete="current-password">
+        <input type="password" id="auth-pass" placeholder="Enter your password" autocomplete="off" data-lpignore="true" data-form-type="other">
         <button type="button" class="pw-toggle" id="pw-toggle" onclick="togglePw()" title="Show / Hide password" aria-label="Show or hide password"><i class="bi bi-eye"></i></button>
       </div>
       <div class="auth-row"><span class="auth-forgot" onclick="forgotPw()">Forgot password?</span></div>
