@@ -1060,7 +1060,10 @@ tbody td{padding:12px 14px;font-size:13px;color:#374151}
         <div class="form-row">
           <div class="form-group">
             <label>Serial No (S/No)</label>
-            <input type="text" id="f-serial" placeholder="e.g. SN123456789">
+            <div style="position:relative">
+              <input type="text" id="f-serial" placeholder="e.g. SN123456789" style="padding-right:48px">
+              <button type="button" onclick="openQRScannerForField('f-serial')" title="Scan QR / barcode to fill serial" style="position:absolute;right:5px;top:50%;transform:translateY(-50%);background:#2563EB;color:#fff;border:none;border-radius:6px;width:36px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center"><i class="bi bi-qr-code-scan" style="font-size:16px"></i></button>
+            </div>
           </div>
           <div class="form-group">
             <label>Asset Condition</label>
@@ -6982,6 +6985,13 @@ function renderRepairs() {
 //  QR CODE LABEL PRINT
 // ══════════════════════════════════════════════
 let _qrScanner = null;
+let _qrFillTarget = null;
+function openQRScannerForField(fieldId) {
+  _qrFillTarget = fieldId;
+  openQRScanner();
+  const st = document.getElementById('qr-scan-status');
+  if (st) st.textContent = 'Scan QR / barcode to fill the Serial No';
+}
 function openQRScanner() {
   const modal = document.getElementById('qr-scan-modal');
   if (!modal) return;
@@ -7005,11 +7015,22 @@ function closeQRScanner() {
     _qrScanner.stop().then(() => { try { _qrScanner.clear(); } catch(e){} _qrScanner = null; }).catch(() => { _qrScanner = null; });
   }
   if (modal) modal.classList.remove('show');
+  _qrFillTarget = null;
 }
 function onQRDecoded(text) {
   let code = String(text || '');
   if (code.indexOf('WIOM:') === 0) code = code.slice(5).split('|')[0];
-  code = code.trim().toUpperCase();
+  code = code.trim();
+  // Fill mode: put the scanned value into a form field (e.g. Add Asset serial)
+  if (_qrFillTarget) {
+    const el = document.getElementById(_qrFillTarget);
+    closeQRScanner();
+    if (el) { el.value = code; try { el.dispatchEvent(new Event('input')); } catch(e){} el.focus(); }
+    showToast('Scanned: ' + code, 'success');
+    return;
+  }
+  // Default mode: look up an existing asset and open it
+  code = code.toUpperCase();
   const a = getAssets().find(x => (x.assetId || '').toUpperCase() === code || (x.serial || '').toUpperCase() === code);
   closeQRScanner();
   if (a) viewAsset(a.id);
