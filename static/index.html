@@ -2040,6 +2040,7 @@ function renderAssetTable() {
       <td class="col-sno"><code style="font-size:11px">${escH(a.serial||'--')}</code></td>
       <td class="col-name"><strong>${escH(a.name)}</strong></td>
       <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
+      <td style="font-size:12px;color:#374151">${escH(a.vendor||'--')}</td>
       <td>${escH(a.location)}</td>
       <td>${badgeCondition(a.condition)}</td>
       <td>${badgeStatus(a.status)}</td>
@@ -2104,10 +2105,10 @@ function renderAssetTable() {
       <table class="asset-tbl">
         <thead><tr>
           ${bulkAssignMode ? '<th style="width:36px"><input type="checkbox" id="ba-select-all" onclick="toggleSelectAll(this)" style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer"></th>' : ''}
-          <th>S/NO</th><th>ASSET NAME</th><th>ASSET ID</th><th>LOCATION</th><th>CONDITION</th>
+          <th>S/NO</th><th>ASSET NAME</th><th>ASSET ID</th><th>VENDOR</th><th>LOCATION</th><th>CONDITION</th>
           <th>STATUS</th><th>ACKNOWLEDGMENT</th><th>AGE</th><th>ACTIONS</th>
         </tr></thead>
-        <tbody>${rows || `<tr><td colspan="${bulkAssignMode?10:9}"><div class="empty-state"><i class="bi bi-inbox"></i><p>No assets found</p></div></td></tr>`}</tbody>
+        <tbody>${rows || `<tr><td colspan="${bulkAssignMode?11:10}"><div class="empty-state"><i class="bi bi-inbox"></i><p>No assets found</p></div></td></tr>`}</tbody>
       </table>
     </div>`;
 }
