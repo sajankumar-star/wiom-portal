@@ -6510,9 +6510,11 @@ function syncBarHTML() {
   const failed = st && st.ok === false;
   const bg = failed ? '#fef2f2' : '#f0fdf4', bd = failed ? '#fecaca' : '#bbf7d0', col = failed ? '#dc2626' : '#16a34a';
   const icon = failed ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill';
+  const _actEmp = (typeof getEmployees==='function') ? getEmployees().filter(e=>(e.status||'Active')==='Active').length : (st?(st.employees||0):0);
+  const _totAssets = (typeof getAssets==='function') ? getAssets().length : (st?(st.assets||0):0);
   const msg = !st ? 'Keka: no sync yet'
     : failed ? ('Keka sync FAIL — ' + escH(String(st.error||'').slice(0,90)))
-    : ('Keka synced ' + syncTimeAgo(st.at) + ' · ' + (st.employees||0) + ' employees, ' + (st.assets||0) + ' assets');
+    : ('Keka synced ' + syncTimeAgo(st.at) + ' · ' + _actEmp + ' active employees, ' + _totAssets + ' assets');
   return `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;background:${bg};border:1.5px solid ${bd};border-radius:12px">
     <i class="bi ${icon}" style="color:${col};font-size:16px"></i>
     <span style="font-size:13px;color:${col};font-weight:600;flex:1;min-width:180px">${msg}</span>
