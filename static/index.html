@@ -24,7 +24,7 @@
   window.addEventListener('appinstalled', function(){ var b=document.getElementById('pwa-install-btn'); if(b) b.style.display='none'; });
   if ('serviceWorker' in navigator) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
 })();
-function pwaInstall(){ if (window.__pwaPrompt){ window.__pwaPrompt.prompt(); window.__pwaPrompt.userChoice.finally(function(){ window.__pwaPrompt=null; }); } else { alert("Install: Chrome menu (three dots) se 'Install app' / 'Add to Home screen' chunein."); } }
+function pwaInstall(){ if (window.__pwaPrompt){ window.__pwaPrompt.prompt(); window.__pwaPrompt.userChoice.finally(function(){ window.__pwaPrompt=null; }); } else { alert("Install: From the Chrome menu (three dots), choose 'Install app' / 'Add to Home screen'."); } }
 </script>
 <title>Wiom IT Asset Management Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1577,7 +1577,7 @@ function doLogin() {
   // server, and any network error also falls through to the old behaviour.
   fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({username:u, password:p})})
     .then(r=>r.json())
-    .then(res=>{ if (res && res.ok === false) { errEl.textContent = 'Login failed — password galat hai ya server issue.'; errEl.style.display = 'block'; resetBtn(); } else proceed(); })
+    .then(res=>{ if (res && res.ok === false) { errEl.textContent = 'Login failed — incorrect password or a server issue.'; errEl.style.display = 'block'; resetBtn(); } else proceed(); })
     .catch(()=>proceed());
 }
 function togglePw() {
@@ -2389,7 +2389,7 @@ function saveExpense() {
   const date = document.getElementById('exp-date').value;
   const item = (document.getElementById('exp-item').value||'').trim();
   const amount = document.getElementById('exp-amount').value;
-  if (!date||!item||!amount) { alert('Date, Item aur Amount required hai.'); return; }
+  if (!date||!item||!amount) { alert('Date, Item and Amount are required.'); return; }
   const expenses = getExpenses();
   const editId = document.getElementById('exp-edit-id').value;
   const entry = {
@@ -2602,7 +2602,7 @@ function renderAssigned() {
   <div style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
     <div style="position:relative;min-width:280px;flex:1;max-width:380px">
       <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#aaa;font-size:14px"></i>
-      <input type="text" id="assigned-search" placeholder="Employee naam, Wiom ID, asset naam..." oninput="filterAssignedTable()"
+      <input type="text" id="assigned-search" placeholder="Employee name, Wiom ID, asset name..." oninput="filterAssignedTable()"
         style="width:100%;padding:9px 14px 9px 36px;border:1.5px solid #e0e0e0;border-radius:10px;font-size:13px;outline:none;background:#fff"
         onfocus="this.style.borderColor='#2563EB'" onblur="this.style.borderColor='#e0e0e0'">
     </div>
@@ -2938,7 +2938,7 @@ function bulkAddAssets() {
     </div>
     <div style="padding:22px">
       <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:#1e40af">
-        <div style="font-weight:700;margin-bottom:6px"><i class="bi bi-info-circle"></i> CSV format (pehli row header honi chahiye):</div>
+        <div style="font-weight:700;margin-bottom:6px"><i class="bi bi-info-circle"></i> CSV format (first row must be the header):</div>
         <code style="font-size:11px;color:#6b7280;word-break:break-all">${cols}</code>
         <div style="margin-top:8px"><a href="#" onclick="downloadBulkTemplate();return false" style="color:#2563EB;font-weight:600;text-decoration:none"><i class="bi bi-download"></i> Download sample template</a></div>
         <div style="margin-top:4px;color:#6b7280">Zaroori columns: <b>category, type, assetId, name</b>. Baaki optional.</div>
@@ -3476,7 +3476,7 @@ function markLostStolen(id, recover) {
   const kind = prompt('Lost ya Stolen? Type "lost" ya "stolen":', 'lost');
   if (!kind) return;
   const status = /stol/i.test(kind) ? 'Stolen' : 'Lost';
-  const note = prompt('Kya hua? (short detail — FIR no, location, etc.):', '') || '';
+  const note = prompt('What happened? (short detail — FIR no, location, etc.):', '') || '';
   assets[idx].status = status;
   assets[idx].lostDate = new Date().toISOString().slice(0,10);
   assets[idx].lostNote = note;
@@ -3560,7 +3560,7 @@ function saveAsset() {
   if (!assetId) { showToast('Please enter an Asset ID', 'error'); return; }
   if (!name) { showToast('Please enter Asset Name', 'error'); return; }
   // Data-integrity: Assigned needs an employee; non-Assigned clears assignment fields
-  if (status === 'Assigned' && !assignedTo) { showToast('⚠️ Assigned status ke liye Employee naam zaroori hai', 'error'); return; }
+  if (status === 'Assigned' && !assignedTo) { showToast('⚠️ Employee name is required for Assigned status', 'error'); return; }
   const _asg = status === 'Assigned';
 
   const editId = document.getElementById('edit-id').value;
@@ -3569,9 +3569,9 @@ function saveAsset() {
   // ── Duplicate detection (Asset ID / Serial / Invoice) ──
   const others = assets.filter(a => a.id !== editId);
   const dupId = assetId && others.find(a => (a.assetId||'').toLowerCase() === assetId.toLowerCase());
-  if (dupId) { showToast('⚠️ Duplicate Asset ID — pehle se maujood hai: ' + dupId.name, 'error'); return; }
+  if (dupId) { showToast('⚠️ Duplicate Asset ID — already exists: ' + dupId.name, 'error'); return; }
   const dupSerial = serial && others.find(a => (a.serial||'').toLowerCase() === serial.toLowerCase());
-  if (dupSerial) { showToast('⚠️ Duplicate Serial No — pehle se maujood: ' + dupSerial.name + ' (' + dupSerial.assetId + ')', 'error'); return; }
+  if (dupSerial) { showToast('⚠️ Duplicate Serial No — already exists: ' + dupSerial.name + ' (' + dupSerial.assetId + ')', 'error'); return; }
   const dupInv = invoice && others.find(a => (a.invoice||'').toLowerCase() === invoice.toLowerCase());
   if (dupInv) { if (!confirm('⚠️ Invoice "' + invoice + '" already exists on ' + dupInv.name + '. Save anyway?')) return; }
 
@@ -3611,7 +3611,7 @@ function deleteAsset(id) {
   const a = getAssets().find(a=>a.id===id);
   if (!a) return;
   if (typeof canDelete === 'function' && !canDelete()) {
-    showToast('❌ Permanent delete ki permission nahi. "Retire / Dispose" use karein — history safe rehti hai.', 'error');
+    showToast('❌ No permission for permanent delete. Use "Retire / Dispose" — history stays safe.', 'error');
     return;
   }
   document.getElementById('confirm-title').textContent = 'Delete Asset';
@@ -3993,7 +3993,7 @@ function getFilteredAssetsForExport() {
 }
 function exportFilteredCSV() {
   const assets = getFilteredAssetsForExport();
-  if (!assets.length) { showToast('Filtered list khaali hai — kuch export nahi hua', 'error'); return; }
+  if (!assets.length) { showToast('Filtered list is empty — nothing to export', 'error'); return; }
   const headers = ['Asset ID','Asset Name','Serial No','Category','Type','Location','Condition','Status','Assigned To','Purchase Date','Warranty','Invoice No','Vendor'];
   const rows = assets.map(a=>[a.assetId,a.name,a.serial||'',a.category,a.type,a.location,a.condition,a.status,a.assignedTo||'',a.purchased||'',a.warranty||'',a.invoice||'',a.vendor||''].map(v=>'"'+String(v||'').replace(/"/g,'""')+'"').join(','));
   const csv = [headers.join(','),...rows].join('\r\n');
@@ -4216,7 +4216,7 @@ function ssReport(id) {
   m.style.display = 'flex';
   m.innerHTML = `<div style="background:#fff;border-radius:16px;padding:24px;max-width:420px;width:100%">
     <div style="font-size:17px;font-weight:700;margin-bottom:12px;color:#dc2626"><i class="bi bi-exclamation-triangle"></i> Report an Issue</div>
-    <textarea id="ss-issue-note" placeholder="Kya problem hai? (damaged, not working, missing part...)" style="width:100%;min-height:90px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+    <textarea id="ss-issue-note" placeholder="What is the problem? (damaged, not working, missing part...)" style="width:100%;min-height:90px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button onclick="ssSubmitReport('${escH(id)}')" style="flex:1;background:#dc2626;color:#fff;border:none;padding:11px;border-radius:8px;font-weight:600;cursor:pointer">Submit</button>
       <button onclick="document.getElementById('ss-modal').style.display='none'" style="background:#f3f4f6;border:none;padding:11px 18px;border-radius:8px;font-weight:600;color:#666;cursor:pointer">Cancel</button>
@@ -4301,7 +4301,7 @@ function checkAckFromUrl() {
   if (idx < 0) return;
   const a = assets[idx];
   if (a.ack === 'Completed') {
-    showToast(`${a.name} pehle se acknowledge ho chuka hai`, 'success');
+    showToast(`${a.name} has already been acknowledged`, 'success');
     return;
   }
   ackRenderChoice(ackId, a); return; /* legacy auto-confirm below (disabled)
@@ -4360,7 +4360,7 @@ function ackShowIssueForm() {
   const body = document.getElementById('ack-choice-body');
   if (!body) return;
   body.innerHTML = `
-    <textarea id="ack-issue-note" placeholder="Kya problem hai? (e.g. damaged, wrong item, not received, missing accessory...)" style="width:100%;min-height:90px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:12px"></textarea>
+    <textarea id="ack-issue-note" placeholder="What is the problem? (e.g. damaged, wrong item, not received, missing accessory...)" style="width:100%;min-height:90px;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;margin-bottom:12px"></textarea>
     <button onclick="ackSubmitIssue()" style="display:block;width:100%;background:#dc2626;color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px"><i class="bi bi-send"></i> Submit issue</button>
     <button onclick="document.getElementById('ack-choice-modal').remove()" style="display:block;width:100%;background:none;color:#888;border:none;padding:6px;font-size:13px;cursor:pointer">Cancel</button>`;
   const ta = document.getElementById('ack-issue-note');
@@ -4808,7 +4808,7 @@ function renderVendors() {
       <h2><i class="bi bi-building" style="color:#2563EB"></i> Vendor Management</h2>
       <button class="btn btn-outline btn-sm" onclick="exportCSV()"><i class="bi bi-download"></i> Export</button>
     </div>
-    <div style="font-size:13px;color:#6b7280;margin-bottom:18px">Har vendor ke assets, repairs, active warranties aur total spend — ek jagah.</div>
+    <div style="font-size:13px;color:#6b7280;margin-bottom:18px">Each vendor's assets, repairs, active warranties and total spend — all in one place.</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px">
       <div style="background:#fff;border:1px solid #e8e8f0;border-radius:12px;padding:16px"><div style="font-size:12px;color:#6b7280">Total Vendors</div><div style="font-size:24px;font-weight:800;color:#2563EB">${vendors.length}</div></div>
       <div style="background:#fff;border:1px solid #e8e8f0;border-radius:12px;padding:16px"><div style="font-size:12px;color:#6b7280">Total Assets</div><div style="font-size:24px;font-weight:800;color:#3b82f6">${assets.length}</div></div>
@@ -5036,7 +5036,7 @@ function renderSettings() {
     <!-- Section A: Email Settings -->
     <div class="white-card" style="padding:24px;margin-bottom:20px">
       <h3 style="font-size:15px;font-weight:700;color:#0B1220;margin-bottom:6px"><i class="bi bi-envelope-at"></i> Email Settings</h3>
-      <p style="font-size:12px;color:#888;margin-bottom:16px">Asset assignment, acknowledgement aur reminder emails in addresses par jaate hain / CC hote hain.</p>
+      <p style="font-size:12px;color:#888;margin-bottom:16px">Asset assignment, acknowledgement and reminder emails are sent to / CC'd to these addresses.</p>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
         <div>
           <label style="display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:4px">HR Email</label>
@@ -6638,7 +6638,7 @@ function renderDashboard() {
     </div>
   </div>
   <div style="background:#fff;border:1px solid #e8e8f0;border-radius:14px;padding:16px 18px;margin-bottom:20px">
-    <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#0B1220;margin-bottom:${itAlerts.length?'12px':'0'}"><i class="bi bi-bell-fill" style="color:#2563EB"></i> IT Alerts — Aaj ka action</div>
+    <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#0B1220;margin-bottom:${itAlerts.length?'12px':'0'}"><i class="bi bi-bell-fill" style="color:#2563EB"></i> IT Alerts — Today's Actions</div>
     ${itAlerts.length ? `<div style="display:flex;flex-direction:column;gap:8px">${itAlerts.map(a=>`
       <div onclick="navGo('${a.view}')" style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:${a.bg};border-radius:10px;cursor:pointer;transition:transform .1s" onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform='none'">
         <div style="width:30px;height:30px;border-radius:8px;background:${a.col}22;color:${a.col};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="bi bi-${a.icon}"></i></div>
