@@ -5896,35 +5896,63 @@ function openEmpProfile(empId) {
 }
 function closeEmpProfile() { const m=document.getElementById('emp-profile-modal'); if(m) m.remove(); }
 
-function renderEmpDirectory() {
+let empDirFilter = 'Active';
+function toggleEmpStatus(id) {
   const employees = getEmployees();
+  const i = employees.findIndex(e=>e.id===id);
+  if (i<0) return;
+  const now = ((employees[i].status||'Active')==='Active') ? 'Inactive' : 'Active';
+  if (now==='Inactive' && !confirm('Mark ' + (employees[i].name||'this employee') + ' as LEFT? They will be hidden from the Active view.')) return;
+  employees[i].status = now;
+  saveEmployees(employees);
+  renderEmployeeModule('directory');
+  showToast((employees[i].name||'Employee') + (now==='Active'?' marked Active' : ' marked as Left'), 'success');
+}
+function renderEmpDirectory() {
+  const all = getEmployees();
   const assets = getAssets();
   const getAssetCount = name => assets.filter(a=>a.assignedTo&&a.assignedTo.toLowerCase()===name.toLowerCase()).length;
-  const rows = employees.map(e=>`<tr>
+  const activeN = all.filter(e=>(e.status||'Active')==='Active').length;
+  const inactiveN = all.length - activeN;
+  const employees = all.filter(e=>{
+    const s = e.status || 'Active';
+    if (empDirFilter==='All') return true;
+    if (empDirFilter==='Inactive') return s!=='Active';
+    return s==='Active';
+  });
+  const rows = employees.map(e=>{
+    const isActive = (e.status||'Active')==='Active';
+    return `<tr${isActive?'':' style="background:#fafafa;opacity:.72"'}>
     <td><div style="font-weight:600;color:#2563EB;cursor:pointer" onclick="openEmpProfile('${escH(e.id)}')">${escH(e.name)}</div></td>
     <td><code style="font-size:11px">${escH(e.wiomId||'—')}</code></td>
     <td>${escH(e.dept||'—')}</td>
     <td><a href="mailto:${escH(e.email)}" style="color:#2563EB">${escH(e.email)}</a></td>
-    <td>${escH(e.phone||'—')}</td>
     <td>${escH(e.managerName||'—')}</td>
-    <td>${escH(e.joinDate||'—')}</td>
+    <td><span class="badge ${isActive?'badge-available':'badge-na'}">${isActive?'Active':'Left'}</span></td>
     <td><span class="badge badge-assigned">${getAssetCount(e.name)}</span></td>
     <td>
-      <button class="btn btn-primary btn-sm" onclick="openEmpProfile('${escH(e.id)}')"><i class="bi bi-eye"></i> Profile</button>
-      <button class="btn btn-outline btn-sm" onclick="openEmpModal('${escH(e.id)}')"><i class="bi bi-pencil"></i></button>
-      <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none" onclick="deleteEmployee('${escH(e.id)}')"><i class="bi bi-trash"></i></button>
+      <button class="btn btn-primary btn-sm" onclick="openEmpProfile('${escH(e.id)}')" title="Profile"><i class="bi bi-eye"></i></button>
+      <button class="btn btn-outline btn-sm" onclick="openEmpModal('${escH(e.id)}')" title="Edit"><i class="bi bi-pencil"></i></button>
+      <button class="btn btn-sm" style="background:${isActive?'#fff7ed;color:#c2410c;border:1px solid #fed7aa':'#ecfdf5;color:#047857;border:1px solid #a7f3d0'}" onclick="toggleEmpStatus('${escH(e.id)}')" title="${isActive?'Mark as Left':'Mark Active'}"><i class="bi ${isActive?'bi-box-arrow-right':'bi-arrow-counterclockwise'}"></i> ${isActive?'Left':'Rejoin'}</button>
     </td>
-  </tr>`).join('');
+  </tr>`;}).join('');
 
   return `<div class="page-header">
     <h2>Employee Directory <span style="color:#aaa;font-weight:400;font-size:13px">(${employees.length})</span></h2>
-    <button class="btn btn-primary btn-sm" onclick="openEmpModal()"><i class="bi bi-plus-lg"></i> Add Employee</button>
+    <div style="display:flex;gap:10px;align-items:center">
+      <select onchange="empDirFilter=this.value; renderEmployeeModule('directory')" style="padding:8px 10px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:13px;font-weight:600;color:#374151">
+        <option value="Active"${empDirFilter==='Active'?' selected':''}>Active only (${activeN})</option>
+        <option value="Inactive"${empDirFilter==='Inactive'?' selected':''}>Left / Inactive (${inactiveN})</option>
+        <option value="All"${empDirFilter==='All'?' selected':''}>All (${all.length})</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="openEmpModal()"><i class="bi bi-plus-lg"></i> Add Employee</button>
+    </div>
   </div>
   <div class="white-card">
     <div class="asset-table-wrap">
       <table>
-        <thead><tr><th>NAME</th><th>WIOM ID</th><th>DEPT</th><th>EMAIL</th><th>PHONE</th><th>MANAGER</th><th>JOIN DATE</th><th>ASSETS</th><th>ACTIONS</th></tr></thead>
-        <tbody>${rows||`<tr><td colspan="9"><div class="empty-state"><i class="bi bi-people"></i><p>No employees yet. Click "Add Employee" or assign assets to auto-populate.</p></div></td></tr>`}</tbody>
+        <thead><tr><th>NAME</th><th>WIOM ID</th><th>DEPT</th><th>EMAIL</th><th>MANAGER</th><th>STATUS</th><th>ASSETS</th><th>ACTIONS</th></tr></thead>
+        <tbody>${rows||`<tr><td colspan="8"><div class="empty-state"><i class="bi bi-people"></i><p>No ${empDirFilter==='Active'?'active ':empDirFilter==='Inactive'?'left ':''}employees in this view.</p></div></td></tr>`}</tbody>
       </table>
     </div>
   </div>`;
