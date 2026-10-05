@@ -6659,6 +6659,19 @@ function renderDashboard() {
     {label:'Lost / Damaged', val:lostDamaged, icon:'bi-exclamation-octagon', col:'#dc2626', view:'list'},
     {label:'Expiring Warranty', val:expiringWarranty.length, icon:'bi-shield-exclamation', col:'#ef4444', view:'reports'},
   ];
+  const catIcons = {'LAPTOPS':'bi-laptop','COMPUTER HARDWARE':'bi-pc-display','MONITORS':'bi-display','MOBILES':'bi-phone','NETWORKING':'bi-router','SECURITY':'bi-shield-lock','ACCESSORIES':'bi-headphones','SOFTWARE':'bi-code-square'};
+  const catCounts = {};
+  assets.forEach(a => { const c = (a.category || 'Other'); catCounts[c] = (catCounts[c] || 0) + 1; });
+  const catEntries = Object.entries(catCounts).sort((a,b) => b[1]-a[1]);
+  const catCardsHTML = `<div style="background:#fff;border:1px solid #e8e8f0;border-radius:12px;padding:14px 16px;margin-bottom:20px">
+    <div style="font-weight:700;font-size:13px;color:#0B1220;margin-bottom:12px"><i class="bi bi-boxes" style="color:#2563EB"></i> Assets by Category <span style="color:#aaa;font-weight:400">(${total} total)</span></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${catEntries.map(([c,n]) => `<div onclick="switchView('list')" style="flex:1;min-width:118px;background:#f8fafc;border:1px solid #eef2f7;border-radius:10px;padding:11px 13px;cursor:pointer">
+        <div style="display:flex;align-items:center;gap:7px"><i class="bi ${catIcons[c]||'bi-box'}" style="color:#2563EB;font-size:15px"></i><span style="font-size:11px;color:#64748b;font-weight:600;text-transform:capitalize">${escH(c.toLowerCase())}</span></div>
+        <div style="font-size:22px;font-weight:800;color:#0B1220;margin-top:4px">${n}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
 
   const warrantyStrip = expiringWarranty.length ? expiringWarranty.slice(0,10).map(a=>{
     const d = new Date(a.warranty); d.setHours(0,0,0,0);
@@ -6693,6 +6706,8 @@ function renderDashboard() {
       <span style="font-size:16px;font-weight:700;color:${c.col}">${c.val}</span>
     </div>`).join('')}
   </div>
+
+  ${catCardsHTML}
 
   <div class="dash-row2">
     <div class="dash-card">
