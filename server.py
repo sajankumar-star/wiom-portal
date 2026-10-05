@@ -273,26 +273,50 @@ def api_keka_sync():
         # Keka only gives us type/category GUIDs, not names, so we classify each
         # asset into the portal's own categories from its NAME (with the laptop
         # type-id as an extra hint). Keeps everything out of a dead "OTHER" bucket.
-        LAPTOP_WORDS = ('macbook', 'thinkpad', 'pavilion', 'zenbook', 'latitude', 'vostro',
-                        'inspiron', 'ideapad', 'elitebook', 'probook', 'zbook', 'vivobook',
-                        'aspire', 'legion', 'victus', 'notebook', 'laptop')
+        # Strong laptop model/line indicators (a real portable computer). The bare
+        # words "laptop"/"notebook" are handled separately so a "laptop bag" or
+        # "laptop charger" is not mistaken for a laptop.
+        LAPTOP_MODELS = ('macbook', 'mac book', 'thinkpad', 'think pad', 'thinkbook',
+                         'ideapad', 'idea pad', 'pavilion', 'latitude', 'latiude', 'inspiron',
+                         'vostro', 'elitebook', 'elite book', 'probook', 'zbook', 'vivobook',
+                         'zenbook', 'zenbbok', 'aspire', 'legion', 'victus', 'omen',
+                         'surface laptop', 'surface pro', 'elite mt645', 'tuf gaming',
+                         'thinkpad ultra', 'hp 240', 'hp240')
 
         def _asset_cat(name, is_laptop_type):
             n = (name or '').lower()
             def has(*w):
                 return any(x in n for x in w)
-            # 1) Keka's laptop type-id is authoritative — trust it first so laptop
-            #    spec words in the name ("16GB RAM, 512GB SSD", "15 inch") can't
-            #    misfile a real laptop.
+            # 0) Core devices that are NEVER laptops — checked BEFORE Keka's laptop
+            #    type-id, so a phone / desktop / SBC / dock / switch that Keka mis-typed
+            #    as a laptop cannot land in LAPTOPS. (Mobile workstations such as the
+            #    HP ZBook are excluded from the desktop guard.)
+            if has('imei', 'galaxy', 'redmi', 'oppo', 'vivo', 'realme', 'nokia', 'iphone',
+                   'poco', 'moto', 'sm-m', 'sm-a', 'smartphone', 'samsungm'):
+                return ('MOBILES', 'Mobile')
+            if has('macstudio', 'mac studio', 'mac mini', 'imac', 'mini pc', 'raspberr') \
+               or (has('workstation') and not has('zbook', 'firefly')):
+                return ('COMPUTER HARDWARE', 'Desktop')
+            if has('cisco', 'poe manage') or has('router', 'switch', 'ethernet', 'access point'):
+                return ('NETWORKING', 'Networking')
+            if has('caldigit', 'tbt5', 'thunderbolt dock'):
+                return ('COMPUTER HARDWARE', 'Others')
+            # 1) Keka's laptop type-id is authoritative for everything else — trust it
+            #    so laptop spec words ("16GB RAM, 512GB SSD", "15 inch") can't misfile
+            #    a real laptop.
             if is_laptop_type:
                 return ('LAPTOPS', 'Laptop')
-            # 2) Laptops that were mis-typed in Keka — detect by model name, but a
-            #    "laptop bag" / "laptop adapter" is an accessory, not a laptop.
-            if has(*LAPTOP_WORDS):
-                if has('bag'):              return ('ACCESSORIES', 'Bags')
+            # 2) A real laptop model line is always a laptop — a bundled charger/bag in
+            #    the name must NOT demote it (Apple M-series notebooks included).
+            if has(*LAPTOP_MODELS) or has('apple m2', 'apple m3', 'apple m4', 'apple m5'):
+                return ('LAPTOPS', 'Laptop')
+            # 3) The generic word "laptop"/"notebook" — but a laptop *bag* or *charger*
+            #    (with no model) is an accessory, not a laptop.
+            if has('laptop', 'notebook'):
+                if has('bag'):                return ('ACCESSORIES', 'Bags')
                 if has('adapter', 'charger'): return ('COMPUTER HARDWARE', 'Others')
                 return ('LAPTOPS', 'Laptop')
-            # 3) Everything else, by keyword.
+            # 4) Everything else, by keyword.
             if has('monitor', 'screen', ' lcd', ' tft', ' inch', '"', 'ultragear', 'ultrawide') \
                or n.strip().startswith(('lg 2', 'lg 3')):                      return ('MONITORS', 'Monitor')
             if has('keyboard', 'keyborad', 'mx keys'):                         return ('COMPUTER HARDWARE', 'Keyboard')
