@@ -291,8 +291,9 @@ def api_keka_sync():
             #    type-id, so a phone / desktop / SBC / dock / switch that Keka mis-typed
             #    as a laptop cannot land in LAPTOPS. (Mobile workstations such as the
             #    HP ZBook are excluded from the desktop guard.)
-            if has('imei', 'galaxy', 'redmi', 'oppo', 'vivo', 'realme', 'nokia', 'iphone',
-                   'poco', 'moto', 'sm-m', 'sm-a', 'smartphone', 'samsungm'):
+            #    Only unambiguous phone tokens here — brand words like "vivo" live in
+            #    the keyword section below so they can't steal "Vivobook" etc.
+            if has('imei', 'smartphone'):
                 return ('MOBILES', 'Mobile')
             if has('macstudio', 'mac studio', 'mac mini', 'imac', 'mini pc', 'raspberr') \
                or (has('workstation') and not has('zbook', 'firefly')):
