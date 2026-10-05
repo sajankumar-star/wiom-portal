@@ -2016,6 +2016,7 @@ function renderAssetTable() {
   const filterSearch = document.getElementById('f-search')?.value||'';
   const filterDept = document.getElementById('f-dept')?.value||'';
   const filterType = document.getElementById('f-typefilter')?.value||'';
+  const filterCat = document.getElementById('f-cat')?.value||'';
 
   // Show ALL assets by default; optionally narrow to one category|type via the Type dropdown.
   const allAssets = getAssets();
@@ -2026,6 +2027,7 @@ function renderAssetTable() {
     : allAssets;
 
   let filtered = assets.filter(a => {
+    if (filterCat && (a.category||'')!==filterCat) return false;
     if (filterLoc && a.location!==filterLoc) return false;
     if (filterDept && a.dept!==filterDept) return false;
     if (filterCond && a.condition!==filterCond) return false;
@@ -2075,7 +2077,7 @@ function renderAssetTable() {
 
   return `
     <div class="asset-main-header">
-      <h2>${filterType ? escH(type0) : 'All Assets'} <span style="color:#aaa;font-weight:400;font-size:13px">(${filtered.length} of ${assets.length})</span></h2>
+      <h2>${filterType ? escH(type0) : (filterCat ? escH(filterCat) : 'All Assets')} <span style="color:#aaa;font-weight:400;font-size:13px">(${filtered.length} of ${assets.length})</span></h2>
       <div class="hdr-right">
         <button class="btn btn-outline btn-sm" onclick="bulkAddAssets()"><i class="bi bi-upload"></i> Bulk Add/Update</button>
         <button class="btn btn-outline btn-sm" onclick="toggleBulkAssign()"><i class="bi bi-people"></i> Bulk Assign</button>
@@ -2084,6 +2086,10 @@ function renderAssetTable() {
       </div>
     </div>
     <div class="filters-row">
+      <select id="f-cat" onchange="applyFilters()" style="font-weight:600">
+        <option value="">All Categories</option>
+        ${[...new Set(getAssets().map(a=>a.category).filter(Boolean))].sort().map(c=>{const n=getAssets().filter(a=>a.category===c).length;return `<option value="${escH(c)}" ${filterCat===c?'selected':''}>${escH(c)} (${n})</option>`;}).join('')}
+      </select>
       <select id="f-typefilter" onchange="applyFilters()">
         <option value="">All Types</option>
         ${Object.entries(getMergedCategories()).map(([cat,types])=>`<optgroup label="${escH(cat)}">${types.map(t=>{const c=getAssets().filter(a=>a.category===cat&&a.type===t).length;return `<option value="${escH(cat)}|${escH(t)}">${escH(t)} (${c})</option>`;}).join('')}</optgroup>`).join('')}
@@ -2123,7 +2129,7 @@ function renderAssetTable() {
 }
 
 function applyFilters() {
-  const ids = ['f-search','f-dept','f-loc','f-cond','f-stat','f-typefilter'];
+  const ids = ['f-search','f-dept','f-loc','f-cond','f-stat','f-typefilter','f-cat'];
   const s = document.getElementById('f-search');
   const caret = s ? s.selectionStart : null;
   const wasFocused = s === document.activeElement;
