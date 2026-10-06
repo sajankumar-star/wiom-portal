@@ -2090,6 +2090,13 @@ function renderAssetTable() {
         <option value="">All Categories</option>
         ${[...new Set(getAssets().map(a=>a.category).filter(Boolean))].sort().map(c=>{const n=getAssets().filter(a=>a.category===c).length;return `<option value="${escH(c)}" ${filterCat===c?'selected':''}>${escH(c)} (${n})</option>`;}).join('')}
       </select>
+      <select id="f-stat" onchange="applyFilters()" style="font-weight:600">
+        <option value="">All (Available + Assigned)</option>
+        <option value="Available" ${filterStatus==='Available'?'selected':''}>Available (${assets.filter(a=>a.status==='Available'||a.status==='In Stock').length})</option>
+        <option value="Assigned" ${filterStatus==='Assigned'?'selected':''}>Assigned (${assets.filter(a=>a.status==='Assigned').length})</option>
+        <option value="Under Repair" ${filterStatus==='Under Repair'?'selected':''}>Under Repair</option>
+        <option value="Retired" ${filterStatus==='Retired'?'selected':''}>Retired</option>
+      </select>
       <select id="f-typefilter" onchange="applyFilters()">
         <option value="">All Types</option>
         ${Object.entries(getMergedCategories()).map(([cat,types])=>`<optgroup label="${escH(cat)}">${types.map(t=>{const c=getAssets().filter(a=>a.category===cat&&a.type===t).length;return `<option value="${escH(cat)}|${escH(t)}">${escH(t)} (${c})</option>`;}).join('')}</optgroup>`).join('')}
@@ -2106,10 +2113,6 @@ function renderAssetTable() {
       <select id="f-cond" class="more-f" style="display:none" onchange="applyFilters()">
         <option value="">All Conditions</option>
         <option>New</option><option>Good</option><option>Fair</option><option>Poor</option>
-      </select>
-      <select id="f-stat" class="more-f" style="display:none" onchange="applyFilters()">
-        <option value="">All Statuses</option>
-        <option>Available</option><option>Assigned</option><option>In Stock</option><option>Not Available</option><option>Under Repair</option><option>Retired</option>
       </select>
       <div class="fi-wrap">
         <i class="bi bi-search"></i>
