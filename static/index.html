@@ -2045,7 +2045,7 @@ function renderAssetTable() {
     return true;
   });
 
-  const rows = filtered.map(a => `
+  const rowFor = (a) => `
     <tr>
       ${bulkAssignMode ? `<td style="text-align:center"><input type="checkbox" class="ba-check" data-id="${escH(a.id)}" ${(a.status==='Available'||a.status==='In Stock')?'':'disabled style="opacity:.35"'} style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer" onclick="updateBulkCount()"></td>` : ''}
       <td class="col-sno"><code style="font-size:11px">${escH(a.serial||'--')}</code></td>
@@ -2073,11 +2073,22 @@ function renderAssetTable() {
           </ul>
         </div>
       </td>
-    </tr>`).join('');
+    </tr>`;
+
+  // Group rows by category so each type shows in its own section (laptops, accessories, monitors…)
+  const COLS = bulkAssignMode ? 11 : 10;
+  const catIconMap = {'LAPTOPS':'bi-laptop','COMPUTER HARDWARE':'bi-pc-display','MONITORS':'bi-display','MOBILES':'bi-phone','NETWORKING':'bi-router','SECURITY':'bi-shield-lock','ACCESSORIES':'bi-headphones','SOFTWARE':'bi-code-square'};
+  const grp = {};
+  filtered.forEach(a => { const c = a.category || 'Other'; (grp[c] = grp[c] || []).push(a); });
+  const groupOrder = Object.keys(grp).sort((x,y)=>grp[y].length-grp[x].length);
+  const rows = groupOrder.map(c => {
+    const hdr = `<tr class="cat-sep"><td colspan="${COLS}" style="background:#f1f5f9;font-weight:700;font-size:12px;color:#0B1220;padding:8px 12px;border-top:2px solid #e2e8f0"><i class="bi ${catIconMap[c]||'bi-box'}" style="color:#2563EB"></i> ${escH(c)} <span style="color:#64748b;font-weight:500">(${grp[c].length})</span></td></tr>`;
+    return hdr + grp[c].map(rowFor).join('');
+  }).join('');
 
   return `
     <div class="asset-main-header">
-      <h2>${filterType ? escH(type0) : (filterCat ? escH(filterCat) : 'All Assets')} <span style="color:#aaa;font-weight:400;font-size:13px">(${filtered.length} of ${assets.length})</span></h2>
+      <h2>${filterStatus ? escH(filterStatus)+' ' : ''}${filterType ? escH(type0) : (filterCat ? escH(filterCat) : 'Assets')} <span style="color:#aaa;font-weight:400;font-size:13px">(${filtered.length} of ${assets.length})</span></h2>
       <div class="hdr-right">
         <button class="btn btn-outline btn-sm" onclick="bulkAddAssets()"><i class="bi bi-upload"></i> Bulk Add/Update</button>
         <button class="btn btn-outline btn-sm" onclick="toggleBulkAssign()"><i class="bi bi-people"></i> Bulk Assign</button>
