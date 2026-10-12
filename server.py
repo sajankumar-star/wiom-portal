@@ -268,6 +268,10 @@ def api_keka_sync():
         merged_emps = {str(x.get('wiomId') or x.get('id') or i): x for i, x in enumerate(non_keka)}
         merged_emps.update(emp_map)
         employees_out = list(merged_emps.values())
+        # Names of people who are currently ACTIVE — an asset held by anyone not in
+        # this set (an ex-employee Keka hasn't un-assigned) returns to available stock.
+        active_names = {str(e.get('name') or '').strip().lower()
+                        for e in employees_out if e.get('status') == 'Active'}
 
         # ── Assets → portal asset shape ──
         # Keka only gives us type/category GUIDs, not names, so we classify each
@@ -293,7 +297,7 @@ def api_keka_sync():
             #    HP ZBook are excluded from the desktop guard.)
             #    Only unambiguous phone tokens here — brand words like "vivo" live in
             #    the keyword section below so they can't steal "Vivobook" etc.
-            if has('imei', 'smartphone'):
+            if has('imei', 'emei', 'smartphone'):
                 return ('MOBILES', 'Mobile')
             if has('macstudio', 'mac studio', 'mac mini', 'imac', 'mini pc', 'raspberr') \
                or (has('workstation') and not has('zbook', 'firefly')):
@@ -301,7 +305,7 @@ def api_keka_sync():
             if has('cisco', 'poe manage') or has('router', 'switch', 'ethernet', 'access point'):
                 return ('NETWORKING', 'Networking')
             if has('caldigit', 'tbt5', 'thunderbolt dock'):
-                return ('COMPUTER HARDWARE', 'Others')
+                return ('ACCESSORIES', 'Others')
             # 1) Keka's laptop type-id is authoritative for everything else — trust it
             #    so laptop spec words ("16GB RAM, 512GB SSD", "15 inch") can't misfile
             #    a real laptop.
@@ -315,24 +319,28 @@ def api_keka_sync():
             #    (with no model) is an accessory, not a laptop.
             if has('laptop', 'notebook'):
                 if has('bag'):                return ('ACCESSORIES', 'Bags')
-                if has('adapter', 'charger'): return ('COMPUTER HARDWARE', 'Others')
+                if has('adapter', 'charger'): return ('ACCESSORIES', 'Others')
                 return ('LAPTOPS', 'Laptop')
             # 4) Everything else, by keyword.
             if has('monitor', 'screen', ' lcd', ' tft', ' inch', '"', 'ultragear', 'ultrawide') \
                or n.strip().startswith(('lg 2', 'lg 3')):                      return ('MONITORS', 'Monitor')
-            if has('keyboard', 'keyborad', 'mx keys'):                         return ('COMPUTER HARDWARE', 'Keyboard')
-            if has('mouse', 'mx master', 'mx anywhere', 'mx vertical'):        return ('COMPUTER HARDWARE', 'Mouse')
+            if has('keyboard', 'keyborad', 'mx keys'):                         return ('ACCESSORIES', 'Keyboard')
+            if has('mouse', 'mx master', 'mx anywhere', 'mx vertical'):        return ('ACCESSORIES', 'Mouse')
             if has('headset', 'headphone', 'earphone', 'earbud', 'jabra', 'evolve', 'airpod'):
-                return ('COMPUTER HARDWARE', 'Headset')
+                return ('ACCESSORIES', 'Headset')
             if has('bag'):                                                     return ('ACCESSORIES', 'Bags')
             if has('sim '):                                                    return ('ACCESSORIES', 'SIM')
             if has('ups'):                                                     return ('SECURITY', 'UPS')
             if has('router', 'switch', 'ethernet', 'access point', 'wifi', 'network'):
                 return ('NETWORKING', 'Networking')
-            if has('imei', 'galaxy', 'redmi', 'oppo', 'vivo', 'realme', 'nokia', 'iphone',
+            if has('imei', 'emei', 'galaxy', 'redmi', 'oppo', 'vivo', 'realme', 'nokia', 'iphone',
                    'poco', 'moto', 'sm-m', 'sm-a', '5g', 'smartphone', 'samsungm', 'galaxy m'):
                 return ('MOBILES', 'Mobile')
-            if has('adapter', 'charger', 'dock'):                              return ('COMPUTER HARDWARE', 'Others')
+            # Peripherals / small accessories (a USB hub, dock, adapter, charger, cable,
+            # webcam or flash drive is an accessory, not a computer).
+            if has('adapter', 'charger', 'dock', ' hub', 'usb-c hub', 'usb hub', 'webcam',
+                   'cable', 'pen drive', 'pendrive', 'flash drive', 'sandisk', 'usb drive'):
+                return ('ACCESSORIES', 'Others')
             if has('desktop', 'raspberry', 'mini pc'):                         return ('COMPUTER HARDWARE', 'Desktop')
             if has('license', 'office 365', 'windows', 'adobe', 'software'):   return ('SOFTWARE', 'Software License')
             return ('COMPUTER HARDWARE', 'Others')
@@ -345,6 +353,13 @@ def api_keka_sync():
             if not a_name and a_email in by_email:
                 a_name = by_email[a_email]['name']
             emp = by_email.get(a_email, {})
+            # If the holder is not an active employee (left the company but Keka still
+            # lists the asset against them), return the asset to available stock.
+            if a_name:
+                holder_active = (emp.get('status') == 'Active') \
+                    or (a_name.strip().lower() in active_names)
+                if not holder_active:
+                    a_name, a_email, emp = '', '', {}
             cat, typ = _asset_cat(a.get('assetName') or a.get('name') or '',
                                   a.get('assetTypeId') == KEKA_LAPTOP_TYPE)
             serial = a.get('assetId') or a.get('serialNumber') or ''
@@ -355,7 +370,7 @@ def api_keka_sync():
                 'location': _txt(a.get('location')) or emp.get('location', ''), 'condition': 'Good',
                 'status': 'Assigned' if a_name else 'Available',
                 'ack': 'Not Applicable', 'assignedTo': a_name,
-                'assignDate': (a.get('assignedOn') or a.get('assignedDate') or '')[:10],
+                'assignDate': ((a.get('assignedOn') or a.get('assignedDate') or '')[:10]) if a_name else '',
                 'wiomId': emp.get('wiomId', ''), 'dept': emp.get('dept', ''), 'empEmail': a_email,
                 'managerName': emp.get('managerName', ''), 'managerEmail': emp.get('managerEmail', ''),
                 'vendor': '', 'invoice': '',
