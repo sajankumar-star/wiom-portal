@@ -320,8 +320,8 @@ def api_keka_sync():
             # 4) Everything else, by keyword.
             if has('monitor', 'screen', ' lcd', ' tft', ' inch', '"', 'ultragear', 'ultrawide') \
                or n.strip().startswith(('lg 2', 'lg 3')):                      return ('MONITORS', 'Monitor')
-            if has('keyboard', 'keyborad', 'mx keys'):                         return ('ACCESSORIES', 'Keyboard')
-            if has('mouse', 'mx master', 'mx anywhere', 'mx vertical'):        return ('ACCESSORIES', 'Mouse')
+            if has('keyboard', 'keyborad', 'mx keys'):                         return ('KEYBOARD', 'Keyboard')
+            if has('mouse', 'mx master', 'mx anywhere', 'mx vertical'):        return ('MOUSE', 'Mouse')
             if has('headset', 'headphone', 'earphone', 'earbud', 'jabra', 'evolve', 'airpod'):
                 return ('ACCESSORIES', 'Headset')
             if has('bag'):                                                     return ('ACCESSORIES', 'Bags')
