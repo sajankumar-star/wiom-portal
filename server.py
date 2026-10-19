@@ -442,6 +442,11 @@ def api_keka_sync():
             '_debug': {
                 'empSampleKeys': list(emps_raw[0].keys()) if emps_raw else [],
                 'assetSampleKeys': list(assets_raw[0].keys()) if assets_raw else [],
+                'empStatusDist': (lambda raw: {str(k): sum(1 for e in raw if e.get('employmentStatus') == k) for k in sorted(set(e.get('employmentStatus') for e in raw), key=lambda x: (x is None, x))})(emps_raw),
+                'empWithExitDate': sum(1 for e in emps_raw if e.get('exitDate')),
+                'empWithResignation': sum(1 for e in emps_raw if e.get('resignationSubmittedDate')),
+                'activeButHasExit': sum(1 for e in emps_raw if e.get('employmentStatus') == 0 and e.get('exitDate')),
+                'exitSamples': [{'name': e.get('displayName'), 'empStatus': e.get('employmentStatus'), 'exitDate': e.get('exitDate'), 'exitStatus': e.get('exitStatus')} for e in emps_raw if e.get('exitDate')][:8],
             },
         })
     except Exception as e:
