@@ -36,6 +36,8 @@ function pwaInstall(){ if (window.__pwaPrompt){ window.__pwaPrompt.prompt(); win
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',sans-serif;background:#F5F7FB;color:#1a1a2e;font-size:14px}
+.wiom-spinner{width:38px;height:38px;border:3.5px solid #e2e8f0;border-top-color:#E91E8C;border-radius:50%;animation:wiomspin .8s linear infinite}
+@keyframes wiomspin{to{transform:rotate(360deg)}}
 a{text-decoration:none;color:inherit}
 button{cursor:pointer;font-family:inherit}
 input,select,textarea{font-family:inherit}
@@ -569,7 +571,7 @@ tbody td{padding:12px 14px;font-size:13px;color:#374151}
     </div>
 
     <!-- CONTENT AREA -->
-    <div class="content" id="main-content"></div>
+    <div class="content" id="main-content"><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;color:#94a3b8"><div class="wiom-spinner"></div><div style="margin-top:14px;font-size:13px;font-weight:600">Loading your assets…</div></div></div>
   </div>
 
 </div>
@@ -2002,6 +2004,15 @@ function toggleCatGroup(cat) {
   const el = document.getElementById('cg-'+cat);
   if (el) el.classList.toggle('collapsed');
 }
+// Collapse/expand a status sub-group's rows in the asset list
+function toggleStatusGroup(sg, el) {
+  const rows = document.querySelectorAll('tr[data-sg="'+sg+'"]');
+  if (!rows.length) return;
+  const collapsed = rows[0].style.display === 'none';
+  rows.forEach(r => r.style.display = collapsed ? '' : 'none');
+  const chev = el.querySelector('.sg-chev');
+  if (chev) chev.style.transform = collapsed ? '' : 'rotate(-90deg)';
+}
 
 function selectType(cat, type) {
   selectedCategory = cat;
@@ -2045,8 +2056,8 @@ function renderAssetTable() {
     return true;
   });
 
-  const rowFor = (a) => `
-    <tr>
+  const rowFor = (a, sg) => `
+    <tr${sg?` data-sg="${sg}"`:''}>
       ${bulkAssignMode ? `<td style="text-align:center"><input type="checkbox" class="ba-check" data-id="${escH(a.id)}" ${(a.status==='Available'||a.status==='In Stock')?'':'disabled style="opacity:.35"'} style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer" onclick="updateBulkCount()"></td>` : ''}
       <td class="col-sno"><code style="font-size:11px">${escH(a.serial||'--')}</code></td>
       <td class="col-name"><strong>${escH(a.name)}</strong></td>
@@ -2105,8 +2116,9 @@ function renderAssetTable() {
     const ordered = [...statusOrder.filter(s=>byStatus[s]), ...Object.keys(byStatus).filter(s=>!statusOrder.includes(s))];
     const blocks = ordered.map(s => {
       const m = statusMeta[s] || {bg:'#f8fafc',col:'#64748b',icon:'bi-box'};
-      const subHdr = `<tr class="status-sep"><td colspan="${COLS}" style="background:${m.bg};font-weight:600;font-size:11.5px;color:${m.col};padding:6px 12px 6px 30px;border-top:1px solid #eef1f6"><i class="bi ${m.icon}"></i> ${escH(s)} <span style="opacity:.7;font-weight:500">(${byStatus[s].length})</span></td></tr>`;
-      return subHdr + byStatus[s].map(rowFor).join('');
+      const sg = (c+'~'+s).replace(/[^a-zA-Z0-9]/g,'_');
+      const subHdr = `<tr class="status-sep"><td colspan="${COLS}" onclick="toggleStatusGroup('${sg}',this)" style="background:${m.bg};font-weight:600;font-size:11.5px;color:${m.col};padding:6px 12px 6px 30px;border-top:1px solid #eef1f6;cursor:pointer;user-select:none"><i class="bi bi-chevron-down sg-chev" style="font-size:10px;transition:transform .15s;margin-right:4px"></i><i class="bi ${m.icon}"></i> ${escH(s)} <span style="opacity:.7;font-weight:500">(${byStatus[s].length})</span></td></tr>`;
+      return subHdr + byStatus[s].map(a=>rowFor(a, sg)).join('');
     }).join('');
     return hdr + blocks;
   }).join('');
