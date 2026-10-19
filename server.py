@@ -268,10 +268,6 @@ def api_keka_sync():
         merged_emps = {str(x.get('wiomId') or x.get('id') or i): x for i, x in enumerate(non_keka)}
         merged_emps.update(emp_map)
         employees_out = list(merged_emps.values())
-        # Names of people who are currently ACTIVE — an asset held by anyone not in
-        # this set (an ex-employee Keka hasn't un-assigned) returns to available stock.
-        active_names = {str(e.get('name') or '').strip().lower()
-                        for e in employees_out if e.get('status') == 'Active'}
 
         # ── Assets → portal asset shape ──
         # Keka only gives us type/category GUIDs, not names, so we classify each
@@ -353,13 +349,11 @@ def api_keka_sync():
             if not a_name and a_email in by_email:
                 a_name = by_email[a_email]['name']
             emp = by_email.get(a_email, {})
-            # If the holder is not an active employee (left the company but Keka still
-            # lists the asset against them), return the asset to available stock.
-            if a_name:
-                holder_active = (emp.get('status') == 'Active') \
-                    or (a_name.strip().lower() in active_names)
-                if not holder_active:
-                    a_name, a_email, emp = '', '', {}
+            # NOTE: if the holder has LEFT the company (not an active employee), we
+            # deliberately KEEP the asset assigned to them instead of returning it to
+            # available stock. Losing that link would hide the fact that an ex-employee
+            # still physically holds company hardware. The `exEmployee` flag set further
+            # below marks these rows so the app/digest can surface them for recovery.
             cat, typ = _asset_cat(a.get('assetName') or a.get('name') or '',
                                   a.get('assetTypeId') == KEKA_LAPTOP_TYPE)
             serial = a.get('assetId') or a.get('serialNumber') or ''
