@@ -2029,32 +2029,30 @@ function renderAssetTable() {
   const filterType = document.getElementById('f-typefilter')?.value||'';
   const filterCat = document.getElementById('f-cat')?.value||'';
 
-  // Show ALL assets by default; optionally narrow to one category|type via the Type dropdown.
   const allAssets = getAssets();
   let cat0='', type0='';
   if (filterType) { const p = filterType.split('|'); cat0 = p[0]||''; type0 = p[1]||''; }
-  const assets = filterType
-    ? allAssets.filter(a => a.category===cat0 && a.type===type0)
-    : allAssets;
 
-  let filtered = assets.filter(a => {
-    if (filterCat && (a.category||'')!==filterCat) return false;
-    if (filterLoc && a.location!==filterLoc) return false;
-    if (filterDept && a.dept!==filterDept) return false;
-    if (filterCond && a.condition!==filterCond) return false;
-    if (filterStatus && a.status!==filterStatus) return false;
-    if (filterSearch) {
-      const q = filterSearch.toLowerCase();
-      const match = (a.name||'').toLowerCase().includes(q)
-        || (a.assetId||'').toLowerCase().includes(q)
-        || (a.assignedTo||'').toLowerCase().includes(q)
-        || (a.wiomId||'').toLowerCase().includes(q)
-        || (a.dept||'').toLowerCase().includes(q)
-        || (a.location||'').toLowerCase().includes(q);
-      if (!match) return false;
-    }
-    return true;
-  });
+  // Individual filter predicates so each dropdown can show faceted (consistent) counts
+  const isAvail = a => a.status==='Available' || a.status==='In Stock';
+  const mCat  = a => !filterCat  || (a.category||'')===filterCat;
+  const mType = a => !filterType || (a.category===cat0 && a.type===type0);
+  const mStat = a => !filterStatus || (filterStatus==='Available' ? isAvail(a) : a.status===filterStatus);
+  const mDept = a => !filterDept || a.dept===filterDept;
+  const mLoc  = a => !filterLoc  || a.location===filterLoc;
+  const mCond = a => !filterCond || a.condition===filterCond;
+  const mSrch = a => { if(!filterSearch) return true; const q=filterSearch.toLowerCase();
+    return (a.name||'').toLowerCase().includes(q)||(a.assetId||'').toLowerCase().includes(q)||(a.assignedTo||'').toLowerCase().includes(q)||(a.wiomId||'').toLowerCase().includes(q)||(a.dept||'').toLowerCase().includes(q)||(a.location||'').toLowerCase().includes(q); };
+
+  // Faceted count bases — each base applies every filter EXCEPT its own, so dropdown counts stay consistent
+  const baseCat  = allAssets.filter(a=> mType(a)&&mStat(a)&&mDept(a)&&mLoc(a)&&mCond(a)&&mSrch(a));
+  const baseType = allAssets.filter(a=> mCat(a)&&mStat(a)&&mDept(a)&&mLoc(a)&&mCond(a)&&mSrch(a));
+  const baseStat = allAssets.filter(a=> mCat(a)&&mType(a)&&mDept(a)&&mLoc(a)&&mCond(a)&&mSrch(a));
+  const baseDept = allAssets.filter(a=> mCat(a)&&mType(a)&&mStat(a)&&mLoc(a)&&mCond(a)&&mSrch(a));
+  const baseLoc  = allAssets.filter(a=> mCat(a)&&mType(a)&&mStat(a)&&mDept(a)&&mCond(a)&&mSrch(a));
+
+  const assets = baseStat; // in-scope set (category + type + other filters), used as the status-count base
+  let filtered = allAssets.filter(a=> mCat(a)&&mType(a)&&mStat(a)&&mDept(a)&&mLoc(a)&&mCond(a)&&mSrch(a));
 
   const rowFor = (a, sg) => `
     <tr${sg?` data-sg="${sg}"`:''}>
@@ -2125,7 +2123,7 @@ function renderAssetTable() {
 
   return `
     <div class="asset-main-header">
-      <h2>${filterStatus ? escH(filterStatus)+' ' : ''}${filterType ? escH(type0) : (filterCat ? escH(filterCat) : 'Assets')} <span style="color:#aaa;font-weight:400;font-size:13px">(${filtered.length} of ${assets.length})</span></h2>
+      <h2>${filterStatus ? escH(filterStatus)+' ' : ''}${filterType ? escH(type0) : (filterCat ? escH(filterCat) : 'Assets')} <span style="color:#aaa;font-weight:400;font-size:13px">(${filtered.length} of ${allAssets.length})</span></h2>
       <div class="hdr-right">
         <button class="btn btn-outline btn-sm" onclick="bulkAddAssets()"><i class="bi bi-upload"></i> Bulk Add/Update</button>
         <button class="btn btn-outline btn-sm" onclick="toggleBulkAssign()"><i class="bi bi-people"></i> Bulk Assign</button>
@@ -2136,31 +2134,31 @@ function renderAssetTable() {
     <div class="filters-row">
       <select id="f-cat" onchange="applyFilters()" style="font-weight:600">
         <option value="">All Categories</option>
-        ${[...new Set(getAssets().map(a=>a.category).filter(Boolean))].sort().map(c=>{const n=getAssets().filter(a=>a.category===c).length;return `<option value="${escH(c)}" ${filterCat===c?'selected':''}>${escH(c)} (${n})</option>`;}).join('')}
+        ${[...new Set(allAssets.map(a=>a.category).filter(Boolean))].sort().map(c=>{const n=baseCat.filter(a=>a.category===c).length;return `<option value="${escH(c)}" ${filterCat===c?'selected':''}>${escH(c)} (${n})</option>`;}).join('')}
       </select>
       <select id="f-stat" onchange="applyFilters()" style="font-weight:600">
-        <option value="">All (Available + Assigned)</option>
-        <option value="Available" ${filterStatus==='Available'?'selected':''}>Available (${assets.filter(a=>a.status==='Available'||a.status==='In Stock').length})</option>
-        <option value="Assigned" ${filterStatus==='Assigned'?'selected':''}>Assigned (${assets.filter(a=>a.status==='Assigned').length})</option>
-        <option value="Under Repair" ${filterStatus==='Under Repair'?'selected':''}>Under Repair</option>
-        <option value="Retired" ${filterStatus==='Retired'?'selected':''}>Retired</option>
+        <option value="">All Statuses (${baseStat.length})</option>
+        <option value="Available" ${filterStatus==='Available'?'selected':''}>Available (${baseStat.filter(isAvail).length})</option>
+        <option value="Assigned" ${filterStatus==='Assigned'?'selected':''}>Assigned (${baseStat.filter(a=>a.status==='Assigned').length})</option>
+        <option value="Under Repair" ${filterStatus==='Under Repair'?'selected':''}>Under Repair (${baseStat.filter(a=>a.status==='Under Repair').length})</option>
+        <option value="Retired" ${filterStatus==='Retired'?'selected':''}>Retired (${baseStat.filter(a=>a.status==='Retired').length})</option>
       </select>
       <select id="f-typefilter" onchange="applyFilters()">
         <option value="">All Types</option>
-        ${Object.entries(getMergedCategories()).map(([cat,types])=>`<optgroup label="${escH(cat)}">${types.map(t=>{const c=getAssets().filter(a=>a.category===cat&&a.type===t).length;return `<option value="${escH(cat)}|${escH(t)}">${escH(t)} (${c})</option>`;}).join('')}</optgroup>`).join('')}
+        ${Object.entries(getMergedCategories()).map(([cat,types])=>`<optgroup label="${escH(cat)}">${types.map(t=>{const c=baseType.filter(a=>a.category===cat&&a.type===t).length;return `<option value="${escH(cat)}|${escH(t)}" ${(cat0===cat&&type0===t)?'selected':''}>${escH(t)} (${c})</option>`;}).join('')}</optgroup>`).join('')}
       </select>
       <select id="f-dept" onchange="applyFilters()">
-        <option value="">All Departments</option>
-        ${[...new Set(getAssets().map(a=>a.dept).filter(Boolean))].sort().map(d=>`<option>${escH(d)}</option>`).join('')}
+        <option value="">All Departments (${baseDept.length})</option>
+        ${[...new Set(allAssets.map(a=>a.dept).filter(Boolean))].sort().map(d=>`<option value="${escH(d)}" ${filterDept===d?'selected':''}>${escH(d)} (${baseDept.filter(a=>a.dept===d).length})</option>`).join('')}
       </select>
       <select id="f-loc" onchange="applyFilters()">
-        <option value="">All Locations</option>
-        <option>Gurugram</option><option>Mumbai</option><option>Saket</option><option>New Delhi</option>
+        <option value="">All Locations (${baseLoc.length})</option>
+        ${['Gurugram','Mumbai','Saket','New Delhi'].map(l=>`<option value="${escH(l)}" ${filterLoc===l?'selected':''}>${escH(l)} (${baseLoc.filter(a=>a.location===l).length})</option>`).join('')}
       </select>
       <button class="btn btn-outline btn-sm" type="button" onclick="document.querySelectorAll('.more-f').forEach(function(x){x.style.display=x.style.display==='none'?'':'none'})"><i class="bi bi-sliders"></i> More Filters</button>
       <select id="f-cond" class="more-f" style="display:none" onchange="applyFilters()">
         <option value="">All Conditions</option>
-        <option>New</option><option>Good</option><option>Fair</option><option>Poor</option>
+        ${['New','Good','Fair','Poor'].map(c=>`<option value="${escH(c)}" ${filterCond===c?'selected':''}>${escH(c)}</option>`).join('')}
       </select>
       <div class="fi-wrap">
         <i class="bi bi-search"></i>
