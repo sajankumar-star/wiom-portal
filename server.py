@@ -402,7 +402,7 @@ def api_keka_sync():
                 # Preserve app-entered / imported fields that Keka's API does not provide
                 # (warranty, purchase date, condition, vendor, etc.) so a one-time import
                 # from the Keka Excel export survives every subsequent sync.
-                for f in ('vendor', 'invoice', 'desc', 'photo', 'price', 'warranty', 'purchased', 'condition'):
+                for f in ('vendor', 'invoice', 'desc', 'photo', 'price', 'warranty', 'purchased', 'condition', 'location'):
                     if not a.get(f) and old.get(f):
                         a[f] = old.get(f)
             else:
