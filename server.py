@@ -361,7 +361,7 @@ def api_keka_sync():
                 'id': 'KEKA-A-' + str(a.get('id') or serial or len(keka_assets)),
                 'name': a.get('assetName') or a.get('name') or 'Asset',
                 'assetId': serial, 'serial': serial, 'category': cat, 'type': typ,
-                'location': _txt(a.get('location')) or emp.get('location', ''), 'condition': 'Good',
+                'location': _txt(a.get('location')) or emp.get('location', ''), 'condition': '',
                 'status': 'Assigned' if a_name else 'Available',
                 'ack': 'Not Applicable', 'assignedTo': a_name,
                 'assignDate': ((a.get('assignedOn') or a.get('assignedDate') or '')[:10]) if a_name else '',
@@ -399,8 +399,10 @@ def api_keka_sync():
                     a['ack'] = old.get('ack', a.get('ack'))
                     if old.get('ackDate'):
                         a['ackDate'] = old.get('ackDate')
-                # Preserve app-entered fields that Keka does not provide.
-                for f in ('vendor', 'invoice', 'desc', 'photo', 'price'):
+                # Preserve app-entered / imported fields that Keka's API does not provide
+                # (warranty, purchase date, condition, vendor, etc.) so a one-time import
+                # from the Keka Excel export survives every subsequent sync.
+                for f in ('vendor', 'invoice', 'desc', 'photo', 'price', 'warranty', 'purchased', 'condition'):
                     if not a.get(f) and old.get(f):
                         a[f] = old.get(f)
             else:
@@ -409,6 +411,10 @@ def api_keka_sync():
                     a['ack'] = 'Pending'
             merged_assets[key] = a
         assets_out = list(merged_assets.values())
+        # Default condition for any asset that still has none (API doesn't send it).
+        for a in assets_out:
+            if not a.get('condition'):
+                a['condition'] = 'Good'
 
         # Flag assets still assigned to someone who is NOT an active employee
         # (held by an ex-employee) so the app can surface unreturned assets.
