@@ -2081,9 +2081,34 @@ function renderAssetTable() {
   const grp = {};
   filtered.forEach(a => { const c = a.category || 'Other'; (grp[c] = grp[c] || []).push(a); });
   const groupOrder = Object.keys(grp).sort((x,y)=>grp[y].length-grp[x].length);
+  // Within each category, separate rows into status sub-groups (Available / Assigned / …)
+  const statusGroupOf = s => {
+    if (s==='Available'||s==='In Stock') return 'Available';
+    if (s==='Assigned') return 'Assigned';
+    if (s==='Under Repair') return 'Under Repair';
+    if (s==='Retired') return 'Retired';
+    if (s==='Lost'||s==='Stolen'||s==='Under Investigation') return 'Lost / Stolen';
+    return s || 'Other';
+  };
+  const statusMeta = {
+    'Available':{bg:'#f0fdf4',col:'#16a34a',icon:'bi-check-circle-fill'},
+    'Assigned':{bg:'#eff6ff',col:'#2563eb',icon:'bi-person-check-fill'},
+    'Under Repair':{bg:'#fffbeb',col:'#d97706',icon:'bi-tools'},
+    'Lost / Stolen':{bg:'#fef2f2',col:'#dc2626',icon:'bi-exclamation-octagon-fill'},
+    'Retired':{bg:'#f8fafc',col:'#64748b',icon:'bi-archive-fill'}
+  };
+  const statusOrder = ['Available','Assigned','Under Repair','Lost / Stolen','Retired'];
   const rows = groupOrder.map(c => {
     const hdr = `<tr class="cat-sep"><td colspan="${COLS}" style="background:#f1f5f9;font-weight:700;font-size:12px;color:#0B1220;padding:8px 12px;border-top:2px solid #e2e8f0"><i class="bi ${catIconMap[c]||'bi-box'}" style="color:#2563EB"></i> ${escH(c)} <span style="color:#64748b;font-weight:500">(${grp[c].length})</span></td></tr>`;
-    return hdr + grp[c].map(rowFor).join('');
+    const byStatus = {};
+    grp[c].forEach(a => { const s=statusGroupOf(a.status); (byStatus[s]=byStatus[s]||[]).push(a); });
+    const ordered = [...statusOrder.filter(s=>byStatus[s]), ...Object.keys(byStatus).filter(s=>!statusOrder.includes(s))];
+    const blocks = ordered.map(s => {
+      const m = statusMeta[s] || {bg:'#f8fafc',col:'#64748b',icon:'bi-box'};
+      const subHdr = `<tr class="status-sep"><td colspan="${COLS}" style="background:${m.bg};font-weight:600;font-size:11.5px;color:${m.col};padding:6px 12px 6px 30px;border-top:1px solid #eef1f6"><i class="bi ${m.icon}"></i> ${escH(s)} <span style="opacity:.7;font-weight:500">(${byStatus[s].length})</span></td></tr>`;
+      return subHdr + byStatus[s].map(rowFor).join('');
+    }).join('');
+    return hdr + blocks;
   }).join('');
 
   return `
