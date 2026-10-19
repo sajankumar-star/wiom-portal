@@ -234,7 +234,18 @@ def api_keka_sync():
             fl = ('%s %s' % (mgr_obj.get('firstName') or '', mgr_obj.get('lastName') or '')).strip()
             return (mgr_obj.get('name') or mgr_obj.get('displayName') or mgr_obj.get('fullName') or fl or '')
 
+        import datetime as _dtmod
+        _today_str = _dtmod.date.today().isoformat()
+        # An employee has LEFT if Keka's employmentStatus is not 0 (Active) OR they
+        # have an exit date that is today/past. Keka sometimes leaves employmentStatus=0
+        # on people who have an exitDate set, so we must honour the exit date too.
+        def _keka_left(e):
+            if e.get('employmentStatus') != 0:
+                return True
+            ed = str(e.get('exitDate') or '')[:10]
+            return bool(ed) and ed <= _today_str
         by_email, emp_map = {}, {}
+        keka_num_status = {}   # employeeNumber -> 'Active' / 'Inactive' (authoritative from Keka)
         for e in emps_raw:
             num = str(e.get('employeeNumber') or '').strip()
             if not num or num == '01':
@@ -244,6 +255,7 @@ def api_keka_sync():
             mgr   = e.get('reportsTo') or e.get('reportingManager') or e.get('reportingTo') or e.get('l2Manager') or e.get('manager') or {}
             if not isinstance(mgr, dict):
                 mgr = {}
+            left = _keka_left(e)
             emp = {
                 'id': 'KEKA-' + num, 'name': name, 'wiomId': num,
                 'dept': _dept_of(e), 'designation': _txt(e.get('jobTitle')),
@@ -253,11 +265,13 @@ def api_keka_sync():
                 'managerName': _mgr_name(mgr),
                 'managerEmail': mgr.get('email') or '',
                 'joinDate': e.get('joiningDate') or e.get('dateJoined') or '',
-                'status': 'Active' if e.get('employmentStatus') == 0 else 'Inactive',
+                'exitDate': str(e.get('exitDate') or '')[:10],
+                'status': 'Inactive' if left else 'Active',
             }
+            keka_num_status[num] = emp['status']
             if email:
                 by_email[email] = emp           # ALL employees — used to enrich assets
-            if e.get('employmentStatus') == 0:   # only ACTIVE go into the directory
+            if not left:                         # only genuinely ACTIVE go into the directory
                 emp_map[num] = emp
 
         # Directory = active Keka employees + any non-Keka (manually added) rows.
@@ -268,6 +282,13 @@ def api_keka_sync():
         merged_emps = {str(x.get('wiomId') or x.get('id') or i): x for i, x in enumerate(non_keka)}
         merged_emps.update(emp_map)
         employees_out = list(merged_emps.values())
+        # Reconcile EVERY directory row (incl. old manually-added "EMP-" rows that the
+        # sync never refreshed) against Keka's authoritative status by employee number,
+        # so people who have left are not left showing as Active.
+        for emp in employees_out:
+            num = str(emp.get('wiomId') or '').strip()
+            if num and num in keka_num_status:
+                emp['status'] = keka_num_status[num]
 
         # ── Assets → portal asset shape ──
         # Keka only gives us type/category GUIDs, not names, so we classify each
@@ -418,7 +439,7 @@ def api_keka_sync():
 
         # Flag assets still assigned to someone who is NOT an active employee
         # (held by an ex-employee) so the app can surface unreturned assets.
-        _active_names = set((e.get('name') or '').strip().lower() for e in employees_out)
+        _active_names = set((e.get('name') or '').strip().lower() for e in employees_out if e.get('status') == 'Active')
         ex_held = 0
         for a in assets_out:
             is_ex = bool(a.get('status') == 'Assigned' and a.get('assignedTo')
