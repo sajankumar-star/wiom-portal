@@ -531,6 +531,7 @@ tbody td{padding:12px 14px;font-size:13px;color:#374151}
       <div class="nav-section">
       <div class="ng-title">REPORTS</div>
       <div class="nav-sub">
+      <div class="nav-item" data-view="warranty" onclick="navGo('warranty')"><i class="bi bi-shield-check"></i><span>Warranty Tracker</span></div>
       <div class="nav-item" data-view="summary" onclick="navGo('summary')"><i class="bi bi-graph-up"></i><span>Analytics</span></div>
       <div class="nav-item" data-view="vendors" onclick="navGo('vendors')"><i class="bi bi-building"></i><span>Vendors</span></div>
       <div class="nav-item" data-view="expenses" onclick="navGo('expenses')"><i class="bi bi-currency-rupee"></i><span>IT Expenses</span></div>
@@ -1821,6 +1822,7 @@ function switchView(view) {
   else if (view === 'ack') renderAck();
   else if (view === 'returns') renderReturnHistory();
   else if (view === 'reports') renderReports();
+  else if (view === 'warranty') renderWarrantyMgmt();
   else if (view === 'categories') renderCategoriesPage();
   else if (view === 'maintenance') renderMaintenance();
   else if (view === 'repairs') renderRepairs();
@@ -2654,8 +2656,37 @@ function filterAssignedTable() {
         <button class="btn btn-outline btn-sm" onclick="viewAsset('${escH(a.id)}')"><i class="bi bi-eye"></i></button>
         <button class="btn btn-sm" style="background:#fff7ed;color:#f97316;border:1.5px solid #fed7aa" onclick="openReturnModal('${escH(a.id)}')"><i class="bi bi-box-arrow-in-left"></i> Return</button>
           <button class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac" onclick="openTransferModal('${escH(a.id)}')"><i class="bi bi-arrow-left-right"></i> Transfer</button>
+        ${a.exEmployee?`<button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" onclick="recoverExAsset('${escH(a.id)}')" title="Mark recovered from ex-employee"><i class="bi bi-box-arrow-in-down"></i> Recover</button><button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1.5px solid #bfdbfe" onclick="emailRecover('${escH(a.id)}')" title="Email manager to recover"><i class="bi bi-envelope"></i></button>`:''}
       </td>
     </tr>`).join('');
+}
+
+// Recover an asset still held by an ex-employee: return it to Available stock + log it.
+function recoverExAsset(id) {
+  const assets = getAssets();
+  const i = assets.findIndex(x=>x.id===id);
+  if (i < 0) return;
+  const a = assets[i], who = a.assignedTo || 'ex-employee';
+  if (!confirm(`Mark "${a.name}" (${a.assetId}) as RECOVERED from ${who}?\n\nThis returns it to Available stock and clears the ex-employee flag.`)) return;
+  assets[i] = Object.assign({}, a, {
+    status:'Available', assignedTo:'', exEmployee:false, ack:'Not Applicable',
+    recoveredFrom:who, recoveredDate:new Date().toISOString().slice(0,10)
+  });
+  saveAssets(assets);
+  if (typeof logAudit==='function') logAudit('Asset Recovered', a.name+' ('+a.assetId+') recovered from ex-employee '+who);
+  if (typeof showToast==='function') showToast('Recovered "'+a.name+'" from '+who, 'success');
+  renderAssigned();
+}
+// Draft an email to the ex-employee's manager asking to recover the asset.
+function emailRecover(id) {
+  const a = getAssets().find(x=>x.id===id);
+  if (!a) return;
+  const to = a.managerEmail || '';
+  const subj = 'Asset recovery required: ' + a.name + ' (' + a.assetId + ')';
+  const body = 'Hi,\n\n' + (a.assignedTo || 'An ex-employee') + ' has left the company but the following IT asset is still assigned to them:\n\n'
+    + 'Asset: ' + a.name + '\nAsset ID: ' + a.assetId + '\nCategory: ' + (a.category||'') + '\n\n'
+    + 'Please help recover this asset and return it to the IT team.\n\nThanks,\nWiom IT Asset Team';
+  window.location.href = 'mailto:' + encodeURIComponent(to) + '?subject=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body);
 }
 
 function renderAssigned() {
@@ -2678,6 +2709,7 @@ function renderAssigned() {
         <button class="btn btn-outline btn-sm" onclick="viewAsset('${escH(a.id)}')"><i class="bi bi-eye"></i></button>
         <button class="btn btn-sm" style="background:#fff7ed;color:#f97316;border:1.5px solid #fed7aa" onclick="openReturnModal('${escH(a.id)}')"><i class="bi bi-box-arrow-in-left"></i> Return</button>
         <button class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac" onclick="openTransferModal('${escH(a.id)}')"><i class="bi bi-arrow-left-right"></i> Transfer</button>
+        ${a.exEmployee?`<button class="btn btn-sm" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca" onclick="recoverExAsset('${escH(a.id)}')" title="Mark recovered from ex-employee"><i class="bi bi-box-arrow-in-down"></i> Recover</button><button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border:1.5px solid #bfdbfe" onclick="emailRecover('${escH(a.id)}')" title="Email manager to recover"><i class="bi bi-envelope"></i></button>`:''}
       </td>
     </tr>`).join('');
 
@@ -3043,6 +3075,55 @@ function navType(cat, type) {
   currentModule = 'assets';
   switchView('list');
   setTimeout(() => { const tf = document.getElementById('f-typefilter'); if (tf) { tf.value = cat + '|' + type; applyFilters(); } }, 60);
+}
+
+// Warranty Tracker page — expired / expiring / active, with renew action.
+function renderWarrantyMgmt() {
+  const assets = getAssets();
+  const today = new Date(); today.setHours(0,0,0,0);
+  const in30 = new Date(today); in30.setDate(today.getDate()+30);
+  const parse = w => { if(!w) return null; const d=new Date(w); if(isNaN(d)) return null; d.setHours(0,0,0,0); return d; };
+  const withW = assets.filter(a=>parse(a.warranty));
+  const noW = assets.length - withW.length;
+  const expired=[], soon=[], active=[];
+  withW.forEach(a=>{ const d=parse(a.warranty); const days=Math.round((d-today)/86400000);
+    if(days<0) expired.push([a,days]); else if(d<=in30) soon.push([a,days]); else active.push([a,days]); });
+  expired.sort((x,y)=>x[1]-y[1]); soon.sort((x,y)=>x[1]-y[1]); active.sort((x,y)=>x[1]-y[1]);
+  const card=(label,val,col)=>`<div style="flex:1;min-width:130px;background:#fff;border:1px solid #e8e8f0;border-radius:12px;padding:14px 16px"><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.5px">${label}</div><div style="font-size:26px;font-weight:800;color:${col};margin-top:4px">${val}</div></div>`;
+  const rowsFor = (arr, kind) => arr.map(([a,days])=>{
+    const col = kind==='expired'?'#dc2626':kind==='soon'?'#d97706':'#16a34a';
+    const label = kind==='expired'?`${-days}d ago`:`${days}d left`;
+    return `<tr style="border-bottom:1px solid #f4f4f6">
+      <td style="padding:8px 12px"><strong>${escH(a.name)}</strong><br><span style="font-size:11px;color:#aaa">${escH(a.category)} / ${escH(a.type)}</span></td>
+      <td style="padding:8px 12px"><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
+      <td style="padding:8px 12px;font-size:12px;color:#555">${escH(a.assignedTo||'—')}</td>
+      <td style="padding:8px 12px;font-size:12px">${escH(a.warranty)}</td>
+      <td style="padding:8px 12px;font-weight:700;color:${col};white-space:nowrap">${label}</td>
+      <td style="padding:8px 12px"><button class="btn btn-outline btn-sm" onclick="renewWarranty('${escH(a.id)}')"><i class="bi bi-arrow-clockwise"></i> Renew</button></td>
+    </tr>`;
+  }).join('');
+  const section = (title, arr, kind, col) => arr.length?`
+    <div style="margin-top:18px">
+      <div style="font-weight:700;font-size:13px;color:${col};margin-bottom:8px"><i class="bi bi-circle-fill" style="font-size:8px;vertical-align:middle;margin-right:5px"></i>${title} (${arr.length})</div>
+      <div style="overflow-x:auto;border:1px solid #eef1f6;border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr style="background:#f8fafc"><th style="text-align:left;padding:8px 12px;font-size:11px;color:#888">ASSET</th><th style="text-align:left;padding:8px 12px;font-size:11px;color:#888">ID</th><th style="text-align:left;padding:8px 12px;font-size:11px;color:#888">HOLDER</th><th style="text-align:left;padding:8px 12px;font-size:11px;color:#888">EXPIRES</th><th style="text-align:left;padding:8px 12px;font-size:11px;color:#888">STATUS</th><th style="text-align:left;padding:8px 12px;font-size:11px;color:#888">ACTION</th></tr></thead>
+        <tbody>${rowsFor(arr,kind)}</tbody>
+      </table></div>
+    </div>`:'';
+  document.getElementById('main-content').innerHTML = `
+  <div class="asset-main" style="padding:20px">
+    <div class="asset-main-header" style="margin-bottom:16px"><h2><i class="bi bi-shield-check" style="color:#2563EB"></i> Warranty Tracker</h2></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      ${card('Expired', expired.length, '#dc2626')}
+      ${card('Expiring ≤30d', soon.length, '#d97706')}
+      ${card('Active', active.length, '#16a34a')}
+      ${card('No warranty data', noW, '#94a3b8')}
+    </div>
+    ${section('Expired — action needed', expired, 'expired', '#dc2626')}
+    ${section('Expiring soon (≤30 days)', soon, 'soon', '#d97706')}
+    ${section('Active warranties', active, 'active', '#16a34a')}
+    ${withW.length===0?'<div style="color:#aaa;padding:30px;text-align:center">No warranty dates on record.</div>':''}
+  </div>`;
 }
 
 
