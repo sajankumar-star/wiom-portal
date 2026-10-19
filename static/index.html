@@ -2024,6 +2024,25 @@ function selectType(cat, type) {
   renderAssetList();
 }
 
+// ── Asset table sorting + pagination state ──
+let assetSortCol = '';     // '', 'serial','name','assetId','vendor','location','condition','status','age'
+let assetSortDir = 1;      // 1 asc, -1 desc
+let assetRowLimit = 200;   // cap rows rendered; "Show all" lifts it
+function sortAssetTable(col) {
+  if (assetSortCol === col) assetSortDir *= -1; else { assetSortCol = col; assetSortDir = 1; }
+  if (typeof applyFilters === 'function') applyFilters();
+}
+function showAllAssets() { assetRowLimit = Infinity; if (typeof applyFilters === 'function') applyFilters(); }
+function _assetSortVal(a, col) {
+  if (col === 'age') return a.purchased ? new Date(a.purchased).getTime() : 0;
+  const m = {serial:'serial',name:'name',assetId:'assetId',vendor:'vendor',location:'location',condition:'condition',status:'status'};
+  return (a[m[col]] || '').toString().toLowerCase();
+}
+function _sortArrow(col) {
+  if (assetSortCol !== col) return '<i class="bi bi-chevron-expand" style="opacity:.35;font-size:10px;margin-left:3px"></i>';
+  return `<i class="bi bi-chevron-${assetSortDir>0?'up':'down'}" style="color:#2563EB;font-size:10px;margin-left:3px"></i>`;
+}
+
 function renderAssetTable() {
   const filterLoc = document.getElementById('f-loc')?.value||'';
   const filterCond = document.getElementById('f-cond')?.value||'';
@@ -2057,6 +2076,11 @@ function renderAssetTable() {
 
   const assets = baseStat; // in-scope set (category + type + other filters), used as the status-count base
   let filtered = allAssets.filter(a=> mCat(a)&&mType(a)&&mStat(a)&&mDept(a)&&mLoc(a)&&mCond(a)&&mSrch(a));
+  // optional column sort (applied within the category/status groups since grouping preserves order)
+  if (assetSortCol) { const dir = assetSortDir; filtered.sort((x,y)=>{ const a=_assetSortVal(x,assetSortCol), b=_assetSortVal(y,assetSortCol); return a<b?-dir:(a>b?dir:0); }); }
+  const totalFiltered = filtered.length;
+  const capped = totalFiltered > assetRowLimit;
+  const shown = capped ? filtered.slice(0, assetRowLimit) : filtered;
 
   const rowFor = (a, sg) => `
     <tr${sg?` data-sg="${sg}"`:''}>
@@ -2092,7 +2116,7 @@ function renderAssetTable() {
   const COLS = bulkAssignMode ? 11 : 10;
   const catIconMap = {'LAPTOPS':'bi-laptop','COMPUTER HARDWARE':'bi-pc-display','KEYBOARD':'bi-keyboard','MOUSE':'bi-mouse','MONITORS':'bi-display','MOBILES':'bi-phone','NETWORKING':'bi-router','SECURITY':'bi-shield-lock','ACCESSORIES':'bi-headphones','SOFTWARE':'bi-code-square'};
   const grp = {};
-  filtered.forEach(a => { const c = a.category || 'Other'; (grp[c] = grp[c] || []).push(a); });
+  shown.forEach(a => { const c = a.category || 'Other'; (grp[c] = grp[c] || []).push(a); });
   const groupOrder = Object.keys(grp).sort((x,y)=>grp[y].length-grp[x].length);
   // Within each category, separate rows into status sub-groups (Available / Assigned / …)
   const statusGroupOf = s => {
@@ -2169,12 +2193,16 @@ function renderAssetTable() {
         <input class="search-input" type="text" id="f-search" autocomplete="off" placeholder="Search by name or ID..." data-x="…" oninput="applyFilters()">
       </div>
     </div>
+    ${capped ? `<div style="display:flex;align-items:center;gap:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 14px;margin-bottom:10px;font-size:13px;color:#1e40af">
+      <i class="bi bi-info-circle-fill"></i> Showing first <b>${assetRowLimit}</b> of <b>${totalFiltered}</b> assets${assetSortCol?' (sorted)':''}.
+      <button onclick="showAllAssets()" style="margin-left:auto;background:#2563EB;color:#fff;border:none;border-radius:7px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">Show all ${totalFiltered}</button>
+    </div>` : ''}
     <div class="asset-table-wrap">
       <table class="asset-tbl">
         <thead><tr>
           ${bulkAssignMode ? '<th style="width:36px"><input type="checkbox" id="ba-select-all" onclick="toggleSelectAll(this)" style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer"></th>' : ''}
-          <th>S/NO</th><th>ASSET NAME</th><th>ASSET ID</th><th>VENDOR</th><th>LOCATION</th><th>CONDITION</th>
-          <th>STATUS</th><th>ACKNOWLEDGMENT</th><th>AGE</th><th>ACTIONS</th>
+          <th onclick="sortAssetTable('serial')" style="cursor:pointer;user-select:none">S/NO${_sortArrow('serial')}</th><th onclick="sortAssetTable('name')" style="cursor:pointer;user-select:none">ASSET NAME${_sortArrow('name')}</th><th onclick="sortAssetTable('assetId')" style="cursor:pointer;user-select:none">ASSET ID${_sortArrow('assetId')}</th><th onclick="sortAssetTable('vendor')" style="cursor:pointer;user-select:none">VENDOR${_sortArrow('vendor')}</th><th onclick="sortAssetTable('location')" style="cursor:pointer;user-select:none">LOCATION${_sortArrow('location')}</th><th onclick="sortAssetTable('condition')" style="cursor:pointer;user-select:none">CONDITION${_sortArrow('condition')}</th>
+          <th onclick="sortAssetTable('status')" style="cursor:pointer;user-select:none">STATUS${_sortArrow('status')}</th><th>ACKNOWLEDGMENT</th><th onclick="sortAssetTable('age')" style="cursor:pointer;user-select:none">AGE${_sortArrow('age')}</th><th>ACTIONS</th>
         </tr></thead>
         <tbody>${rows || `<tr><td colspan="${bulkAssignMode?11:10}"><div class="empty-state"><i class="bi bi-inbox"></i><p>No assets found</p></div></td></tr>`}</tbody>
       </table>
@@ -6688,6 +6716,11 @@ function renderDashboard() {
     const d = new Date(a.warranty); d.setHours(0,0,0,0);
     return d >= today && d <= in30;
   }).sort((a,b)=>new Date(a.warranty)-new Date(b.warranty));
+  const expiredWarranty = assets.filter(a=>{
+    if (!a.warranty) return false;
+    const d = new Date(a.warranty); if (isNaN(d)) return false; d.setHours(0,0,0,0);
+    return d < today;
+  }).length;
 
   const auditLog = DB.get('audit_log',[]).slice(0,8);
   const actionColor = a => {
@@ -6743,6 +6776,7 @@ function renderDashboard() {
     {n:issuesReported, txt:'assets with employee-reported issues', icon:'exclamation-triangle-fill', col:'#EF4444', bg:'#fef2f2', view:'inbox'},
     {n:assets.filter(a=>a.ack==='Pending' && afterBase(a.assignDate)).length, txt:'acknowledgements pending', icon:'hourglass-split', col:'#F59E0B', bg:'#fffbeb', view:'ack'},
     {n:expiringWarranty.length, txt:'warranties expiring in 30 days', icon:'shield-exclamation', col:'#F59E0B', bg:'#fffbeb', view:'reports'},
+    {n:expiredWarranty, txt:'assets with expired warranty', icon:'shield-x', col:'#EF4444', bg:'#fef2f2', view:'reports'},
     {n:repairOver7, txt:'assets under repair over 7 days', icon:'tools', col:'#EF4444', bg:'#fef2f2', view:'repairs'},
     {n:offboardPending, txt:'employee offboarding pending', icon:'person-dash-fill', col:'#3B82F6', bg:'#eff6ff', view:'__employees'},
     {n:missingAcc, txt:'laptop users missing charger/mouse', icon:'plug-fill', col:'#F59E0B', bg:'#fffbeb', view:'assigned'},
@@ -6812,6 +6846,16 @@ function renderDashboard() {
     </div>`;
   }).join('') : `<div style="color:#aaa;font-size:13px;padding:12px">No assets expiring in next 30 days</div>`;
 
+  const chartsHTML = `
+  <div class="dash-card dash-section" style="margin-bottom:20px">
+    <div class="dash-section-title"><i class="bi bi-pie-chart-fill" style="color:#2563EB"></i> Asset Analytics</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px;margin-top:6px">
+      <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:8px">By Category</div><div style="height:215px"><canvas id="chart-category"></canvas></div></div>
+      <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:8px">Available vs Assigned</div><div style="height:215px"><canvas id="chart-status"></canvas></div></div>
+      <div style="text-align:center"><div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:8px">Warranty Status</div><div style="height:215px"><canvas id="chart-warranty"></canvas></div></div>
+    </div>
+  </div>`;
+
   document.getElementById('main-content').innerHTML = `
   ${alertsHTML}
   ${syncBarHTML()}
@@ -6831,6 +6875,8 @@ function renderDashboard() {
       <span style="font-size:16px;font-weight:700;color:${c.col}">${c.val}</span>
     </div>`).join('')}
   </div>
+
+  ${chartsHTML}
 
   ${catCardsHTML}
 
@@ -6918,7 +6964,33 @@ function renderDashboard() {
     </div>
   </div>`;
 
+  renderDashboardCharts(assets);
   checkNotifications();
+}
+
+let _dashCharts = [];
+function renderDashboardCharts(assets) {
+  if (typeof Chart === 'undefined') return;
+  _dashCharts.forEach(c=>{ try{ c.destroy(); }catch(e){} }); _dashCharts = [];
+  const isAvail = a => a.status==='Available' || a.status==='In Stock';
+  const PAL = ['#2563EB','#0891b2','#d97706','#7c3aed','#c026d3','#dc2626','#0d9488','#059669','#475569','#db2777'];
+  const legendR = {responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},boxWidth:12,padding:7}}}};
+  // 1) category doughnut
+  const catData = {}; assets.forEach(a=>{ const c=a.category||'Other'; catData[c]=(catData[c]||0)+1; });
+  const catE = Object.entries(catData).sort((a,b)=>b[1]-a[1]);
+  const c1 = document.getElementById('chart-category');
+  if (c1) _dashCharts.push(new Chart(c1, {type:'doughnut', data:{labels:catE.map(e=>e[0]), datasets:[{data:catE.map(e=>e[1]), backgroundColor:PAL, borderWidth:1}]}, options:legendR}));
+  // 2) available vs assigned stacked bar per category
+  const sc = {}; assets.forEach(a=>{ const c=a.category||'Other'; sc[c]=sc[c]||{av:0,as:0}; if(isAvail(a))sc[c].av++; else if(a.status==='Assigned')sc[c].as++; });
+  const scE = Object.entries(sc).sort((a,b)=>(b[1].av+b[1].as)-(a[1].av+a[1].as));
+  const c2 = document.getElementById('chart-status');
+  if (c2) _dashCharts.push(new Chart(c2, {type:'bar', data:{labels:scE.map(e=>e[0]), datasets:[{label:'Available',data:scE.map(e=>e[1].av),backgroundColor:'#16a34a'},{label:'Assigned',data:scE.map(e=>e[1].as),backgroundColor:'#2563eb'}]}, options:{responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,ticks:{font:{size:8},maxRotation:60,minRotation:45}},y:{stacked:true,ticks:{font:{size:9}}}},plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:12}}}}}));
+  // 3) warranty status doughnut
+  const today = new Date(); today.setHours(0,0,0,0); const in30 = new Date(today); in30.setDate(today.getDate()+30);
+  let wA=0,wS=0,wE=0,wN=0;
+  assets.forEach(a=>{ if(!a.warranty){wN++;return;} const d=new Date(a.warranty); if(isNaN(d)){wN++;return;} d.setHours(0,0,0,0); if(d<today)wE++; else if(d<=in30)wS++; else wA++; });
+  const c3 = document.getElementById('chart-warranty');
+  if (c3) _dashCharts.push(new Chart(c3, {type:'doughnut', data:{labels:['Active','Expiring 30d','Expired','No warranty'], datasets:[{data:[wA,wS,wE,wN], backgroundColor:['#16a34a','#f59e0b','#dc2626','#cbd5e1'], borderWidth:1}]}, options:legendR}));
 }
 
 // ══════════════════════════════════════════════
