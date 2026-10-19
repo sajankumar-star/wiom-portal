@@ -1481,8 +1481,10 @@ const DB = {
 //  SEED DATA
 // ══════════════════════════════════════════════
 const CATEGORIES = {
-  'ACCESSORIES': ['Bags','Phone','SIM'],
-  'COMPUTER HARDWARE': ['Desktop','Keyboard','Mouse','Others'],
+  'ACCESSORIES': ['Bags','Phone','SIM','Headset'],
+  'COMPUTER HARDWARE': ['Desktop','Others'],
+  'KEYBOARD': ['Keyboard'],
+  'MOUSE': ['Mouse'],
   'LAPTOPS': ['Adapter','Laptop'],
   'MOBILES': ['Mobile'],
   'MONITORS': ['Monitor'],
@@ -1998,7 +2000,7 @@ function renderAssetList() {
 }
 
 function catIcon(cat) {
-  const m = {'ACCESSORIES':'bag','COMPUTER HARDWARE':'pc-display','LAPTOPS':'laptop','MOBILES':'phone','MONITORS':'display','NETWORKING':'router','SECURITY':'shield-lock','SOFTWARE':'code-square'};
+  const m = {'ACCESSORIES':'headphones','COMPUTER HARDWARE':'pc-display','KEYBOARD':'keyboard','MOUSE':'mouse','LAPTOPS':'laptop','MOBILES':'phone','MONITORS':'display','NETWORKING':'router','SECURITY':'shield-lock','SOFTWARE':'code-square'};
   return m[cat]||'box';
 }
 
@@ -2088,7 +2090,7 @@ function renderAssetTable() {
 
   // Group rows by category so each type shows in its own section (laptops, accessories, monitors…)
   const COLS = bulkAssignMode ? 11 : 10;
-  const catIconMap = {'LAPTOPS':'bi-laptop','COMPUTER HARDWARE':'bi-pc-display','MONITORS':'bi-display','MOBILES':'bi-phone','NETWORKING':'bi-router','SECURITY':'bi-shield-lock','ACCESSORIES':'bi-headphones','SOFTWARE':'bi-code-square'};
+  const catIconMap = {'LAPTOPS':'bi-laptop','COMPUTER HARDWARE':'bi-pc-display','KEYBOARD':'bi-keyboard','MOUSE':'bi-mouse','MONITORS':'bi-display','MOBILES':'bi-phone','NETWORKING':'bi-router','SECURITY':'bi-shield-lock','ACCESSORIES':'bi-headphones','SOFTWARE':'bi-code-square'};
   const grp = {};
   filtered.forEach(a => { const c = a.category || 'Other'; (grp[c] = grp[c] || []).push(a); });
   const groupOrder = Object.keys(grp).sort((x,y)=>grp[y].length-grp[x].length);
@@ -2940,7 +2942,7 @@ function markAckComplete(id) {
 //  CATEGORIES PAGE
 // ══════════════════════════════════════════════
 function catColor(cat) {
-  const m = {'LAPTOPS':'#2563EB','MOBILES':'#7c3aed','MONITORS':'#0891b2','ACCESSORIES':'#d97706','COMPUTER HARDWARE':'#dc2626','NETWORKING':'#059669','SECURITY':'#475569','SOFTWARE':'#db2777'};
+  const m = {'LAPTOPS':'#2563EB','MOBILES':'#7c3aed','MONITORS':'#0891b2','ACCESSORIES':'#d97706','COMPUTER HARDWARE':'#dc2626','KEYBOARD':'#0d9488','MOUSE':'#c026d3','NETWORKING':'#059669','SECURITY':'#475569','SOFTWARE':'#db2777'};
   return m[cat] || '#2563EB';
 }
 function renderCategoriesPage() {
@@ -2955,7 +2957,7 @@ function renderCategoriesPage() {
     tt.total++; if (isAvail(a)) tt.avail++; else if (a.status==='Assigned') tt.assigned++;
   });
   const order = Object.keys(cats).sort((x,y)=>cats[y].total-cats[x].total);
-  const iconMap = {'LAPTOPS':'bi-laptop','COMPUTER HARDWARE':'bi-pc-display','MONITORS':'bi-display','MOBILES':'bi-phone','NETWORKING':'bi-router','SECURITY':'bi-shield-lock','ACCESSORIES':'bi-headphones','SOFTWARE':'bi-code-square'};
+  const iconMap = {'LAPTOPS':'bi-laptop','COMPUTER HARDWARE':'bi-pc-display','KEYBOARD':'bi-keyboard','MOUSE':'bi-mouse','MONITORS':'bi-display','MOBILES':'bi-phone','NETWORKING':'bi-router','SECURITY':'bi-shield-lock','ACCESSORIES':'bi-headphones','SOFTWARE':'bi-code-square'};
   const total = assets.length, totAvail = assets.filter(isAvail).length, totAssigned = assets.filter(a=>a.status==='Assigned').length;
 
   const cards = order.map(c => {
