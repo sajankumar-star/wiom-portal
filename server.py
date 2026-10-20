@@ -368,6 +368,7 @@ def api_keka_sync():
             return ('COMPUTER HARDWARE', 'Others')
 
         keka_assets = []
+        _used_ids = set()
         for a in assets_raw:
             at = a.get('assignedTo') if isinstance(a.get('assignedTo'), dict) else {}
             a_email = (at.get('email') or '').lower()
@@ -383,8 +384,17 @@ def api_keka_sync():
             cat, typ = _asset_cat(a.get('assetName') or a.get('name') or '',
                                   a.get('assetTypeId') == KEKA_LAPTOP_TYPE)
             serial = a.get('assetId') or a.get('serialNumber') or ''
+            # Build a UNIQUE id. Keka sometimes reuses one asset GUID across several
+            # physical rows (e.g. a bag logged 5 times), which would make the portal's
+            # actions (view/edit/delete/assign) hit the wrong row. Prefer the serial
+            # (unique here) and dedupe with a counter so every asset gets its own id.
+            _base = (serial or '').strip() or str(a.get('id') or '') or str(len(keka_assets))
+            _aid = 'KEKA-A-' + _base; _k = 2
+            while _aid in _used_ids:
+                _aid = 'KEKA-A-' + _base + '-' + str(_k); _k += 1
+            _used_ids.add(_aid)
             keka_assets.append({
-                'id': 'KEKA-A-' + str(a.get('id') or serial or len(keka_assets)),
+                'id': _aid,
                 'name': a.get('assetName') or a.get('name') or 'Asset',
                 'assetId': serial, 'serial': serial, 'category': cat, 'type': typ,
                 'location': _txt(a.get('location')) or emp.get('location', ''), 'condition': '',
@@ -444,13 +454,24 @@ def api_keka_sync():
 
         # Flag assets still assigned to someone who is NOT an active employee
         # (held by an ex-employee) so the app can surface unreturned assets.
-        _active_names = set((e.get('name') or '').strip().lower() for e in employees_out if e.get('status') == 'Active')
+        # Match by EMAIL / Wiom-ID first (robust), falling back to name — this avoids
+        # both false positives (an active person whose name is spelled differently)
+        # and false negatives (two people sharing a first name).
+        _active = [e for e in employees_out if e.get('status') == 'Active']
+        _active_names  = set((e.get('name')  or '').strip().lower() for e in _active)
+        _active_emails = set((e.get('email') or '').strip().lower() for e in _active if e.get('email'))
+        _active_wiom   = set(str(e.get('wiomId') or '').strip()     for e in _active if e.get('wiomId'))
         ex_held = 0
         for a in assets_out:
-            is_ex = bool(a.get('status') == 'Assigned' and a.get('assignedTo')
-                         and a['assignedTo'].strip().lower() not in _active_names)
-            a['exEmployee'] = is_ex
-            if is_ex:
+            if a.get('status') != 'Assigned' or not a.get('assignedTo'):
+                a['exEmployee'] = False
+                continue
+            em = (a.get('empEmail') or '').strip().lower()
+            wi = str(a.get('wiomId') or '').strip()
+            nm = (a.get('assignedTo') or '').strip().lower()
+            holder_active = (em and em in _active_emails) or (wi and wi in _active_wiom) or (nm in _active_names)
+            a['exEmployee'] = not holder_active
+            if not holder_active:
                 ex_held += 1
 
         _store_set('wiom_keka_employees', employees_out)
