@@ -4308,18 +4308,28 @@ function checkNotifications() {
     alerts.push({type:'warn', msg:`<strong>${escH(r.empName||r.empId||'Employee')}</strong> — ${escH(r.type)} request${r.assetName?' ('+escH(r.assetName)+')':''}${r.note?': "'+escH(r.note)+'"':''}`, color:'#8b5cf6'});
   });
 
-  // Warranty — only expired or expiring within 30 days
+  // Warranty — AGGREGATED (one summary alert each, not one per asset, so the bell
+  // stays useful instead of flooding with 100s of individual warranty lines).
+  let wExpired = 0, wSoon7 = 0, wSoon30 = 0;
   assets.forEach(a => {
-    if (a.warranty) {
-      const d = new Date(a.warranty); d.setHours(0,0,0,0);
-      const days = Math.round((d-today)/(1000*60*60*24));
-      if (d < today) alerts.push({type:'error', msg:`<strong>${escH(a.name)}</strong> — Warranty EXPIRED (${a.warranty})`, color:'#ef4444'});
-      else if (d <= in7) alerts.push({type:'error', msg:`<strong>${escH(a.name)}</strong> — Warranty expires in <strong>${days}d</strong>`, color:'#ef4444'});
-      else if (d <= in30) alerts.push({type:'warn', msg:`<strong>${escH(a.name)}</strong> — Warranty expires in ${days}d`, color:'#f97316'});
-      else if (d <= in60) alerts.push({type:'info', msg:`<strong>${escH(a.name)}</strong> — Warranty expires in ${days}d — plan renewal`, color:'#3b82f6'});
-      else if (d <= in90) alerts.push({type:'info', msg:`<strong>${escH(a.name)}</strong> — Warranty expires in ~${Math.round(days/30)} months`, color:'#6b7280'});
-    }
+    if (!a.warranty) return;
+    const d = new Date(a.warranty); if (isNaN(d)) return; d.setHours(0,0,0,0);
+    if (d < today) wExpired++;
+    else if (d <= in7) wSoon7++;
+    else if (d <= in30) wSoon30++;
   });
+  const warrLink = c => `<a onclick="toggleNotifPanel();navGo('warranty')" style="color:${c};cursor:pointer;font-weight:700;text-decoration:underline">review</a>`;
+  if (wExpired) alerts.push({type:'error', msg:`<strong>${wExpired}</strong> assets have an <strong>EXPIRED</strong> warranty — ${warrLink('#dc2626')}`, color:'#ef4444'});
+  if (wSoon7)   alerts.push({type:'error', msg:`<strong>${wSoon7}</strong> warranties expire within <strong>7 days</strong> — ${warrLink('#dc2626')}`, color:'#ef4444'});
+  if (wSoon30)  alerts.push({type:'warn',  msg:`<strong>${wSoon30}</strong> warranties expire within 30 days — ${warrLink('#b45309')}`, color:'#f97316'});
+
+  // Ex-employees still holding assets (actionable recovery) — aggregated.
+  const exHeld = assets.filter(a=>a.exEmployee).length;
+  if (exHeld) alerts.push({type:'warn', msg:`<strong>${exHeld}</strong> assets held by ex-employees — <a onclick="toggleNotifPanel();navGo('assigned')" style="color:#dc2626;cursor:pointer;font-weight:700;text-decoration:underline">recover</a>`, color:'#dc2626'});
+
+  // Pending acknowledgements — aggregated.
+  const pAck = assets.filter(a=>a.ack==='Pending').length;
+  if (pAck) alerts.push({type:'warn', msg:`<strong>${pAck}</strong> acknowledgements pending — <a onclick="toggleNotifPanel();navGo('ack')" style="color:#b45309;cursor:pointer;font-weight:700;text-decoration:underline">view</a>`, color:'#f59e0b'});
 
   const bell = document.getElementById('notif-bell');
   const badge = document.getElementById('notif-count');
