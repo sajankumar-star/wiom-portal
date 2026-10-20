@@ -340,15 +340,16 @@ tbody td{padding:12px 14px;font-size:13px;color:#374151}
 .assigned-tbl td strong{line-height:1.3;word-break:break-word}
 .assigned-tbl code{white-space:normal;word-break:break-word}
 .asset-tbl{min-width:0;table-layout:fixed}
-.asset-tbl th:nth-child(1),.asset-tbl td:nth-child(1){width:12%}
-.asset-tbl th:nth-child(2),.asset-tbl td:nth-child(2){width:22%}
-.asset-tbl th:nth-child(3),.asset-tbl td:nth-child(3){width:12%}
-.asset-tbl th:nth-child(4),.asset-tbl td:nth-child(4){width:10%}
+.asset-tbl th:nth-child(1),.asset-tbl td:nth-child(1){width:10%}
+.asset-tbl th:nth-child(2),.asset-tbl td:nth-child(2){width:21%}
+.asset-tbl th:nth-child(3),.asset-tbl td:nth-child(3){width:11%}
+.asset-tbl th:nth-child(4),.asset-tbl td:nth-child(4){width:9%}
 .asset-tbl th:nth-child(5),.asset-tbl td:nth-child(5){width:9%}
-.asset-tbl th:nth-child(6),.asset-tbl td:nth-child(6){width:10%}
-.asset-tbl th:nth-child(7),.asset-tbl td:nth-child(7){width:13%}
-.asset-tbl th:nth-child(8),.asset-tbl td:nth-child(8){width:6%}
+.asset-tbl th:nth-child(6),.asset-tbl td:nth-child(6){width:8%}
+.asset-tbl th:nth-child(7),.asset-tbl td:nth-child(7){width:9%}
+.asset-tbl th:nth-child(8),.asset-tbl td:nth-child(8){width:11%}
 .asset-tbl th:nth-child(9),.asset-tbl td:nth-child(9){width:6%}
+.asset-tbl th:nth-child(10),.asset-tbl td:nth-child(10){width:6%}
 .asset-tbl .col-name{white-space:normal;line-height:1.3;word-break:break-word}
 .asset-tbl code{white-space:normal;word-break:break-word}
 .email-cell{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -2252,7 +2253,7 @@ function renderAssetTable() {
         <thead><tr>
           ${bulkAssignMode ? '<th style="width:36px"><input type="checkbox" id="ba-select-all" onclick="toggleSelectAll(this)" style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer"></th>' : ''}
           <th onclick="sortAssetTable('serial')" style="cursor:pointer;user-select:none">S/NO${_sortArrow('serial')}</th><th onclick="sortAssetTable('name')" style="cursor:pointer;user-select:none">ASSET NAME${_sortArrow('name')}</th><th onclick="sortAssetTable('assetId')" style="cursor:pointer;user-select:none">ASSET ID${_sortArrow('assetId')}</th><th onclick="sortAssetTable('vendor')" style="cursor:pointer;user-select:none">VENDOR${_sortArrow('vendor')}</th><th onclick="sortAssetTable('location')" style="cursor:pointer;user-select:none">LOCATION${_sortArrow('location')}</th><th onclick="sortAssetTable('condition')" style="cursor:pointer;user-select:none">CONDITION${_sortArrow('condition')}</th>
-          <th onclick="sortAssetTable('status')" style="cursor:pointer;user-select:none">STATUS${_sortArrow('status')}</th><th>ACKNOWLEDGMENT</th><th onclick="sortAssetTable('age')" style="cursor:pointer;user-select:none">AGE${_sortArrow('age')}</th><th>ACTIONS</th>
+          <th onclick="sortAssetTable('status')" style="cursor:pointer;user-select:none">STATUS${_sortArrow('status')}</th><th title="Acknowledgement">ACK</th><th onclick="sortAssetTable('age')" style="cursor:pointer;user-select:none">AGE${_sortArrow('age')}</th><th>ACTIONS</th>
         </tr></thead>
         <tbody>${rows || `<tr><td colspan="${bulkAssignMode?11:10}"><div class="empty-state"><i class="bi bi-inbox"></i><p>No assets found</p></div></td></tr>`}</tbody>
       </table>
