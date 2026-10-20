@@ -6827,6 +6827,20 @@ function scheduleSyncBarAutoHide() {
   if (_syncBarTimer) clearTimeout(_syncBarTimer);
   _syncBarTimer = setTimeout(dismissSyncBar, 6000);
 }
+// The "IT Alerts — Today's Actions" box also shows briefly then slides away; the
+// same alerts stay available any time in the 🔔 notification bell.
+function dismissItAlerts() {
+  const b = document.getElementById('it-alerts-box');
+  if (!b) return;
+  b.style.opacity = '0'; b.style.maxHeight = '0'; b.style.marginBottom = '0';
+  b.style.paddingTop = '0'; b.style.paddingBottom = '0'; b.style.borderWidth = '0';
+  setTimeout(() => { if (b) b.style.display = 'none'; }, 520);
+}
+let _itAlertsTimer = null;
+function scheduleItAlertsAutoHide() {
+  if (_itAlertsTimer) clearTimeout(_itAlertsTimer);
+  _itAlertsTimer = setTimeout(dismissItAlerts, 8000);
+}
 function lowStockBarHTML() {
   const low = getAssets().filter(a => a.qty != null && a.minQty != null && Number(a.qty) <= Number(a.minQty));
   if (!low.length) return '';
@@ -6949,8 +6963,8 @@ function renderDashboard() {
       <div style="font-size:13px;color:#6b7280;margin-top:2px">Wiom IT Asset Overview — ${new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
     </div>
   </div>
-  <div style="background:#fff;border:1px solid #e8e8f0;border-radius:14px;padding:16px 18px;margin-bottom:20px">
-    <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#0B1220;margin-bottom:${itAlerts.length?'12px':'0'}"><i class="bi bi-bell-fill" style="color:#2563EB"></i> IT Alerts — Today's Actions</div>
+  <div id="it-alerts-box" style="background:#fff;border:1px solid #e8e8f0;border-radius:14px;padding:16px 18px;margin-bottom:20px;transition:opacity .5s ease,max-height .5s ease,margin .5s ease,padding .5s ease,border-width .5s ease;max-height:1200px;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:8px;font-weight:700;font-size:13px;color:#0B1220;margin-bottom:${itAlerts.length?'12px':'0'}"><i class="bi bi-bell-fill" style="color:#2563EB"></i> IT Alerts — Today's Actions<button title="Dismiss" onclick="dismissItAlerts()" style="margin-left:auto;background:none;border:none;color:#94a3b8;font-size:16px;cursor:pointer;line-height:1">&times;</button></div>
     ${itAlerts.length ? `<div style="display:flex;flex-direction:column;gap:8px">${itAlerts.map(a=>`
       <div onclick="navGo('${a.view}')" style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:${a.bg};border-radius:10px;cursor:pointer;transition:transform .1s" onmouseover="this.style.transform='translateX(3px)'" onmouseout="this.style.transform='none'">
         <div style="width:30px;height:30px;border-radius:8px;background:${a.col}22;color:${a.col};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="bi bi-${a.icon}"></i></div>
@@ -7122,6 +7136,7 @@ function renderDashboard() {
   renderDashboardCharts(assets);
   checkNotifications();
   scheduleSyncBarAutoHide();
+  scheduleItAlertsAutoHide();
 }
 
 let _dashCharts = [];
