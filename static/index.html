@@ -1790,6 +1790,7 @@ function navGo(view) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === '__employees'));
     openActiveNavSection();
     if (typeof switchModule === 'function') switchModule('employees');
+    if (!window._restoringView) { try { history.pushState({wiomView:'__employees'}, '', '#employees'); } catch(e) {} }
     return;
   }
   currentModule = 'assets';
@@ -1830,7 +1831,25 @@ function switchView(view) {
   else if (view === 'settings') renderSettings();
   else if (view === 'expenses') renderExpenses();
   else if (view === 'notes') renderNotes();
+  // Record each view in browser history so the window Back / Forward buttons move
+  // between portal pages (this is a single-page app, so without this the Back button
+  // has nothing to go to). The restore flag stops popstate from re-pushing.
+  if (!window._restoringView) {
+    try { history.pushState({wiomView: view}, '', '#' + view); } catch(e) {}
+  }
 }
+// Back/Forward: re-render the view stored in history (without pushing a new entry).
+window.addEventListener('popstate', function(e) {
+  const v = e.state && e.state.wiomView;
+  if (!v || typeof switchView !== 'function') return;
+  window._restoringView = true;
+  try {
+    currentModule = 'assets';
+    if (v === '__employees' && typeof switchModule === 'function') switchModule('employees');
+    else switchView(v);
+  } catch(err) {}
+  window._restoringView = false;
+});
 
 // ══════════════════════════════════════════════
 //  HELPERS
