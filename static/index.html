@@ -1566,19 +1566,7 @@ function doLogin() {
   if (btn) btn.disabled = true;
   if (btxt) btxt.innerHTML = '<i class="bi bi-arrow-repeat"></i> Signing in…';
   const resetBtn = () => { if (btn) btn.disabled = false; if (btxt) btxt.textContent = 'Sign In'; };
-  const proceed = () => {
-    currentUser = found;
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    // Update topbar avatar
-    const av = document.getElementById('topbar-avatar');
-    if (av) { av.textContent = found.initials || getUserInitials(found.name); av.title = found.name + ' (' + found.role + ')'; }
-    const nm = document.getElementById('tb-user-name'); if (nm) nm.textContent = found.name || 'User';
-    const rl = document.getElementById('tb-user-role'); if (rl) rl.textContent = found.role || 'Member';
-    // Restrict viewer role
-    applyRoleRestrictions();
-    DB.init().then(()=>{ seedData(); autoOffboardFromKeka(); initSubTabs(); switchView('dashboard'); });
-  };
+  const proceed = () => enterApp(found);
   // Establish a server session so the data API can require login. This is a
   // no-op (fail-open) until PORTAL_PASSWORD + PORTAL_AUTH_SECRET are set on the
   // server, and any network error also falls through to the old behaviour.
@@ -1587,6 +1575,47 @@ function doLogin() {
     .then(res=>{ if (res && res.ok === false) { errEl.textContent = 'Login failed — incorrect password or a server issue.'; errEl.style.display = 'block'; resetBtn(); } else proceed(); })
     .catch(()=>proceed());
 }
+
+const _KNOWN_VIEWS = ['dashboard','list','categories','assigned','accessories','returns','repairs','reports','warranty','summary','vendors','expenses','audit','settings','health','notes','inbox','ack','maintenance'];
+// Enter the app after login (or auto-login on refresh). Opens the view named in the
+// URL hash so a refresh / bookmark / Back stays on the same page instead of jumping
+// to the dashboard every time.
+function enterApp(user) {
+  currentUser = user;
+  try { sessionStorage.setItem('wiom_session_user', user.id); } catch(e) {}
+  const au = document.getElementById('auth-screen'); if (au) au.style.display = 'none';
+  const ap = document.getElementById('app'); if (ap) ap.style.display = 'flex';
+  const av = document.getElementById('topbar-avatar');
+  if (av) { av.textContent = user.initials || getUserInitials(user.name); av.title = user.name + ' (' + user.role + ')'; }
+  const nm = document.getElementById('tb-user-name'); if (nm) nm.textContent = user.name || 'User';
+  const rl = document.getElementById('tb-user-role'); if (rl) rl.textContent = user.role || 'Member';
+  if (typeof applyRoleRestrictions === 'function') applyRoleRestrictions();
+  DB.init().then(() => {
+    seedData(); autoOffboardFromKeka(); initSubTabs();
+    const h = (location.hash || '').replace('#', '');
+    if (h === 'employees' || h === '__employees') navGo('__employees');
+    else if (_KNOWN_VIEWS.indexOf(h) >= 0) switchView(h);
+    else switchView('dashboard');
+  });
+}
+// Auto-login on refresh: if this browser session already signed in, skip the login
+// screen (the real data-API gate is still the server-side password).
+(function autoLoginOnRefresh() {
+  try {
+    const uid = sessionStorage.getItem('wiom_session_user');
+    if (!uid) return;
+    const u = (getUsers() || []).find(x => x.id === uid);
+    if (u) enterApp(u);
+  } catch(e) {}
+})();
+// Escape closes any open modal (standard UX — users expect Esc to dismiss dialogs).
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  let closedAny = false;
+  document.querySelectorAll('.modal.show, .modal-overlay.show').forEach(m => { m.classList.remove('show'); closedAny = true; });
+  // dynamically-created modals that use inline display + a close/remove pattern
+  ['bulk-upload-modal','asset-modal'].forEach(id => { const m = document.getElementById(id); if (m && (m.classList.contains('show') || m.style.display && m.style.display !== 'none')) { if (m.id === 'bulk-upload-modal') m.remove(); else m.classList.remove('show'); closedAny = true; } });
+});
 function togglePw() {
   const inp = document.getElementById('auth-pass'), ic = document.querySelector('#pw-toggle i');
   if (inp.type === 'password') { inp.type = 'text'; if (ic) ic.className = 'bi bi-eye-slash'; }
