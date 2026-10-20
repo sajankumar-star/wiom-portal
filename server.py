@@ -289,6 +289,11 @@ def api_keka_sync():
             num = str(emp.get('wiomId') or '').strip()
             if num and num in keka_num_status:
                 emp['status'] = keka_num_status[num]
+        # Directory shows ONLY working (Active) employees — people who have left Keka
+        # are dropped from the People list. Their assets are untouched and still show
+        # (flagged as ex-employee held via the asset's own assignedTo/manager), so
+        # recovery is unaffected.
+        employees_out = [e for e in employees_out if e.get('status') == 'Active']
 
         # ── Assets → portal asset shape ──
         # Keka only gives us type/category GUIDs, not names, so we classify each
