@@ -6096,7 +6096,7 @@ function syncEmployeesFromAssets() {
   const existing = new Set(employees.map(e => (e.name||'').toLowerCase()));
   let added = 0;
   assets.forEach(a => {
-    if (a.status === 'Assigned' && a.assignedTo && a.empEmail && !existing.has(a.assignedTo.toLowerCase())) {
+    if (a.status === 'Assigned' && !a.exEmployee && a.assignedTo && a.empEmail && !existing.has(a.assignedTo.toLowerCase())) {
       employees.push({
         id: 'EMP-' + Date.now() + added,
         name: a.assignedTo, wiomId: a.wiomId||'', dept: a.dept||'',
@@ -6806,11 +6806,26 @@ function syncBarHTML() {
   const msg = !st ? 'Keka: no sync yet'
     : failed ? ('Keka sync FAIL — ' + escH(String(st.error||'').slice(0,90)))
     : ('Keka synced ' + syncTimeAgo(st.at) + ' · ' + _actEmp + ' active employees, ' + _totAssets + ' assets');
-  return `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;background:${bg};border:1.5px solid ${bd};border-radius:12px">
+  return `<div id="sync-status-bar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;background:${bg};border:1.5px solid ${bd};border-radius:12px;transition:opacity .5s ease,max-height .5s ease,margin .5s ease,padding .5s ease,border-width .5s ease;max-height:80px;overflow:hidden">
     <i class="bi ${icon}" style="color:${col};font-size:16px"></i>
     <span style="font-size:13px;color:${col};font-weight:600;flex:1;min-width:180px">${msg}</span>
     <button id="sync-now-btn" class="btn btn-sm" style="background:#2563EB;color:#fff;border:none" onclick="doSyncNow()"><i class="bi bi-arrow-repeat"></i> Sync Now</button>
+    <button title="Dismiss" onclick="dismissSyncBar()" style="background:none;border:none;color:${col};font-size:16px;cursor:pointer;opacity:.6;line-height:1">&times;</button>
   </div>`;
+}
+// The green "Keka synced…" bar shows briefly then slides away (toast-style), and
+// can be dismissed manually with the × button.
+function dismissSyncBar() {
+  const b = document.getElementById('sync-status-bar');
+  if (!b) return;
+  b.style.opacity = '0'; b.style.maxHeight = '0'; b.style.marginBottom = '0';
+  b.style.paddingTop = '0'; b.style.paddingBottom = '0'; b.style.borderWidth = '0';
+  setTimeout(() => { if (b) b.style.display = 'none'; }, 520);
+}
+let _syncBarTimer = null;
+function scheduleSyncBarAutoHide() {
+  if (_syncBarTimer) clearTimeout(_syncBarTimer);
+  _syncBarTimer = setTimeout(dismissSyncBar, 6000);
 }
 function lowStockBarHTML() {
   const low = getAssets().filter(a => a.qty != null && a.minQty != null && Number(a.qty) <= Number(a.minQty));
@@ -7106,6 +7121,7 @@ function renderDashboard() {
 
   renderDashboardCharts(assets);
   checkNotifications();
+  scheduleSyncBarAutoHide();
 }
 
 let _dashCharts = [];
