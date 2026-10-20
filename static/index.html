@@ -473,6 +473,19 @@ tbody td{padding:12px 14px;font-size:13px;color:#374151}
 .nav-item:hover{transform:translateX(2px)}
 /* inputs/selects focus ring */
 .filters-row select:focus,.filters-row input:focus,.search-input:focus{outline:none;border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+/* ---- mobile hamburger menu ---- */
+.mobile-menu-btn{display:none;background:none;border:none;font-size:23px;color:#0B1220;cursor:pointer;padding:2px 8px;align-items:center}
+#mobile-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:55;animation:wiomViewIn .2s ease}
+@media(max-width:860px){
+  .mobile-menu-btn{display:inline-flex}
+  #mobile-backdrop.show{display:block}
+  .sidebar{transition:width .22s ease}
+  .sidebar.mobile-open{width:242px;z-index:60;box-shadow:0 0 50px rgba(0,0,0,.45)}
+  .sidebar.mobile-open .sb-txt,.sidebar.mobile-open .ng-title,.sidebar.mobile-open .nav-item span{display:block!important}
+  .sidebar.mobile-open .nav-item span{display:inline!important}
+  .sidebar.mobile-open .nav-item{justify-content:flex-start!important;padding:9px 18px!important;margin:1px 8px!important}
+  .sidebar.mobile-open .sb-brand{justify-content:flex-start!important;padding:20px!important}
+}
 </style>
 </head>
 <body>
@@ -583,6 +596,7 @@ tbody td{padding:12px 14px;font-size:13px;color:#374151}
   <div class="main-wrap">
     <!-- TOP BAR -->
     <div class="topbar">
+      <button class="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Menu"><i class="bi bi-list"></i></button>
       <div class="search-wrap">
         <i class="bi bi-search si"></i>
         <input type="text" id="global-search" placeholder="Search assets, employees, serials...  (Ctrl+K)" autocomplete="off" oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape'){this.value='';globalSearch('');}else if(event.key==='Enter'){event.preventDefault();globalSearchEnter();}">
@@ -1849,6 +1863,7 @@ function navGo(view) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === '__employees'));
     openActiveNavSection();
     if (typeof switchModule === 'function') switchModule('employees');
+    if (typeof closeMobileSidebar === 'function') closeMobileSidebar();
     if (!window._restoringView) { try { history.pushState({wiomView:'__employees'}, '', '#employees'); } catch(e) {} }
     return;
   }
@@ -1865,7 +1880,20 @@ function navAvailable() {
     if (st) { st.value = 'Available'; if (typeof applyFilters === 'function') applyFilters(); }
   }, 80);
 }
+function toggleMobileSidebar() {
+  const sb = document.querySelector('.sidebar');
+  if (!sb) return;
+  let bd = document.getElementById('mobile-backdrop');
+  if (!bd) { bd = document.createElement('div'); bd.id = 'mobile-backdrop'; bd.onclick = closeMobileSidebar; document.body.appendChild(bd); }
+  const open = sb.classList.toggle('mobile-open');
+  bd.classList.toggle('show', open);
+}
+function closeMobileSidebar() {
+  const sb = document.querySelector('.sidebar'); if (sb) sb.classList.remove('mobile-open');
+  const bd = document.getElementById('mobile-backdrop'); if (bd) bd.classList.remove('show');
+}
 function switchView(view) {
+  closeMobileSidebar();
   currentView = view;
   document.querySelectorAll('.sub-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
   document.querySelectorAll('.nav-item').forEach(t => t.classList.toggle('active', t.dataset.view === view));
