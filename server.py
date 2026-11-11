@@ -55,6 +55,12 @@ def _api_gate():
     path = request.path
     if not path.startswith('/api/') or path in _AUTH_OPEN_PATHS:
         return
+    # The daily IT report refresh pushes one key with its own token (IT_PUSH_TOKEN in Railway),
+    # so it keeps working after the portal password is turned on.
+    push_tok = os.environ.get('IT_PUSH_TOKEN', '')
+    if (push_tok and request.method == 'POST' and path == '/api/set/wiom_keka_it_report'
+            and hmac.compare_digest(request.headers.get('X-IT-Push-Token', ''), push_tok)):
+        return
     if not _valid_token(request.cookies.get('portal_auth', '')):
         return jsonify({'ok': False, 'error': 'auth required'}), 401
 

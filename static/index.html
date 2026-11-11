@@ -580,6 +580,8 @@ tbody td{padding:12px 14px;font-size:13px;color:#374151}
       <div class="nav-item" data-view="summary" onclick="navGo('summary')"><i class="bi bi-graph-up"></i><span>Analytics</span></div>
       <div class="nav-item" data-view="vendors" onclick="navGo('vendors')"><i class="bi bi-building"></i><span>Vendors</span></div>
       <div class="nav-item" data-view="expenses" onclick="navGo('expenses')"><i class="bi bi-currency-rupee"></i><span>IT Expenses</span></div>
+      <div class="nav-item" data-view="itreport" onclick="navGo('itreport')"><i class="bi bi-receipt-cutoff"></i><span>IT Report</span></div>
+      <div class="nav-item" data-view="laptopspend" onclick="navGo('laptopspend')"><i class="bi bi-laptop"></i><span>Laptop Spend</span></div>
       <div class="nav-item" data-view="audit" onclick="navGo('audit')"><i class="bi bi-clock-history"></i><span>Audit Logs</span></div>
       </div></div>
 
@@ -1622,7 +1624,7 @@ function doLogin() {
     .catch(()=>proceed());
 }
 
-const _KNOWN_VIEWS = ['dashboard','list','categories','assigned','accessories','returns','repairs','reports','warranty','summary','vendors','expenses','audit','settings','health','notes','inbox','ack','maintenance'];
+const _KNOWN_VIEWS = ['dashboard','list','categories','assigned','accessories','returns','repairs','reports','warranty','summary','vendors','expenses','audit','settings','health','notes','inbox','ack','maintenance','itreport','laptopspend'];
 // Enter the app after login (or auto-login on refresh). Opens the view named in the
 // URL hash so a refresh / bookmark / Back stays on the same page instead of jumping
 // to the dashboard every time.
@@ -1919,6 +1921,8 @@ function switchView(view) {
   else if (view === 'audit') renderAuditLog();
   else if (view === 'settings') renderSettings();
   else if (view === 'expenses') renderExpenses();
+  else if (view === 'itreport') { if (typeof renderITReport === 'function') renderITReport(); }
+  else if (view === 'laptopspend') { if (typeof renderLaptopSpend === 'function') renderLaptopSpend(); }
   else if (view === 'notes') renderNotes();
   // Record each view in browser history so the window Back / Forward buttons move
   // between portal pages (this is a single-page app, so without this the Back button
@@ -7774,5 +7778,6 @@ function getAssetAgeYears(purchasedStr) {
   return (new Date() - d) / (365.25 * 24 * 3600 * 1000);
 }
 </script>
+<script src="it-report.js"></script>
 </body>
 </html>
