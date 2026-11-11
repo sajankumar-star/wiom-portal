@@ -1,4 +1,4 @@
-// Wiom IT Asset Hub — minimal service worker (enables PWA install)
+// Wiom IT Hub — minimal service worker (enables PWA install)
 const CACHE = 'wiom-assets-v1';
 
 self.addEventListener('install', (e) => {

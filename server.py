@@ -594,7 +594,7 @@ def _build_digest():
 def _send_digest():
     if not KEKA_CLIENT_SECRET:
         return {'ok': False, 'error': 'no client secret configured'}
-    body = {'clientSecret': KEKA_CLIENT_SECRET, 'header': 'WIOM Asset Portal — Daily Digest',
+    body = {'clientSecret': KEKA_CLIENT_SECRET, 'header': 'Wiom IT Hub — Daily Digest',
             'text': _build_digest()}
     ch = os.environ.get('SLACK_ASSET_CHANNEL', '')
     if ch:
