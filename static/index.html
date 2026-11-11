@@ -6972,7 +6972,8 @@ function renderDashboard() {
 
   const underRepair = assets.filter(a=>a.status==='Under Repair').length;
   const returnedCount = (DB.get('return_history',[])||[]).length;
-  const lostDamaged = assets.filter(a=>a.status==='Lost'||a.condition==='Damaged'||a.condition==='Critical').length;
+  // Retired = sold to employees, damaged or duplicate records (see each asset's note) — counted here so the tiles add up to the total
+  const lostDamaged = assets.filter(a=>a.status==='Lost'||a.status==='Lost / Stolen'||a.status==='Retired'||a.condition==='Damaged'||a.condition==='Critical').length;
 
   // ── IT Alerts (action-needed) — baseline: pre-2026-09-29 backlog cleared, track new items from today ──
   const ALERT_BASE = new Date('2026-09-29'); ALERT_BASE.setHours(0,0,0,0);
@@ -7045,7 +7046,7 @@ function renderDashboard() {
   const miniStats = [
     {label:'Under Repair', val:underRepair, icon:'bi-tools', col:'#ca8a04', view:'repairs'},
     {label:'Returned', val:returnedCount, icon:'bi-box-arrow-in-left', col:'#f97316', view:'returns'},
-    {label:'Lost / Damaged', val:lostDamaged, icon:'bi-exclamation-octagon', col:'#dc2626', view:'list'},
+    {label:'Retired / Sold / Damaged', val:lostDamaged, icon:'bi-exclamation-octagon', col:'#dc2626', view:'list'},
     {label:'Expiring Warranty', val:expiringWarranty.length, icon:'bi-shield-exclamation', col:'#ef4444', view:'reports'},
   ];
   const catIcons = {'LAPTOPS':'bi-laptop','COMPUTER HARDWARE':'bi-pc-display','MONITORS':'bi-display','MOBILES':'bi-phone','NETWORKING':'bi-router','SECURITY':'bi-shield-lock','ACCESSORIES':'bi-headphones','SOFTWARE':'bi-code-square'};

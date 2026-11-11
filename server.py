@@ -447,6 +447,16 @@ def api_keka_sync():
                 for f in ('vendor', 'invoice', 'desc', 'photo', 'price', 'warranty', 'purchased', 'condition', 'location'):
                     if not a.get(f) and old.get(f):
                         a[f] = old.get(f)
+                # Keep a cleaned-up model name / real serial (set when Keka had name and
+                # serial swapped, e.g. an IMEI in the name) instead of Keka's raw text.
+                if old.get('serial') and old.get('serial') != (old.get('assetId') or ''):
+                    a['serial'] = old['serial']
+                    if old.get('name'):
+                        a['name'] = old['name']
+                # A record retired in the portal (sold / damaged / duplicate) stays retired
+                # while Keka still lists it as available.
+                if old.get('status') == 'Retired' and a.get('status') == 'Available':
+                    a['status'] = 'Retired'
             else:
                 # Brand-new asset row: if it arrives already assigned, require ack.
                 if a.get('status') == 'Assigned' and new_to:
