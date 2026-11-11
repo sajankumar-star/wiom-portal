@@ -201,9 +201,17 @@ def api_keka_sync():
             with urllib.request.urlopen(_preq, timeout=180) as _r:
                 _pd = json.loads(_r.read().decode())
         except Exception as e:
+            # Include the proxy's own error body (e.g. "Keka token 401 ...") so the
+            # sync status shows WHY it failed, not just "502 Bad Gateway".
+            _detail = ''
+            if isinstance(e, urllib.error.HTTPError):
+                try:
+                    _detail = ' :: ' + e.read().decode('utf-8', 'replace')[:300]
+                except Exception:
+                    pass
             _store_set('wiom_keka_sync_status', {'at': int(time.time()), 'ok': False,
-                       'error': 'helpdesk proxy call failed: ' + str(e)})
-            return jsonify({'ok': False, 'error': 'helpdesk proxy call failed: ' + str(e)}), 502
+                       'error': 'helpdesk proxy call failed: ' + str(e) + _detail})
+            return jsonify({'ok': False, 'error': 'helpdesk proxy call failed: ' + str(e) + _detail}), 502
         if not _pd.get('ok'):
             _store_set('wiom_keka_sync_status', {'at': int(time.time()), 'ok': False,
                        'error': 'helpdesk proxy: ' + str(_pd.get('error') or _pd)})
