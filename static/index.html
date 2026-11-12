@@ -1652,7 +1652,9 @@ function enterApp(user) {
   const av = document.getElementById('topbar-avatar');
   if (av) { av.textContent = user.initials || getUserInitials(user.name); av.title = user.name + ' (' + user.role + ')'; }
   const nm = document.getElementById('tb-user-name'); if (nm) nm.textContent = user.name || 'User';
-  const rl = document.getElementById('tb-user-role'); if (rl) rl.textContent = user.role || 'Member';
+  const rl = document.getElementById('tb-user-role'); if (rl) rl.textContent = '';
+  // Role label + menu rights need ROLE_DEFS, which is defined further down the script: apply once it exists.
+  setTimeout(() => { try { applyRoleRestrictions(); } catch (e) {} }, 0);
   if (typeof applyRoleRestrictions === 'function') applyRoleRestrictions();
   DB.init().then(() => {
     seedData(); autoOffboardFromKeka(); initSubTabs();
@@ -2012,6 +2014,9 @@ function badgeAck(a) {
   return `<span class="badge ${cls}">${a}</span>`;
 }
 function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// Show the real serial when Keka stored the model text in the Asset ID (e.g. "Redmi A4 5G.4gb.64gb")
+function dispId(a) { if (!a) return ''; const id = String(a.assetId||''), sn = String(a.serial||'').trim();
+  return (sn && sn !== id && /[A-Za-z]{3,}[\s.]/.test(id) && !/^[A-Z0-9\/\-]+$/.test(id)) ? sn : id; }
 // Robust element lookup: falls back to substring id match for elements whose id got mojibake-corrupted quotes
 function $el(id){ return document.getElementById(id) || document.querySelector('[id*="'+id+'"]'); }
 function $val(id){ const e=$el(id); return e?(e.value||''):''; }
@@ -2217,7 +2222,7 @@ function renderAssetTable() {
       ${bulkAssignMode ? `<td style="text-align:center"><input type="checkbox" class="ba-check" data-id="${escH(a.id)}" ${(a.status==='Available'||a.status==='In Stock')?'':'disabled style="opacity:.35"'} style="width:15px;height:15px;accent-color:#2563EB;cursor:pointer" onclick="updateBulkCount()"></td>` : ''}
       <td class="col-sno"><code style="font-size:11px">${escH(a.serial||'--')}</code></td>
       <td class="col-name"><strong>${escH(a.name)}</strong></td>
-      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
+      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(dispId(a))}</code></td>
       <td style="font-size:12px;color:#374151">${escH(a.vendor||'--')}</td>
       <td>${escH(a.location)}</td>
       <td>${badgeCondition(a.condition)}</td>
@@ -2385,7 +2390,7 @@ function globalSearch(q) {
     matches.map(a => `<div onmousedown="globalSearchOpen('${escH(a.id)}')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;gap:10px" onmouseover="this.style.background='#F5F7FB'" onmouseout="this.style.background='#fff'">
       <div style="width:32px;height:32px;border-radius:8px;background:#eff6ff;color:#2563EB;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="bi bi-${catIcon(a.category)}"></i></div>
       <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escH(a.name)}</div>
-      <div style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><code style="background:#f3f4f6;padding:1px 5px;border-radius:4px">${escH(a.assetId)}</code>${a.serial?' · S/No '+escH(a.serial):''}${a.assignedTo?' · '+escH(a.assignedTo):''}</div></div>
+      <div style="font-size:11px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><code style="background:#f3f4f6;padding:1px 5px;border-radius:4px">${escH(dispId(a))}</code>${a.serial?' · S/No '+escH(a.serial):''}${a.assignedTo?' · '+escH(a.assignedTo):''}</div></div>
       ${badgeStatus(a.status)}
     </div>`).join('');
   dd.style.display = 'block';
@@ -2775,7 +2780,7 @@ function filterAssignedTable() {
         ${a.dept?`<div style="font-size:11px;color:#888">${escH(a.dept)}</div>`:''}
       </td>
       <td><strong>${escH(a.name)}</strong><br><span style="font-size:11px;color:#aaa">${escH(a.category)} / ${escH(a.type)}</span></td>
-      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
+      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(dispId(a))}</code></td>
       <td class="email-cell" title="${escH(a.empEmail||'')}">${escH(a.empEmail||'—')}</td>
       <td>${escH(a.assignDate||a.purchased||'—')}</td>
       <td>${(a.itemsGiven&&a.itemsGiven.length)?`<span style="font-size:11px;color:#555">${a.itemsGiven.join(', ')}</span>`:'—'}</td>
@@ -2828,7 +2833,7 @@ function renderAssigned() {
         ${a.dept?`<div style="font-size:11px;color:#888">${escH(a.dept)}</div>`:''}
       </td>
       <td><strong>${escH(a.name)}</strong><br><span style="font-size:11px;color:#aaa">${escH(a.category)} / ${escH(a.type)}</span></td>
-      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
+      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(dispId(a))}</code></td>
       <td class="email-cell" title="${escH(a.empEmail||'')}">${escH(a.empEmail||'—')}</td>
       <td>${escH(a.assignDate||a.purchased||'—')}</td>
       <td>${(a.itemsGiven&&a.itemsGiven.length)?`<span style="font-size:11px;color:#555">${a.itemsGiven.join(', ')}</span>`:'—'}</td>
@@ -2906,7 +2911,7 @@ function filterAckTable() {
         ${a.empEmail?`<div style="font-size:11px;color:#2563EB">${escH(a.empEmail)}</div>`:''}
       </td>
       <td><strong>${escH(a.name)}</strong></td>
-      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
+      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(dispId(a))}</code></td>
       <td>${escH(a.category)} / ${escH(a.type)}</td>
       <td>${escH(a.assignDate||'—')}</td>
       <td style="text-align:center">${daysPendingHtml}</td>
@@ -2950,7 +2955,7 @@ function renderAck() {
         ${a.empEmail?`<div style="font-size:11px;color:#2563EB">${escH(a.empEmail)}</div>`:''}
       </td>
       <td><strong>${escH(a.name)}</strong></td>
-      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
+      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(dispId(a))}</code></td>
       <td>${escH(a.category)} / ${escH(a.type)}</td>
       <td>${escH(a.assignDate||'—')}</td>
       <td style="text-align:center">${daysPendingHtml}</td>
@@ -3223,7 +3228,7 @@ function renderWarrantyMgmt() {
     const label = kind==='expired'?`${-days}d ago`:`${days}d left`;
     return `<tr style="border-bottom:1px solid #f4f4f6">
       <td style="padding:8px 12px"><strong>${escH(a.name)}</strong><br><span style="font-size:11px;color:#aaa">${escH(a.category)} / ${escH(a.type)}</span></td>
-      <td style="padding:8px 12px"><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
+      <td style="padding:8px 12px"><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(dispId(a))}</code></td>
       <td style="padding:8px 12px;font-size:12px;color:#555">${escH(a.assignedTo||'—')}</td>
       <td style="padding:8px 12px;font-size:12px">${escH(a.warranty)}</td>
       <td style="padding:8px 12px;font-weight:700;color:${col};white-space:nowrap">${label}</td>
@@ -3578,7 +3583,7 @@ function viewAsset(id) {
       <div>
         <div class="section-divider">Asset Information</div>
         <div class="info-grid">
-          ${infoRow('Asset ID', `<code style="background:#f0f0f8;padding:2px 6px;border-radius:4px;font-size:12px">${escH(a.assetId)}</code>`)}
+          ${infoRow('Asset ID', `<code style="background:#f0f0f8;padding:2px 6px;border-radius:4px;font-size:12px">${escH(dispId(a))}</code>`)}
           ${infoRow('Serial No', escH(a.serial))}
           ${infoRow('Location', [escH(a.location||''), escH(a.locDetail||'')].filter(Boolean).join(' — '))}
           ${infoRow('Condition', badgeCondition(a.condition))}
@@ -3853,7 +3858,7 @@ function generateHandover(id) {
   const items = (a.itemsGiven&&a.itemsGiven.length) ? a.itemsGiven : [a.type];
   const today = new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
   const row = (l,v) => `<tr><td style="padding:8px 10px;border:1px solid #ddd;font-weight:600;background:#f8fafc;width:38%">${l}</td><td style="padding:8px 10px;border:1px solid #ddd">${escH(v||'—')}</td></tr>`;
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Asset Handover - ${escH(a.assetId)}</title>
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Asset Handover - ${escH(dispId(a))}</title>
     <style>body{font-family:Arial,sans-serif;color:#1a1a2e;max-width:760px;margin:0 auto;padding:30px}
     h1{font-size:20px;color:#0F172A;margin:0} .hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #2563EB;padding-bottom:14px;margin-bottom:20px}
     table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:13px} .sec{font-size:13px;font-weight:700;color:#2563EB;margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px}
@@ -3861,7 +3866,7 @@ function generateHandover(id) {
     .note{font-size:11px;color:#666;margin-top:24px;line-height:1.6;border:1px solid #eee;border-radius:8px;padding:12px}</style></head>
     <body>
       <div class="hd"><div><h1>WIOM — Asset Handover Form</h1><div style="font-size:12px;color:#666;margin-top:4px">IT Asset Management</div></div>
-      <div style="text-align:right;font-size:12px"><div><b>Date:</b> ${today}</div><div><b>Ref:</b> ${escH(a.assetId)}</div></div></div>
+      <div style="text-align:right;font-size:12px"><div><b>Date:</b> ${today}</div><div><b>Ref:</b> ${escH(dispId(a))}</div></div></div>
       <div class="sec">Employee Details</div>
       <table>${row('Name', a.assignedTo)}${row('Wiom ID', a.wiomId)}${row('Department', a.dept)}${row('Email', a.empEmail)}${row('Manager', a.managerName)}</table>
       <div class="sec">Asset Details</div>
@@ -4051,11 +4056,11 @@ function renderReports() {
       </div>
       <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-bottom:20px">
         <h4 style="margin:0 0 12px;font-size:14px;color:#374151"><i class="bi bi-exclamation-triangle" style="color:#f59e0b"></i> Warranty Expiring in 90 Days (${expiring.length})</h4>
-        ${expiring.length ? `<div class="asset-table-wrap"><table><thead><tr><th>ASSET NAME</th><th>ASSET ID</th><th>CATEGORY</th><th>LOCATION</th><th>WARRANTY EXPIRY</th></tr></thead><tbody>${expiring.map(a=>`<tr><td>${escH(a.name)}</td><td><code>${escH(a.assetId)}</code></td><td>${escH(a.category)}</td><td>${escH(a.location)}</td><td style="color:#f59e0b;font-weight:600">${a.warranty}</td></tr>`).join('')}</tbody></table></div>` : `<p style="color:#6b7280;font-size:13px">No assets expiring in the next 90 days.</p>`}
+        ${expiring.length ? `<div class="asset-table-wrap"><table><thead><tr><th>ASSET NAME</th><th>ASSET ID</th><th>CATEGORY</th><th>LOCATION</th><th>WARRANTY EXPIRY</th></tr></thead><tbody>${expiring.map(a=>`<tr><td>${escH(a.name)}</td><td><code>${escH(dispId(a))}</code></td><td>${escH(a.category)}</td><td>${escH(a.location)}</td><td style="color:#f59e0b;font-weight:600">${a.warranty}</td></tr>`).join('')}</tbody></table></div>` : `<p style="color:#6b7280;font-size:13px">No assets expiring in the next 90 days.</p>`}
       </div>
       <div style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px">
         <h4 style="margin:0 0 12px;font-size:14px;color:#374151"><i class="bi bi-x-circle" style="color:#ef4444"></i> Expired Warranties (${expired.length})</h4>
-        ${expired.length ? `<div class="asset-table-wrap"><table><thead><tr><th>ASSET NAME</th><th>ASSET ID</th><th>CATEGORY</th><th>WARRANTY EXPIRED</th></tr></thead><tbody>${expired.map(a=>`<tr><td>${escH(a.name)}</td><td><code>${escH(a.assetId)}</code></td><td>${escH(a.category)}</td><td style="color:#ef4444;font-weight:600">${a.warranty}</td></tr>`).join('')}</tbody></table></div>` : `<p style="color:#6b7280;font-size:13px">No expired warranties.</p>`}
+        ${expired.length ? `<div class="asset-table-wrap"><table><thead><tr><th>ASSET NAME</th><th>ASSET ID</th><th>CATEGORY</th><th>WARRANTY EXPIRED</th></tr></thead><tbody>${expired.map(a=>`<tr><td>${escH(a.name)}</td><td><code>${escH(dispId(a))}</code></td><td>${escH(a.category)}</td><td style="color:#ef4444;font-weight:600">${a.warranty}</td></tr>`).join('')}</tbody></table></div>` : `<p style="color:#6b7280;font-size:13px">No expired warranties.</p>`}
       </div>
       <div id="asset-value-summary-section" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-top:20px"></div>
       <div id="cost-analysis-section" style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin-top:20px"></div>
@@ -4159,7 +4164,7 @@ function renderReports() {
         .slice(0,5);
       const oldestRows = oldest.map(a=>`<tr>
         <td style="font-weight:600">${escH(a.name)}</td>
-        <td><code>${escH(a.assetId)}</code></td>
+        <td><code>${escH(dispId(a))}</code></td>
         <td>${escH(a.category)}</td>
         <td>${escH(a.purchased)}</td>
         <td style="text-align:center;font-weight:700;color:#ef4444">${a._age.toFixed(1)}</td>
@@ -4531,7 +4536,7 @@ function renderSelfService(myId) {
     return `<div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px">
         <div><div style="font-weight:700;font-size:15px;color:#1a1a2e">${escH(a.name)}</div>
-        <div style="font-size:12px;color:#888;margin-top:2px">${escH(a.category)} / ${escH(a.type)} · ID: ${escH(a.assetId)}${a.serial?' · S/No: '+escH(a.serial):''}</div></div>
+        <div style="font-size:12px;color:#888;margin-top:2px">${escH(a.category)} / ${escH(a.type)} · ID: ${escH(dispId(a))}${a.serial?' · S/No: '+escH(a.serial):''}</div></div>
         <div>${ackBadge}</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
@@ -4681,7 +4686,7 @@ function checkAckFromUrl() {
     <div style="font-size:56px;margin-bottom:16px">✅</div>
     <div style="font-size:22px;font-weight:700;color:#065f46;margin-bottom:8px">Acknowledged!</div>
     <div style="font-size:15px;color:#555;margin-bottom:6px"><strong>${escH(a.name)}</strong></div>
-    <div style="font-size:13px;color:#888;margin-bottom:24px">Asset ID: ${escH(a.assetId)} — Assigned to: ${escH(a.assignedTo||'—')}</div>
+    <div style="font-size:13px;color:#888;margin-bottom:24px">Asset ID: ${escH(dispId(a))} — Assigned to: ${escH(a.assignedTo||'—')}</div>
     <button onclick="this.closest('div[style*=fixed]').remove()" style="background:#2563EB;color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">OK</button>
   </div>`;
   */
@@ -4696,7 +4701,7 @@ function ackRenderChoice(ackId, a) {
     <div style="font-size:44px;margin-bottom:10px">📦</div>
     <div style="font-size:20px;font-weight:700;color:#1a1a2e;margin-bottom:6px">Confirm your asset</div>
     <div style="font-size:15px;color:#333;margin-bottom:4px"><strong>${escH(a.name)}</strong></div>
-    <div style="font-size:12px;color:#888;margin-bottom:22px">Asset ID: ${escH(a.assetId)}${a.serial?' · S/No: '+escH(a.serial):''}<br>Assigned to: ${escH(a.assignedTo||'—')}</div>
+    <div style="font-size:12px;color:#888;margin-bottom:22px">Asset ID: ${escH(dispId(a))}${a.serial?' · S/No: '+escH(a.serial):''}<br>Assigned to: ${escH(a.assignedTo||'—')}</div>
     <div id="ack-choice-body">
       <button onclick="ackConfirmReceived('${escH(ackId)}')" style="display:block;width:100%;background:#10b981;color:#fff;border:none;padding:13px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px"><i class="bi bi-check2-circle"></i> Yes, I received it</button>
       <button onclick="ackShowIssueForm()" style="display:block;width:100%;background:#fff;color:#dc2626;border:1.5px solid #fecaca;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer"><i class="bi bi-exclamation-triangle"></i> Report a problem</button>
@@ -5111,7 +5116,7 @@ function renderAccessories() {
   </div>`;
 
   const rows = accs.slice().sort((a,b)=>(a.type||'').localeCompare(b.type||'')).map(a=>`<tr style="border-bottom:1px solid #f5f5f5">
-    <td style="padding:9px 12px"><code style="background:#eff6ff;color:#2563EB;padding:2px 7px;border-radius:5px;font-size:12px;font-weight:600">${escH(a.assetId)}</code></td>
+    <td style="padding:9px 12px"><code style="background:#eff6ff;color:#2563EB;padding:2px 7px;border-radius:5px;font-size:12px;font-weight:600">${escH(dispId(a))}</code></td>
     <td style="padding:9px 12px;font-weight:600">${escH(a.name)}</td>
     <td style="padding:9px 12px;font-size:12px;color:#6b7280">${escH(a.type)}</td>
     <td style="padding:9px 12px">${badgeStatus(a.status)}</td>
@@ -5153,7 +5158,7 @@ function renderVendors() {
   const assets = getAssets();
   const vmap = {};
   assets.forEach(a=>{
-    const v = (a.vendor||'').trim() || 'Unknown';
+    const v = (a.vendor||'').trim() || 'No bill linked';
     if(!vmap[v]) vmap[v] = {name:v, total:0, assigned:0, repair:0, spend:0, warrantyExp:0};
     vmap[v].total++;
     if(a.status==='Assigned') vmap[v].assigned++;
@@ -5161,7 +5166,7 @@ function renderVendors() {
     vmap[v].spend += Number(a.price)||0;
     if(a.warranty){ const d=new Date(a.warranty); if(d>=new Date()) vmap[v].warrantyExp++; }
   });
-  const vendors = Object.values(vmap).sort((a,b)=>b.total-a.total);
+  const vendors = Object.values(vmap).sort((a,b)=>(a.name==='No bill linked')-(b.name==='No bill linked') || b.spend-a.spend || b.total-a.total);
   const fmtINR = v => '₹' + Math.round(v).toLocaleString('en-IN');
   const totalSpend = vendors.reduce((s,v)=>s+v.spend,0);
   const rows = vendors.map(v=>`<tr style="border-bottom:1px solid #f5f5f5">
@@ -5209,7 +5214,7 @@ function renderInbox() {
     <div style="background:#fff;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;padding:14px 16px;margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
         <div>
-          <div style="font-weight:700;color:#1a1a2e">${escH(a.name)} <span style="font-size:11px;color:#888;font-weight:400">· ${escH(a.assetId)}</span></div>
+          <div style="font-weight:700;color:#1a1a2e">${escH(a.name)} <span style="font-size:11px;color:#888;font-weight:400">· ${escH(dispId(a))}</span></div>
           <div style="font-size:12px;color:#555;margin-top:3px"><i class="bi bi-person"></i> ${escH(a.assignedTo||'—')}${a.empEmail?' · '+escH(a.empEmail):''}</div>
           <div style="font-size:13px;color:#dc2626;margin-top:6px;background:#fef2f2;padding:6px 10px;border-radius:6px">"${escH(a.issueNote||'No details')}"</div>
           <div style="font-size:11px;color:#aaa;margin-top:4px">Reported: ${escH(a.issueDate||'—')}</div>
@@ -6221,7 +6226,7 @@ function openEmpProfile(empId) {
     : '<span style="background:#fef3c7;color:#d97706;padding:1px 8px;border-radius:10px;font-size:10px;font-weight:600">Pending</span>';
   const assetHtml = mine.length ? mine.map(a=>`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f3f4f6">
       <div style="font-size:20px">${catEmoji(a.type)}</div>
-      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${escH(a.name)}</div><div style="font-size:11px;color:#888"><code>${escH(a.assetId)}</code>${a.serial?' · '+escH(a.serial):''}</div></div>
+      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${escH(a.name)}</div><div style="font-size:11px;color:#888"><code>${escH(dispId(a))}</code>${a.serial?' · '+escH(a.serial):''}</div></div>
       ${ackChip(a)}
       <button class="btn btn-sm btn-outline" onclick="closeEmpProfile();viewAsset('${escH(a.id)}')"><i class="bi bi-eye"></i></button>
     </div>`).join('') : '<div style="color:#9ca3af;font-size:13px;padding:10px 0">No assets assigned</div>';
@@ -6343,7 +6348,7 @@ function renderEmpAssetSummary() {
       const assetRows = empAssets.length
         ? empAssets.map(a=>`<tr>
             <td>${escH(a.name)}</td>
-            <td><code style="font-size:11px">${escH(a.assetId)}</code></td>
+            <td><code style="font-size:11px">${escH(dispId(a))}</code></td>
             <td>${escH(a.serial||'—')}</td>
             <td>${escH(a.category)}</td>
             <td>${escH(a.assignDate||'—')}</td>
@@ -6434,7 +6439,7 @@ function renderOffboarding() {
 
     const assetRows = obAssets.length
       ? obAssets.map(a=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5">
-          <span style="font-size:13px">${escH(a.name)} <code style="font-size:11px">${escH(a.assetId)}</code></span>
+          <span style="font-size:13px">${escH(a.name)} <code style="font-size:11px">${escH(dispId(a))}</code></span>
           <button class="btn btn-sm" style="background:#fff7ed;color:#f97316;border:1.5px solid #fed7aa;font-size:11px" onclick="openReturnModal('${escH(a.id)}');"><i class="bi bi-box-arrow-in-left"></i> Return</button>
         </div>`).join('')
       : `<div style="color:#059669;font-size:13px;padding:6px 0"><i class="bi bi-check-circle-fill"></i> All assets returned</div>`;
@@ -6610,7 +6615,7 @@ function filterEmpAssetCards(val) {
     const empAssets = assets.filter(a=>a.assignedTo&&a.assignedTo.toLowerCase()===e.name.toLowerCase());
     const assetRows = empAssets.length
       ? empAssets.map(a=>`<tr>
-          <td>${escH(a.name)}</td><td><code style="font-size:11px">${escH(a.assetId)}</code></td>
+          <td>${escH(a.name)}</td><td><code style="font-size:11px">${escH(dispId(a))}</code></td>
           <td>${escH(a.serial||'—')}</td><td>${escH(a.category)}</td>
           <td>${escH(a.assignDate||'—')}</td><td>${badgeAck(a.ack||'—')}</td>
           <td>
@@ -6778,7 +6783,7 @@ function showCalDayDetail(day, month, year) {
         const col = expired ? '#dc2626' : (wd-today<=30*24*60*60*1000 ? '#d97706' : '#16a34a');
         return `<div style="background:${bg};border-radius:8px;padding:8px 12px;font-size:12px">
           <div style="font-weight:700;color:${col}">${escH(a.name)}</div>
-          <div style="color:#888;font-size:11px">${escH(a.assetId)} · ${escH(a.category)}</div>
+          <div style="color:#888;font-size:11px">${escH(dispId(a))} · ${escH(a.category)}</div>
           ${a.assignedTo?`<div style="color:#555;font-size:11px">Assigned: ${escH(a.assignedTo)}</div>`:''}
         </div>`;
       }).join('')}
@@ -7089,7 +7094,7 @@ function renderDashboard() {
     return `<div class="warr-chip" style="background:${bg};border-color:${col}20">
       <div style="font-size:11px;font-weight:700;color:${col}">${days}d left</div>
       <div style="font-size:12px;font-weight:600;color:#1a1a2e;margin-top:2px">${escH(a.name)}</div>
-      <div style="font-size:10px;color:#888;margin-top:2px">${escH(a.assetId)}</div>
+      <div style="font-size:10px;color:#888;margin-top:2px">${escH(dispId(a))}</div>
       <div style="font-size:10px;color:#888">${escH(a.warranty)}</div>
       <button onclick="renewWarranty('${escH(a.id)}')" style="margin-top:6px;font-size:10px;font-weight:600;color:${col};background:#fff;border:1px solid ${col}55;border-radius:6px;padding:2px 8px;cursor:pointer"><i class="bi bi-arrow-clockwise"></i> Renew</button>
     </div>`;
@@ -7577,7 +7582,7 @@ function printQRLabel(id) {
   </style></head><body>
   <div class="label">
     <div class="brand">Wiom IT Hub</div>
-    <div class="asset-id">${escH(a.assetId)}</div>
+    <div class="asset-id">${escH(dispId(a))}</div>
     <div class="qr"><img src="${qrUrl}" alt="QR"></div>
     <div class="info">
       <div class="info-row"><span class="info-label">Name:</span><span>${escH(a.name)}</span></div>
@@ -7724,7 +7729,7 @@ function showEmpDetail(idx) {
   const rows = empAssets.map(a => `
     <tr>
       <td><strong>${escH(a.name)}</strong><br><span style="font-size:11px;color:#aaa">${escH(a.category)} / ${escH(a.type)}</span></td>
-      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(a.assetId)}</code></td>
+      <td><code style="background:#f5f5f5;padding:2px 6px;border-radius:4px;font-size:11px">${escH(dispId(a))}</code></td>
       <td>${escH(a.location||'—')}</td>
       <td>${badgeCondition(a.condition)}</td>
       <td>${badgeAck(a.ack||'Not Applicable')}</td>
