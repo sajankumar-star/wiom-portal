@@ -1594,7 +1594,14 @@ function getUsers() {
     id:'USR-001', name:'Sajan Kumar', wiomId:'WM-0001', username:'sajan',
     password:'sajan', email:'sajan.kumar@wiom.in', dept:'IT', role:'admin', initials:'SK'
   }];
-  return DB.get('users', defaults);
+  const list = DB.get('users', defaults);
+  // Lock-out guard: if no saved user can manage users (e.g. a role got saved blank),
+  // treat the first user as Super Admin so someone can always fix roles.
+  try {
+    if (Array.isArray(list) && list.length && !list.some(x => ROLE_DEFS[normalizeRole(x.role)] && ROLE_DEFS[normalizeRole(x.role)].users))
+      return list.map((x, i) => i === 0 ? Object.assign({}, x, {role: 'super_admin'}) : x);
+  } catch (e) {}
+  return list;
 }
 function saveUsers(u) { DB.set('users', u); }
 
@@ -1602,9 +1609,18 @@ function getUserInitials(name) {
   return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
 }
 
-function doLogin() {
+async function doLogin() {
   const u = document.getElementById('auth-user').value.trim().toLowerCase();
   const p = document.getElementById('auth-pass').value;
+  // Always check against the user list saved on the server (a new phone/laptop has
+  // no local copy yet; without this it would fall back to the built-in default login).
+  if (IS_HOSTED) {
+    try {
+      const r = await fetch('/api/get/wiom_keka_users');
+      const j = await r.json();
+      if (j && Array.isArray(j.data) && j.data.length) { DB._cache['wiom_keka_users'] = j.data; try { localStorage.setItem('wiom_keka_users', JSON.stringify(j.data)); } catch(e) {} }
+    } catch(e) {}
+  }
   const users = getUsers();
   const found = users.find(x => x.username.toLowerCase() === u && x.password === p);
   const errEl = document.getElementById('auth-err');
@@ -1772,11 +1788,11 @@ function openAddUserModal(id) {
     document.getElementById('u-password').placeholder = 'Leave blank to keep current';
     document.getElementById('u-email').value = u.email||'';
     document.getElementById('u-dept').value = u.dept||'';
-    document.getElementById('u-role').value = u.role||'it_staff';
+    document.getElementById('u-role').value = normalizeRole(u.role||'it_staff');
   } else {
     ['u-name','u-wiomid','u-username','u-password','u-email','u-dept'].forEach(i=>document.getElementById(i).value='');
     document.getElementById('u-password').placeholder = 'Min 4 characters';
-    document.getElementById('u-role').value = 'it_staff';
+    document.getElementById('u-role').value = 'it_executive';
   }
   document.getElementById('add-user-modal').classList.add('show');
 }
@@ -1790,7 +1806,7 @@ function saveUser() {
   const password = document.getElementById('u-password').value;
   const email = document.getElementById('u-email').value.trim();
   const dept = document.getElementById('u-dept').value.trim();
-  const role = document.getElementById('u-role').value;
+  const role = normalizeRole(document.getElementById('u-role').value || 'it_executive');
   const wiomId = document.getElementById('u-wiomid').value.trim();
 
   if (!name) { showToast('Full Name is required','error'); return; }
